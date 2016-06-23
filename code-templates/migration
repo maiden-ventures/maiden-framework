@@ -1,0 +1,22 @@
+package @@package@@
+
+import com.imageworks.migration._
+
+class @@className@@ {
+
+  val table = "@@tableName@@"
+
+  def up() = {
+    createTable(table) {t =>
+      @@columns@@
+    }
+
+    @@indexes@@
+
+    @@foreignKeys@@
+  }
+
+  def down() {
+    dropTable(table)
+  }
+}

@@ -1,0 +1,9 @@
+
+Scala migrations for DB
+
+Quill helpers for:
+  create, read, update, delete
+
+
+Finch endpoints for:
+  create, read, update, delete, search by field
