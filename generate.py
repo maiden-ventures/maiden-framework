@@ -424,7 +424,6 @@ class ApiBuilder:
             fd = open(os.path.join(self.api_dir, "%s.scala" % (model['name'])), "w+")
             fd.write(out)
             fd.close()
-
         format_scala(self.api_dir)
 
 def build_boot(app_data):
@@ -437,11 +436,6 @@ def build_boot(app_data):
     fd = open(os.path.join(app_data['app']['source_directory'], "src/main/scala/%s/App.scala" % (app_name)), "w+")
     fd.write(out)
     fd.close()
-
-def buildApiService(model_data, app_data):
-    pass
-
-
 
 
 if __name__ == "__main__":

@@ -10,9 +10,6 @@ import maiden.util.async.AsyncOps
 import maiden.util.error.ErrorReporter._
 import maiden.util.log.Logger._
 
-
-import maiden.models.Reflector
-
 final class App {
   lazy val server: ListeningServer = Http.server
     .withLabel(Config.systemId)

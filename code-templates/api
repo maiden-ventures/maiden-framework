@@ -13,6 +13,8 @@ object @@model@@Api extends MaidenApi {
 
   val prefix = "api" :: "@@lowerCaseModel@@"
 
+  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@
+
   //helper for creating
   val @@lowerCaseModel@@: Endpoint[@@model@@] = ???//(param("id").as[Long] :: param("name").as[String]).as[Hello]
 

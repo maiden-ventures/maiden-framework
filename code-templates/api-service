@@ -1,31 +1,27 @@
-package maiden
+package @@package@@
 
+import io.circe.generic.auto._
+import io.finch.circe._
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import maiden.api.v1.ErrorHandler.apiErrorHandler
-import maiden.api.v1.ResponseEncoders
-import maiden.api.v1.hello.HelloApi._
 import maiden.config.Config.apiAuthenticationCredentials
 import maiden.http.{ExceptionFilter, HawkAuthenticateRequestFilter, RequestLoggingFilter}
 import maiden.util.error.ErrorResponseEncoders
+import @@package@@.api._
 
 object AuthenticationFilter extends HawkAuthenticateRequestFilter(apiAuthenticationCredentials)
 
 object UnhandledExceptionsFilter extends ExceptionFilter[Request](ErrorResponseEncoders.exceptionResponseEncoder)
 
-object FinchTemplateApi extends ResponseEncoders {
-  private def api = helloApi() :+: helloApi()
+object @@model@@Api extends ResponseEncoders {
+   def @@modelLowerCase@@ = @@api_list@@ //TestApi.testApi() :+: Test2Api.test2Api()
 
   def apiService: Service[Request, Response] =
     RequestLoggingFilter andThen
     UnhandledExceptionsFilter andThen
     //AuthenticationFilter andThen
-    api.handle(apiErrorHandler).toService
+    @@modelLowerCase@@Api.handle(apiErrorHandler).toService
 
-  def apiService2: Service[Request, Response] =
-    RequestLoggingFilter andThen
-  UnhandledExceptionsFilter andThen
-  //AuthenticationFilter andThen
-  api.handle(apiErrorHandler).toService
 
 }
