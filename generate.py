@@ -355,6 +355,8 @@ class EncoderBuilder:
         self.config = config
         self.models = models
 
+        self.encoders = []
+
         self.encoder_dir = os.path.join(self.config['app']['source_directory'], "src/main/scala/%s" % (self.config['app']['name']), "encoders")
 
         if not os.path.exists(self.encoder_dir):
@@ -385,7 +387,61 @@ class EncoderBuilder:
             fd = open(file_name, "w+")
             fd.write(out)
             fd.close()
+            self.encoders.append("%sResponseEncoders" % (model_name))
+
         format_scala(self.encoder_dir)
+
+        #now write out the master response encoders file
+        encoder_traits = ' '.join(["with %s" % (x) for x in self.encoders])
+        enc = open("code-templates/response-encoders").read()
+
+        app_name = self.config['app']['name']
+        package = "%s.%s" % (self.config['app']['namespace'], app_name)
+        out = enc.replace("@@package@@", package).replace("@@response_encoders@@", encoder_traits)
+        file_name = os.path.join(self.config['app']['source_directory'], "src/main/scala/%s/ResponseEncoders.scala" % (app_name))
+        fd = open(file_name, "w+")
+        fd.write(out)
+        fd.close()
+        format_scala(file_name)
+
+class ApiBuilder:
+
+    def __init__(self, models, config):
+        self.models = models
+        self.config = config
+        self.template = open("code-templates/api").read()
+        self.api_dir = os.path.join(self.config['app']['source_directory'], 'src/main/scala/%s' % (self.config['app']['name']), 'api')
+
+        if not os.path.exists(self.api_dir):
+            os.makedirs(self.api_dir)
+
+        self.build()
+
+    def build(self):
+        for model in self.models:
+            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", "%s.%s" % (self.config['app']['namespace'], self.config['app']['name']))
+
+            fd = open(os.path.join(self.api_dir, "%s.scala" % (model['name'])), "w+")
+            fd.write(out)
+            fd.close()
+
+        format_scala(self.api_dir)
+
+def build_boot(app_data):
+    template = open("code-templates/boot").read()
+    app_name = app_data['app']['name']
+    package = "%s.%s" % (app_data['app']['namespace'], app_name)
+
+    out = template.replace("@@package@@", package).replace("@@appName@@", app_name)
+
+    fd = open(os.path.join(app_data['app']['source_directory'], "src/main/scala/%s/App.scala" % (app_name)), "w+")
+    fd.write(out)
+    fd.close()
+
+def buildApiService(model_data, app_data):
+    pass
+
+
 
 
 if __name__ == "__main__":
@@ -400,3 +456,5 @@ if __name__ == "__main__":
     access_builder =  DbAccessBuilder(app_data)
     migration_builder = MigrationBuilder(model_data, app_data)
     encoder_builder = EncoderBuilder(model_data, app_data)
+    api_builder = ApiBuilder(model_data, app_data)
+    build_boot(app_data)

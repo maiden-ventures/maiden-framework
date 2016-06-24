@@ -1,0 +1,8 @@
+package @@package@@
+
+import @@package@@.encoders._
+import maiden.util.error.ErrorResponseEncoders
+
+trait ResponseEncoders extends ErrorResponseEncoders @@response_encoders@@ //with HelloResponseEncoders
+
+object ResponseEncoders extends ResponseEncoders
