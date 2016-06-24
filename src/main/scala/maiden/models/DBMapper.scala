@@ -7,7 +7,7 @@ object DBMapper {
     "scala.Long" -> "bigint",
     "scala.Int" -> "int",
     "String" ->  "varchar",
-    "java.sql.Timestamp" -> "datetime",
+    "java.sql.Timestamp" -> "timestamp",
 
     //not currently used..auto serializing types
     "Map[String,scala.Any]" -> "text",

@@ -1,0 +1,60 @@
+import sbt.complete.DefaultParsers._
+
+val commonSettings = Seq(
+  organization := "@@namespace@@",
+  version := "1.0.0",
+  scalaVersion := "2.11.8",
+  resolvers += Resolver.sonatypeRepo("snapshots"),
+  resolvers += Resolver.sonatypeRepo("releases"),
+  scalacOptions ++= Seq()
+)
+
+
+val baseBuildSettings = commonSettings ++ Seq(
+	buildInfoKeys ++= Seq[BuildInfoKey](
+    name, version, scalaVersion, sbtVersion,
+    "hostname" -> java.net.InetAddress.getLocalHost().getHostName(),
+    "deployer" -> System.getProperty("user.name"),
+    "buildTimestamp" -> new java.util.Date(System.currentTimeMillis()),
+    "gitHash" -> new java.lang.Object(){
+      override def toString(): String = {
+        try {
+          val extracted = new java.io.InputStreamReader(
+            java.lang.Runtime.getRuntime().exec("git rev-parse HEAD").getInputStream())
+           (new java.io.BufferedReader(extracted)).readLine()
+        } catch {
+          case t: Throwable => "get git hash failed"
+        }
+      }
+    }.toString()
+  ),
+	buildInfoPackage := "@@namespace@@.@@appName@@.common",
+	buildInfoOptions += BuildInfoOption.BuildTime,
+  buildInfoOptions += BuildInfoOption.ToMap,
+  unmanagedClasspath in Compile <+= (baseDirectory) map { bd => Attributed.blank(bd / "config") },
+  unmanagedClasspath in Runtime <+= (baseDirectory) map { bd => Attributed.blank(bd / "config") }
+)
+
+
+lazy val migrate = inputKey[Unit]("Run migrations")
+
+
+lazy val @@appName@@ = (project in file("."))
+  .enablePlugins(BuildInfoPlugin)
+  .settings(baseBuildSettings ++ Seq(
+    unmanagedSourceDirectories in Compile += baseDirectory.value / "src",
+    unmanagedSourceDirectories in Test += baseDirectory.value / "test",
+    migrate := Def.inputTaskDyn {
+      val args: Seq[String] = spaceDelimited("<arg>").parsed
+      (runMain in Compile).toTask(s" @@namespace@@.@@appName@@.common.Migrate ${args.mkString(" ")}")
+    }.evaluated,
+
+    libraryDependencies ++= Seq(
+      "com.maiden" %% "maiden-framework" % "0.1.0",
+      "io.circe" %% "circe-generic" % "0.5.0-M1",
+      "io.circe" % "circe-java8_2.11" % "0.5.0-M1",
+      "io.circe" %% "circe-core" % "0.5.0-M1",
+      "io.circe" %% "circe-parser" % "0.5.0-M1"
+
+    )
+  ))

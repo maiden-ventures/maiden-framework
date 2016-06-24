@@ -1,0 +1,27 @@
+package @@package@@.encoders
+
+
+import com.twitter.finagle.http.Message
+import com.twitter.finagle.http.Message.ContentTypeJson
+import com.twitter.io.Buf._
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.parser._
+import io.circe.syntax._
+import io.circe.java8.time._
+import io.finch.EncodeResponse
+import @@package@@.models.@@model@@
+
+
+trait @@model@@ResponseEncoders {
+
+  /*implicit val @@lowerCaseModel@@Encoder = Encoder.instance[@@model@@] { m =>
+    Map("@@lowerCaseModel@@" -> Map(@@jsonFields@@)).asJson
+  }
+  */
+
+  implicit def @@lowerCaseModel@@ResponseEncoder: EncodeResponse[@@model@@] =
+    EncodeResponse(ContentTypeJson)(data => Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
+}
+
+object @@model@@ResponseEncoders extends @@model@@ResponseEncoders

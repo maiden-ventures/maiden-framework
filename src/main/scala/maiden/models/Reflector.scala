@@ -1,15 +1,18 @@
 package maiden.models
 
-import java.io.File
+import java.io.{File}
 import java.nio.file.{Files, Paths}
 import java.net.URLClassLoader
 import java.lang.reflect.Constructor
+
 import org.joda.time.format.ISODateTimeFormat
+
 import scala.reflect._
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 import scala.collection.immutable.ListMap
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 import com.thoughtworks.paranamer._
 import org.clapper.classutil.ClassFinder
 import org.joda.time._
@@ -43,10 +46,11 @@ case class ReflectionConfig(appName: String = "app",
                           generateTests: Boolean = false,
                           //whether to generate `findByX` methods
                           generateMagicMethods: Boolean = true,
-                          payloadKey: String = "payload")
+                          payloadKey: String = "payload",
+                          encoders: ListBuffer[String] = ListBuffer[String]())
 
 
-case class ColumnInfo(var name: String, annotations: List[Annotation],
+case class ColumnInfo(name: String, var dbName: String, annotations: List[Annotation],
                       columnType: scala.reflect.runtime.universe.Type)
 
 
@@ -103,23 +107,21 @@ object Reflector {
 
     parser.parse(args, ReflectionConfig()) match {
       case Some(config) => {
+        new File(config.sourceDirectory).mkdirs()
+        buildSbt(config)
         val maidenClasses = getMaidenClasses
         maidenClasses("models").foreach(model => {
           val name = getClassName(model._1.toString)
           val modelInfo = model._2
           buildMigration(modelInfo, config)
+          buildEncoder(modelInfo, config)
           Thread.sleep(2)
+          println(config.encoders)
         })
-
-
       }
-
       case None => ()
     }
-
   }
-
-
 
   def getMaidenClasses() = {
     val classpath = List(".").map(new File(_))
@@ -150,6 +152,7 @@ object Reflector {
     val modelAnnotations = modelClass.annotations
     val columns = defaultConstructor.paramLists.reduceLeft(_ ++ _).map { sym =>
       ColumnInfo(name = sym.name.toString,
+        dbName = sym.name.toString,
         annotations = sym.annotations.toList,
         columnType = tpe.member(sym.name).asMethod.returnType)
     }.toList
@@ -160,18 +163,38 @@ object Reflector {
   }
 
   private[this] def writeFile(source: String, fileName: String) = {
-    val formatted = org.scalafmt.Scalafmt.format(source).get
+    (new File(new File(fileName).getParent)).mkdirs()
+    val formatted = try {
+      org.scalafmt.Scalafmt.format(source).get
+    } catch {
+      case e: Throwable => source
+    }
     FileWriter.write(formatted, fileName)
+  }
+
+  def buildSbt(rc: ReflectionConfig) = {
+    val s = FileReader.read("./code-templates/sbt")
+    val out = s
+      .replaceAll("@@namespace@@", rc.namespace)
+      .replaceAll("@@appName@@", rc.appName)
+
+    val fileName = s"${rc.sourceDirectory}/build.sbt"
+    FileWriter.write(out, fileName)
+
+    //add the plugins
+    val f = s"${rc.sourceDirectory}/project/plugins.sbt"
+    val p = FileReader.read("./code-templates/sbt-plugins")
+    writeFile(p, f)
   }
 
   def buildMigration(info: ModelInfo, rc: ReflectionConfig) = {
 
     def _createColumn(c: ColumnInfo, modifiers: String) = {
       val dbType = DBMapper.scalaTypeToDBType(c.columnType.toString)
-      s"""\tt.${dbType}("${c.name}", ${modifiers})"""
+      s"""\tt.${dbType}("${c.dbName}", ${modifiers})"""
     }
 
-    val migrationPath = s"${rc.sourceDirectory}/src/main/scala/migrations"
+    val migrationPath = s"${rc.sourceDirectory}/src/main/scala/${rc.appName}}/migrations"
     new File(migrationPath).mkdirs()
     val fmt = ISODateTimeFormat.dateHourMinuteSecondMillis
     val date = fmt.print(System.currentTimeMillis)
@@ -185,10 +208,10 @@ object Reflector {
     val file = s"${migrationPath}/${className.replace("Migrate_", "")}.scala"
     var tableName = underscore(info.name)
 
-    var indexes = scala.collection.mutable.ListBuffer[String]()
+    var indexes = ListBuffer[String]()
     var foreignKeys = scala.collection.mutable.ListBuffer[String]()
     val columns = info.columns.map{ c =>
-      var columnName = c.name
+      var columnName = c.dbName
       val initialModifiers = scala.collection.mutable.ListBuffer("NotNull")
       val modifiers = c.annotations.map {m => {
         val e = new Eval(None)
@@ -200,7 +223,7 @@ object Reflector {
           case DBDefault(expr) => s"""Default("${expr}")"""
           case DBLimit(limit) => s"""Limit(${limit})"""
           case DBNullable => {initialModifiers -= "NotNull"; null}
-          case DBName(name) => {c.name = name; null}
+          case DBName(name) => {c.dbName = name; null}
           case DBIndex => {
             indexes += s"""addIndex(table, Array("${columnName}"), Name("${tableName}_${columnName}_index"))"""
             null
@@ -237,6 +260,24 @@ object Reflector {
     //println(columns.mkString(", \n"))
     //println(indexes.toList.mkString("\n"))
     //println(foreignKeys.toList.mkString("\n"))
+  }
+
+  def buildEncoder(info: ModelInfo, rc: ReflectionConfig) = {
+    val model = info.name
+    val lowerCaseModel= model.toLowerCase
+    val jsonFields = info.columns.map(c => s""""${c.name}" -> m.${c.name}""").mkString(", ")
+    val s = FileReader.read("code-templates/encoder")
+    val out = s
+      .replaceAll("@@model@@", model)
+      .replaceAll("@@lowerCaseModel@@", lowerCaseModel)
+      .replaceAll("@@jsonFields@@", jsonFields)
+      .replaceAll("@@package@@", rc.namespace)
+      .replaceAll("@@appName@@", rc.appName)
+      .replaceAll("@@payloadKey@@", rc.payloadKey)
+
+    val fileName = s"${rc.sourceDirectory}/src/main/scala/${rc.appName}/encoders/${model}.scala"
+    writeFile(out, fileName)
+    rc.encoders += s"${model}ResponseEncoders"
   }
 
   def buildApi(info: ModelInfo) = {

@@ -2,7 +2,7 @@ package @@package@@
 
 import com.imageworks.migration._
 
-class @@className@@ {
+class @@className@@ extends Migration {
 
   val table = "@@tableName@@"
 

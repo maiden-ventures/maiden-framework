@@ -6,17 +6,8 @@ version := "0.1.0"
 
 scalaVersion := "2.11.8"
 
-def fuckit(dir: java.io.File) = {
-  val file = dir / "demo" / "Test.scala"
-  IO.write(file, """object Test extends App { println("Hi") }""")
-  Seq(file)
-}
-
 lazy val maiden = (project in file("."))
   .settings(
-  sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
-    fuckit(dir)
-  },
     libraryDependencies ++= Seq(
       "com.github.finagle" % "finch-core_2.11" % "0.10.0",
       //"com.github.finagle" %% "finch-core" % "0.11.0-SNAPSHOT" changing(),
@@ -34,6 +25,8 @@ lazy val maiden = (project in file("."))
 
       "com.geirsson" %% "scalafmt" % "0.2.8",
 
+      "org.scala-lang" % "scala-reflect" % "2.11.8",
+
       //for arg parsing
       "com.github.scopt" %% "scopt" % "3.5.0",
 
@@ -43,9 +36,11 @@ lazy val maiden = (project in file("."))
       //quill
       "io.getquill" % "quill_2.11" % "0.6.0",
       "io.getquill" % "quill-sql_2.11" % "0.6.0",
-      "io.getquill" % "quill-jdbc_2.11" % "0.6.0",
-      "io.getquill" % "quill-cassandra_2.11" % "0.6.0",
+      //"io.getquill" % "quill-jdbc_2.11" % "0.6.0",
+      //"io.getquill" % "quill-cassandra_2.11" % "0.6.0",
 
+      //yaml stuff
+      "net.jcazevedo" %% "moultingyaml" % "0.2",
       //data drivers
       "mysql" % "mysql-connector-java" % "5.1.36",
       "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
@@ -61,9 +56,9 @@ lazy val maiden = (project in file("."))
 
       // Note. We use the latest 0.5.0 version of Circe as it pulls in the Cats 0.6.0 which Mouse depends on.
       "io.circe" %% "circe-generic" % "0.5.0-M1",
-      //"io.circe" %% "circe-core" % "0.4.1",
-      //"io.circe" %% "circe-generic" % "0.4.1",
-      //"io.circe" %% "circe-parser" % "0.4.1",
+      "io.circe" % "circe-java8_2.11" % "0.5.0-M1",
+      "io.circe" %% "circe-core" % "0.5.0-M1",
+      "io.circe" %% "circe-parser" % "0.5.0-M1",
 
       // Utilities
       "joda-time" % "joda-time" % "2.9.3",
