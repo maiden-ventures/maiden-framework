@@ -1,11 +1,13 @@
 package @@package@@.api
 
+import java.time.LocalDateTime
 import scala.language.implicitConversions
 import maiden.types.Exceptions._
 import maiden.types.MaidenApi
 import maiden.http.RequiredAuthRequestReader._
 import maiden.auth.AuthenticatedClient
 import maiden.http.Render.{render}
+import maiden.implicits.DateImplicits._
 import io.finch.{Endpoint, _}
 import @@package@@.models._
 
@@ -16,7 +18,7 @@ object @@model@@Api extends MaidenApi {
   def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: doc@@model@@
 
   //helper for creating
-  val @@lowerCaseModel@@: Endpoint[@@model@@] = @@createArgs@@ //(param("id").as[Long] :: param("name").as[String]).as[Hello]
+  val @@lowerCaseModel@@: Endpoint[@@model@@] = (@@createArgs@@ :: paramOption("createdAt").as[LocalDateTime] :: paramOption("updatedAt").as[LocalDateTime]).as[@@model@@]
 
 
   def doc@@model@@: Endpoint[Map[String, String]] =

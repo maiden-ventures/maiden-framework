@@ -467,7 +467,6 @@ class ApiBuilder:
 
             cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model['columns']]
             create_args = " :: ".join([param_str % (c[0], c[1]) for c in cols])
-            create_args = "(%s).as[%s]" % (create_args, inflection.camelize(model["name"]))
             out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args)
 
             fd = open(os.path.join(self.api_dir, "%s.scala" % (model['name'])), "w+")
