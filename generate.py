@@ -9,19 +9,39 @@ import sys
 import os
 
 from datetime import datetime
-from subprocess import call
+import subprocess
 
-def existsAndTrue(data, key):
+SCALA_FILES = []
+
+DB_TO_SCALA = {
+  "varchar": "String",
+  "bigint": "Long",
+  "int": "Int",
+  "datetime": "LocalDateTime",
+  "timestamp": "LocalDateTime"
+  }
+
+def exists_and_true(data, key):
     if key in data and data[key]: return True
     else: return False
 
 
-def format_scala(directory):
-    call(["java", "-jar", "./tools/scalafmt.jar", "-i", "-f", directory])
+def key_with_default(data, key, default):
+    if key in data and data[key]: return data[key]
+    if key not in data: return default
+
+def read_template(name):
+    fd = open(os.path.join("./code-templates", name))
+    contents = fd.read()
+    fd.close()
+    return contents
+
+def format_scala():
+    for d in SCALA_FILES:
+        subprocess.call(["java", "-jar", "./tools/scalafmt.jar", "-i", "-f", d], stdout=subprocess.PIPE)
 
 
 class MigrationBuilder:
-
 
   def __init__(self, data, config):
     self.data = data
@@ -58,9 +78,9 @@ class MigrationBuilder:
       modifiers = ["NotNull"]
 
       if 'db_name' not in info: info['db_name'] = info['name']
-      if existsAndTrue(info, 'auto_increment'): modifiers.append("AutoIncrement")
-      if existsAndTrue(info, 'primary_key'): modifiers.append("PrimaryKey")
-      if existsAndTrue(info, 'nullable'): modifiers.remove("NotNull")
+      if exists_and_true(info, 'auto_increment'): modifiers.append("AutoIncrement")
+      if exists_and_true(info, 'primary_key'): modifiers.append("PrimaryKey")
+      if exists_and_true(info, 'nullable'): modifiers.remove("NotNull")
       if 'default' in info: modifiers.append("""Default("%s")""" % (info['default']))
       if 'limit' in info: modifiers.append("""Limit(%s)""" % (info['limit']))
       #if 'db_name' in info: info['db_name = info['db_name']
@@ -92,7 +112,7 @@ class MigrationBuilder:
 
 
   def build(self):
-    migration_dir = os.path.abspath(os.path.join(self.config["app"]["source_directory"], "src/main/scala", "%s/migrations" % (self.config["app"]["name"])))
+    migration_dir = os.path.abspath(os.path.join(self.config["base_path"], "migrations"))
 
     #make sure the models directorty exists
     if not os.path.exists(migration_dir):
@@ -117,7 +137,7 @@ class MigrationBuilder:
             self.buildColumn(model['db_name'], col)
 
 
-        package = "%s.%s" % (self.config["app"]["namespace"], self.config["app"]["name"])
+        package = self.config['package']
         column_str = "\n".join(self.columns)
         indexes_str = "\n".join(self.indexes)
         references_str = "\n".join(self.references)
@@ -127,7 +147,7 @@ class MigrationBuilder:
         fd = open(os.path.join(migration_dir, file_name), "w+")
         fd.write(out)
         fd.close()
-    format_scala(migration_dir)
+    SCALA_FILES.append(migration_dir)
 
 
 
@@ -143,8 +163,8 @@ class SbtBuilder:
         if not os.path.exists(os.path.join(self.config["app"]["source_directory"], "project")):
             os.makedirs(os.path.join(self.config["app"]["source_directory"], "project"))
 
-        self.sbt_template = open("./code-templates/sbt").read()
-        self.plugins_template =  open("./code-templates/sbt-plugins").read()
+        self.sbt_template = read_template("sbt")
+        self.plugins_template =  read_template("sbt-plugins")
 
         self.build_sbt()
         self.build_plugins()
@@ -171,19 +191,50 @@ class DbAccessBuilder:
         self.build()
 
     def build(self):
-        db_file = os.path.abspath(os.path.join(self.config["app"]["source_directory"], "src/main/scala", "%s/models/DB.scala" % (self.config["app"]["name"])))
-        s = """package %s.%s.models
-        import io.getquill._
-import io.getquill.naming.SnakeCase
-import io.getquill.sources.sql.idiom.PostgresDialect
+        db_file = read_template("db-driver")
+        file_name = os.path.join(self.config["base_path"], "models/DB.scala")
+        db = self.config['db']
+        db_type = db['driver']
+        db_name = db['name']
+        db_user = db['user']
+        db_password = db['password']
+        db_host = db.get("host", "localhost")
 
-object DB {
-        lazy val db = source(new JdbcSourceConfig[PostgresDialect, SnakeCase]("db"))
-        }""" % (self.config["app"]["namespace"], self.config["app"]["name"])
+        default_port = ""
+        dialect_name = ""
+        template = "postgres-props"
+        if db_type == "postgres":
+            default_port = "5432"
+            dialect_name = "Postgres"
+            template = "postgres-props"
 
-        fd = open(db_file, "w+")
-        fd.write(s)
+        if db_type == "mysql":
+            default_port = "3336"
+            dialect_name = "MySQL"
+            template = "mysql-props"
+
+        db_port = db.get("port", default_port)
+
+        #write out DB file
+        driver = db_file.replace("@@package@@", self.config["package"]).replace("@@dbDialect@@", dialect_name)
+
+
+        fd = open(file_name, "w+")
+        fd.write(driver)
         fd.close()
+        SCALA_FILES.append(file_name)
+
+        template = read_template(template)
+        props = template.replace("@@host@@", db_host).replace("@@port@@", db_port).replace("@@db@@", db_name).replace("@@user@@", db_user).replace("@@password@@", db_password)
+
+        #now write out the application.properties
+        fd = open(os.path.join(self.config['config_path'], "application.properties"), "w+")
+        fd.write(props)
+
+        fd.close()
+
+
+
 
 class ModelBuilder:
 
@@ -191,7 +242,7 @@ class ModelBuilder:
     self.data = data
     self.config = config
     self.prelude = """
-  package %s.%s.models
+  package %s.models
 
   import java.time.LocalDateTime
   import io.getquill._
@@ -200,15 +251,8 @@ class ModelBuilder:
   import maiden.traits._
   import DB._
 
-  """ % (config["app"]["namespace"], config["app"]["name"])
+  """ % (config["package"])
 
-    self.DB_TO_SCALA = {
-      "varchar": "String",
-      "bigint": "Long",
-      "int": "Int",
-      "datetime": "LocalDateTime",
-      "timestamp": "LocalDateTime"
-     }
 
     self.build()
 
@@ -218,7 +262,7 @@ class ModelBuilder:
         query[%s].filter(c => c.%s == lift(value))
       }
       db.run(q)
-    }""" % (inflection.camelize(field_name), self.DB_TO_SCALA[field_type], inflection.camelize(model_name), inflection.camelize(field_name, False))
+    }""" % (inflection.camelize(field_name), DB_TO_SCALA[field_type], inflection.camelize(model_name), inflection.camelize(field_name, False))
 
       return s
 
@@ -253,7 +297,7 @@ class ModelBuilder:
         query[%s].filter(p => p.%s == lift(value)).delete
       }
       db.run(a)
-    }""" % (inflection.camelize(field_name), self.DB_TO_SCALA[field_type], inflection.camelize(model_name), inflection.camelize(field_name, False))
+    }""" % (inflection.camelize(field_name), DB_TO_SCALA[field_type], inflection.camelize(model_name), inflection.camelize(field_name, False))
       return s
 
 
@@ -274,7 +318,7 @@ class ModelBuilder:
 
   def build(self):
 
-    models_dir = os.path.abspath(os.path.join(self.config["app"]["source_directory"], "src/main/scala", "%s/models" % (self.config["app"]["name"])))
+    models_dir = os.path.abspath(os.path.join(self.config["base_path"], "models"))
 
     #make sure the models directorty exists
     if not os.path.exists(models_dir):
@@ -302,7 +346,7 @@ class ModelBuilder:
 
             modifiers = []
             col_name = inflection.camelize(col["name"], False)
-            col_str = "  %s: %s" % (col_name, self.DB_TO_SCALA[col['type']])
+            col_str = "  %s: %s" % (col_name, DB_TO_SCALA[col['type']])
 
             columns.append("\n%s" % (col_str))
         if 'timestamps' in model:
@@ -344,20 +388,20 @@ class ModelBuilder:
         fd = open(model_path, "w+")
         fd.write(out)
         fd.close()
-    format_scala(models_dir)
+    SCALA_FILES.append(models_dir)
 
 
 class EncoderBuilder:
 
     def __init__(self, models, config):
-        self.template = open("./code-templates/encoder").read()
+        self.template = read_template("encoder")
 
         self.config = config
         self.models = models
 
         self.encoders = []
 
-        self.encoder_dir = os.path.join(self.config['app']['source_directory'], "src/main/scala/%s" % (self.config['app']['name']), "encoders")
+        self.encoder_dir = os.path.join(self.config['base_path'], "encoders")
 
         if not os.path.exists(self.encoder_dir):
             os.makedirs(self.encoder_dir)
@@ -369,7 +413,7 @@ class EncoderBuilder:
         else:
             payload_key = ""
 
-        package_name = "%s.%s" % (self.config['app']['namespace'], self.config['app']['name'])
+        package_name = self.config['package']
 
         for model in self.models:
             model_name = inflection.camelize(model['name'])
@@ -389,28 +433,28 @@ class EncoderBuilder:
             fd.close()
             self.encoders.append("%sResponseEncoders" % (model_name))
 
-        format_scala(self.encoder_dir)
+        SCALA_FILES.append(self.encoder_dir)
 
         #now write out the master response encoders file
         encoder_traits = ' '.join(["with %s" % (x) for x in self.encoders])
-        enc = open("code-templates/response-encoders").read()
+        enc = read_template("response-encoders")
 
         app_name = self.config['app']['name']
-        package = "%s.%s" % (self.config['app']['namespace'], app_name)
+        package = self.config['package']
         out = enc.replace("@@package@@", package).replace("@@response_encoders@@", encoder_traits)
-        file_name = os.path.join(self.config['app']['source_directory'], "src/main/scala/%s/ResponseEncoders.scala" % (app_name))
+        file_name = os.path.join(self.config['base_path'], "ResponseEncoders.scala")
         fd = open(file_name, "w+")
         fd.write(out)
         fd.close()
-        format_scala(file_name)
+        SCALA_FILES.append(file_name)
 
 class ApiBuilder:
 
     def __init__(self, models, config):
         self.models = models
         self.config = config
-        self.template = open("code-templates/api").read()
-        self.api_dir = os.path.join(self.config['app']['source_directory'], 'src/main/scala/%s' % (self.config['app']['name']), 'api')
+        self.template = read_template("api")
+        self.api_dir = os.path.join(self.config['base_path'], "api")
 
         if not os.path.exists(self.api_dir):
             os.makedirs(self.api_dir)
@@ -419,24 +463,69 @@ class ApiBuilder:
 
     def build(self):
         for model in self.models:
-            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", "%s.%s" % (self.config['app']['namespace'], self.config['app']['name']))
+            param_str = """param("%s").as[%s]"""
+
+            cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model['columns']]
+            create_args = " :: ".join([param_str % (c[0], c[1]) for c in cols])
+            create_args = "(%s).as[%s]" % (create_args, inflection.camelize(model["name"]))
+            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args)
 
             fd = open(os.path.join(self.api_dir, "%s.scala" % (model['name'])), "w+")
             fd.write(out)
             fd.close()
-        format_scala(self.api_dir)
+        SCALA_FILES.append(self.api_dir)
 
 def build_boot(app_data):
-    template = open("code-templates/boot").read()
+    template = read_template("boot")
     app_name = app_data['app']['name']
-    package = "%s.%s" % (app_data['app']['namespace'], app_name)
+    package = app_data['package']
 
-    out = template.replace("@@package@@", package).replace("@@appName@@", app_name)
+    out = template.replace("@@package@@", package).replace("@@appNameUpper@@", inflection.camelize(app_name))
 
-    fd = open(os.path.join(app_data['app']['source_directory'], "src/main/scala/%s/App.scala" % (app_name)), "w+")
+    file_name = os.path.join(app_data['base_path'], "App.scala")
+    fd = open(file_name, "w+")
     fd.write(out)
     fd.close()
 
+    SCALA_FILES.append(file_name)
+
+
+def build_api_service(models, config):
+
+    apis = []
+    #add create, search, etc...
+    endpoints = ['doc', 'get', 'delete']
+    api_names = [m["name"] for m in models]
+    for api in api_names:
+        apis.append("%sApi.%sApi()" % (inflection.camelize(api), inflection.camelize(api, False)))
+
+    apis = " :+: ".join(apis)
+
+    app_name =  inflection.camelize(config['app']['name'])
+    app_name_lower = inflection.camelize(config['app']['name'], False)
+
+    service = read_template("api-service")
+    out = service.replace("@@package@@", config['package']).replace("@@app@@", app_name).replace("@@appLower@@", app_name_lower).replace("@@api_list@@", apis)
+    file_name = os.path.join(config['base_path'], "%sApi.scala" % (app_name))
+
+    fd = open(file_name, "w+")
+    fd.write(out)
+    fd.close()
+    SCALA_FILES.append(file_name)
+
+def build_env(app_config):
+    template = read_template("env")
+    app = app_config["app"]
+    file_name = os.path.join(app['source_directory'], ".env")
+    port = str(app.get("port", "8888"))
+    env = app.get("environment", "development")
+    rollbar_access_key = app.get("rollbar_access_key", "1234")
+
+    out = template.replace("@@port@@", port).replace("@@env@@", env).replace("@@rollbar_access_key@@", rollbar_access_key)
+
+    fd = open(file_name, "w+")
+    fd.write(out)
+    fd.close()
 
 if __name__ == "__main__":
     #read in our configs
@@ -444,11 +533,49 @@ if __name__ == "__main__":
     app_stream = open("project.yml")
 
     app_data = load(app_stream, Loader=Loader)
+
+    gen_options = app_data['generator']
+
+    app_data['package'] = ("%s.%s" % (app_data['app']['namespace'], app_data['app']['name'])).lower()
+    app_data['base_path'] = os.path.join(app_data['app']['source_directory'], "src/main/scala/%s" % (app_data['app']['name'].lower()))
+    app_data['config_path'] = os.path.join(app_data['app']['source_directory'], "config")
+
+    if not os.path.exists(app_data['config_path']):
+        os.makedirs(app_data['config_path'])
+
     model_data = load(model_stream, Loader=Loader)
-    sbt_builder = SbtBuilder(app_data)
-    model_builder = ModelBuilder(model_data, app_data)
-    access_builder =  DbAccessBuilder(app_data)
-    migration_builder = MigrationBuilder(model_data, app_data)
-    encoder_builder = EncoderBuilder(model_data, app_data)
-    api_builder = ApiBuilder(model_data, app_data)
-    build_boot(app_data)
+
+    if key_with_default(gen_options, "sbt", True):
+        print("Generating project build files...")
+        sbt_builder = SbtBuilder(app_data)
+
+    if key_with_default(gen_options, "models", True):
+        print("Generating models...")
+        model_builder = ModelBuilder(model_data, app_data)
+        access_builder =  DbAccessBuilder(app_data)
+
+    if key_with_default(gen_options, "migrations", True):
+        print("Generating migrations...")
+        migration_builder = MigrationBuilder(model_data, app_data)
+
+    if key_with_default(gen_options, "encoders", True):
+        print("Generating JSON encoders...")
+        encoder_builder = EncoderBuilder(model_data, app_data)
+
+    if key_with_default(gen_options, "api", True):
+        print("Generating API...")
+        api_builder = ApiBuilder(model_data, app_data)
+        build_boot(app_data)
+        build_api_service(model_data, app_data)
+
+    build_env(app_data)
+
+    if key_with_default(gen_options, "format_source", True):
+      print("Formatting Scala sources...")
+      format_scala()
+
+    message = """Your project is now available in %s. To run, simply
+    cd into %s and then type "sbt run". Your API will be available at http://localhost:%s/api/[model_name]""" % (app_data["base_path"], app_data["base_path"], app_data["app"]["port"])
+
+    print
+    print(message)

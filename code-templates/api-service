@@ -14,14 +14,14 @@ object AuthenticationFilter extends HawkAuthenticateRequestFilter(apiAuthenticat
 
 object UnhandledExceptionsFilter extends ExceptionFilter[Request](ErrorResponseEncoders.exceptionResponseEncoder)
 
-object @@model@@Api extends ResponseEncoders {
-   def @@modelLowerCase@@ = @@api_list@@ //TestApi.testApi() :+: Test2Api.test2Api()
+object @@app@@Api extends ResponseEncoders {
+   def @@appLower@@Api = @@api_list@@ //TestApi.testApi() :+: Test2Api.test2Api()
 
   def apiService: Service[Request, Response] =
     RequestLoggingFilter andThen
     UnhandledExceptionsFilter andThen
     //AuthenticationFilter andThen
-    @@modelLowerCase@@Api.handle(apiErrorHandler).toService
+    @@appLower@@Api.handle(apiErrorHandler).toService
 
 
 }

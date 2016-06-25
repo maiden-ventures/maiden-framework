@@ -1,4 +1,4 @@
-package @@package@@ 
+package @@package@@
 
 import com.twitter.finagle.param.Stats
 import com.twitter.finagle.{Http, ListeningServer}
@@ -9,7 +9,7 @@ import maiden.config.Environment.env
 import maiden.util.async.AsyncOps
 import maiden.util.error.ErrorReporter._
 import maiden.util.log.Logger._
-import @@appName@@Api._
+import @@appNameUpper@@Api._
 
 
 final class App {

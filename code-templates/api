@@ -13,16 +13,28 @@ object @@model@@Api extends MaidenApi {
 
   val prefix = "api" :: "@@lowerCaseModel@@"
 
-  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@
+  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: doc@@model@@
 
   //helper for creating
-  val @@lowerCaseModel@@: Endpoint[@@model@@] = ???//(param("id").as[Long] :: param("name").as[String]).as[Hello]
+  val @@lowerCaseModel@@: Endpoint[@@model@@] = @@createArgs@@ //(param("id").as[Long] :: param("name").as[String]).as[Hello]
 
+
+  def doc@@model@@: Endpoint[Map[String, String]] =
+    get(prefix :: "doc") { () => {
+      val mount = prefix.toString
+      val doc = Map(
+        "Base Endpoint" -> mount,
+        "Doc" -> s"GET ${mount}/doc",
+        "Get" -> s"GET ${mount}/:id",
+        "Delete" -> s"DELETE ${mount}/:id"
+      )
+      Ok(doc)
+    }}
 
   def get@@model@@: Endpoint[@@model@@] =
-    get(prefix::long("id")) { (id: Long) => {
-      Ok(@@model@@.findById(id))
-    }}
+    get(prefix::long("id")) { (id: Long) =>
+      Ok(@@model@@.findById(id).head)
+    }
 
   def delete@@model@@: Endpoint[Boolean] =
     delete(prefix::long("id")) { (id: Long) => {

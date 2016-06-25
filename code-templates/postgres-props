@@ -1,0 +1,7 @@
+db.dataSourceClassName=org.postgresql.ds.PGSimpleDataSource
+db.dataSource.user=@@user@@
+db.dataSource.password=@@password@@
+db.dataSource.databaseName=@@db@@
+db.dataSource.portNumber=@@port@@
+db.dataSource.serverName=@@host@@
+db.connectionTimeout=30000
