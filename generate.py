@@ -7,6 +7,7 @@ except ImportError:
 
 import sys
 import os
+import time
 
 from datetime import datetime
 import subprocess
@@ -58,11 +59,11 @@ class MigrationBuilder:
         createTable(table) { t =>
           %s
         }
+
+        %s
+
+        %s
       }
-
-      %s
-
-      %s
 
       def down() = {
         dropTable(table)
@@ -106,7 +107,7 @@ class MigrationBuilder:
           s = """addForeignKey(on("%s" -> "%s"),
           references("%s" -> "%s"),
           OnDelete(%s),
-          Name("%s"))""" % (ref_table, ref_column, table, info['db_name'], on_delete, ref_name)
+          Name("%s"))""" % (ref_table, ref_column, inflection.underscore(table).lower(), info['db_name'], on_delete, ref_name)
 
           self.references.append(s)
 
@@ -126,11 +127,11 @@ class MigrationBuilder:
         self.indexes = []
         self.references = []
 
-        now_ts = str(datetime.now()).replace("-","").replace(":","").replace(".","").replace(" ", "")
+        now_ts = str(datetime.now()).split(".")[0].replace("-","").replace(":","").replace(".","").replace(" ", "")
 
         migration_name = "Create%s" % (inflection.camelize(model["name"]))
         class_name = "Migrate_%s_%s"  % (now_ts, migration_name)
-        table_name = model["name"]
+        table_name = inflection.underscore(model["name"]).lower()
         file_name = "%s.scala" % (class_name.replace("Migrate_", ""))
 
         for col in model['columns']:
@@ -147,6 +148,7 @@ class MigrationBuilder:
         fd = open(os.path.join(migration_dir, file_name), "w+")
         fd.write(out)
         fd.close()
+        time.sleep(2)
     SCALA_FILES.append(migration_dir)
 
 
