@@ -28,6 +28,8 @@ object DateImplicits {
    */
 
 
+  implicit val timestampOrd: Ordering[LocalDateTime] = null
+
   implicit class RichDateTime(a: LocalDateTime) {
     def >=(b: LocalDateTime) = quote(infix"$a >= $b".as[Boolean])
 

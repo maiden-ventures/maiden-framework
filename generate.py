@@ -38,7 +38,7 @@ def read_template(name):
 
 def format_scala():
     for d in SCALA_FILES:
-        subprocess.call(["java", "-jar", "./tools/scalafmt.jar", "-i", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
+        subprocess.call(["java", "-jar", "./tools/scalafmt.jar", "-i", "-s", "default", "--alignByOpenParenCallSite", "true", "--alignByArrowEnumeratorGenerator", "true", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
 
 
 class MigrationBuilder:
@@ -354,7 +354,7 @@ import DB._
 
     models_dir = os.path.abspath(os.path.join(self.config["base_path"], "models"))
 
-    #make sure the models directorty exists
+    #make sure the models directory exists
     if not os.path.exists(models_dir):
         os.makedirs(models_dir)
 
@@ -363,12 +363,8 @@ import DB._
         self.query_name = "%sQuery" % (inflection.camelize(model["name"], False))
         model_path= os.path.join(models_dir, "%s.scala" % (inflection.camelize(model["name"])))
 
-        add_timestamps = False
         case_class = ""
         companion = ""
-
-        if 'timestamps' in model:
-            add_timestamps = True
 
         if 'db_name' not in model:
             model['db_name'] = model['name']
@@ -401,11 +397,10 @@ import DB._
                 magic_methods.append(self.buildReferences(ref["table"], ref["column"], model['name'], col['name']))
                 #TODO: and now the reverse reference
 
-        if 'timestamps' in model:
-            magic_methods.append(self.buildFindBy(model["name"], "created_at", "timestamp"))
-            magic_methods.append(self.buildFindBy(model["name"], "updated_at", "timestamp"))
-            magic_methods.append(self.buildDeleteBy(model["name"], "created_at", "timestamp"))
-            magic_methods.append(self.buildDeleteBy(model["name"], "updated_at", "timestamp"))
+        #magic_methods.append(self.buildFindBy(model["name"], "created_at", "timestamp"))
+        #magic_methods.append(self.buildFindBy(model["name"], "updated_at", "timestamp"))
+        #magic_methods.append(self.buildDeleteBy(model["name"], "created_at", "timestamp"))
+        #magic_methods.append(self.buildDeleteBy(model["name"], "updated_at", "timestamp"))
 
         like_columns = [x for x in model['columns'] if x['type'] == "varchar"]
         for c in like_columns:
@@ -500,13 +495,16 @@ class ApiBuilder:
         for model in self.models:
             param_str = """param("%s").as[%s]"""
 
+            all_model_cols = ["%s: %s" % (inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model['columns']]
+            all_model_cols_str = ", ".join(all_model_cols)
+
             cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model['columns'] if c["name"] not in ("id", "created_at", "updated_at")]
             create_args = " :: ".join([param_str % (c[0], c[1]) for c in cols])
             create_param_args = " :: ".join(['param("%s")' % (c[0]) for c in cols])
             create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
             model_creation_args = ", ".join([c[0] for c in cols])
 
-            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args).replace("@@createParamArgs@@", create_param_args).replace("@@createParams@@", create_params).replace("@@modelCreationArgs@@", model_creation_args)
+            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args).replace("@@createParamArgs@@", create_param_args).replace("@@createParams@@", create_params).replace("@@modelCreationArgs@@", model_creation_args).replace("@@modelColumns@@", all_model_cols_str)
 
             fd = open(os.path.join(self.api_dir, "%s.scala" % (model['name'])), "w+")
             fd.write(out)
@@ -582,6 +580,33 @@ if __name__ == "__main__":
         os.makedirs(app_data['config_path'])
 
     model_data = load(model_stream, Loader=Loader)
+
+
+    #make sure that all models have an id and timestamps
+    for index in range(len(model_data)):
+        model = model_data[index]
+        cols = model["columns"]
+        if "id" not in cols:
+            model_data[index]["columns"].insert(0, {
+                "name": "id",
+                "auto_increment" : True,
+                "type" : "bigint",
+                "primary_key" : True
+            })
+
+        if 'created_at' not in cols:
+            model_data[index]["columns"].append({
+                "name": "created_at",
+                "type" : "timestamp",
+                "default": "NOW()"
+            })
+
+        if 'updated_at' not in cols:
+            model_data[index]["columns"].append({
+                "name": "updated_at",
+                "type" : "timestamp",
+                "default": "NOW()"
+            })
 
     if key_with_default(gen_options, "sbt", True):
         print("Generating project build files...")

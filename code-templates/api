@@ -21,15 +21,13 @@ object @@model@@Api extends MaidenApi {
 
   def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: doc@@model@@
 
-  //helper for creating
-  //val @@lowerCaseModel@@: Endpoint[@@model@@] = (@@createArgs@@ :: param("createdAt").as[LocalDateTime] :: param("updatedAt").as[LocalDateTime]).as[@@model@@]
-
-
   def doc@@model@@: Endpoint[Map[String, String]] =
     get(prefix :: "doc") { () => {
       val mount = prefix.toString
       val doc = Map(
         "Base Endpoint" -> mount,
+        "Model Name" -> "@@model@@",
+        "Columns" -> "@@modelColumns@@",
         "Doc" -> s"GET ${mount}/doc",
         "Get" -> s"GET ${mount}/:id",
         "Create" -> s"PUT ${mount} params = @@createParams@@",
@@ -44,10 +42,9 @@ object @@model@@Api extends MaidenApi {
       render(@@model@@.findById(id).head)
     }
 
-  def delete@@model@@: Endpoint[Boolean] =
+  def delete@@model@@: Endpoint[Long] =
     delete(prefix::long("id")) { (id: Long) =>
       render(@@model@@.deleteById(id))
-      Ok(true)
     }
 
   def create@@model@@: Endpoint[@@model@@] =
