@@ -5,5 +5,9 @@ import io.getquill.naming.SnakeCase
 import io.getquill.sources.sql.idiom.@@dbDialect@@Dialect
 
 object DB {
+
+  val dbType = "@@Dialect@@"
+
   lazy val db = source(new JdbcSourceConfig[@@dbDialect@@Dialect, SnakeCase]("db"))
+
 }

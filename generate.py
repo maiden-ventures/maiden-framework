@@ -259,6 +259,7 @@ import java.time.LocalDateTime
 import io.getquill._
 import io.getquill.sources.sql.ops._
 import maiden.implicits.DateImplicits._
+import maiden.implicits.DBImplicits._
 import maiden.traits._
 import DB._
 
@@ -304,28 +305,20 @@ import DB._
       return s
 
   def buildCreate(self, model_name, models):
-#      val a = quote {
-#  (personId: Int, phone: String) =>
-#    query[Contact].insert(_.personId -> personId, _.phone -> phone)
-#}
-
-#db.run(a)(List((999, "+1510488988")))
-
       cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in models if c["name"] not in ("id", "created_at", "updated_at")]
       create_args = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
-      create_param_args = " :: ".join(['param("%s")' % (c[0]) for c in cols])
-      create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
-      insert_params = ", ".join(["_.%s -> %s" % (c[0], c[0]) for c in cols])
-      model_creation_args = ", ".join([c[0] for c in cols])
 
-      s = """def create(%s) = {
-      val q = quote {
-        (%s) =>
-          query[%s].insert(%s)
-      }
+      case_class_args = ", ".join(["%s = %s" % (c[0], c[0]) for c in cols])
 
-      db.run(q)(List(%s))
-      }""" % (create_args, create_args, inflection.camelize(model_name), insert_params, model_creation_args)
+      s = ""
+      if self.config["db"]["driver"] == "postgres":
+          s = """def create(%s) = {
+          val q = quote {
+            query[%s].schema(_.generated(_.id)).insert
+          }
+          db.run(q)(%s(%s))
+          }"""
+      s =  s % (create_args, inflection.camelize(model_name), inflection.camelize(model_name), case_class_args)
 
       return s
 
@@ -381,7 +374,14 @@ import DB._
 
             modifiers = []
             col_name = inflection.camelize(col["name"], False)
-            col_str = "  %s: %s" % (col_name, DB_TO_SCALA[col['type']])
+            if col_name == "id":
+                col_str = "id: Long = -1"
+            elif col_name  == "createdAt":
+                col_str = "createdAt: LocalDateTime = LocalDateTime.now"
+            elif col_name  == "updatedAt":
+                col_str = "updatedAt: LocalDateTime = LocalDateTime.now"
+            else:
+                col_str = "  %s: %s" % (col_name, DB_TO_SCALA[col['type']])
 
             columns.append("\n%s" % (col_str))
         modifiers = []

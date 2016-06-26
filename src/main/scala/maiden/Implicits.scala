@@ -16,22 +16,12 @@ object DateImplicits {
 
   implicit val decodeLocalTime = mappedEncoding[Date, LocalDateTime](date => LocalDateTime.ofInstant(date.toInstant, ZoneId.systemDefault()))
   implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => Date.from(time.atZone(ZoneId.systemDefault).toInstant))
-                                                                       //new Date(time.toEpochSecond(ZoneOffset.of(ZoneId.systemDefault().getId))))
-  //implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => new Date(time.toEpochSecond(ZoneOffset.of(ZoneId.systemDefault().getId))))
-
-  /*
-   val jodaTzDateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ")
-   implicit val jodaDateTimeEncoder = db.encoder[DateTime](
-   (d: DateTime) => d.toString(jodaTzDateTimeFormatter)
-   )
-   implicit val jodaDateTimeDecoder = db.decoder[DateTime] {
-   case s: String => DateTime.parse(s, jodaTzDateTimeFormatter)
-   }
-   */
 
 
+  //handle ordering of datetimes
   implicit val timestampOrd: Ordering[LocalDateTime] = null
 
+  //for date queries
   implicit class RichDateTime(a: LocalDateTime) {
     def >=(b: LocalDateTime) = quote(infix"$a >= $b".as[Boolean])
 
@@ -41,8 +31,16 @@ object DateImplicits {
     def <(b: LocalDateTime) = quote(infix"$a < $b".as[Boolean])
   }
 
+}
+
+object DBImplicits {
+
   implicit class ForUpdate[T](q: Query[T]) {
     def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
+  }
+
+  implicit class ReturningId[T](a: Action[T]) {
+    def returningId = quote(infix"$a RETURNING ID".as[Query[T]])
   }
 
 }

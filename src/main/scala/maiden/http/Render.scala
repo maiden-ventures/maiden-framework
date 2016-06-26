@@ -23,7 +23,7 @@ object Render {
     val result: Either[MaidenException, T] = Try (body) match {
       case Success(x) => Right(x)
       //TODO:  handle speciality cases here
-      case Failure(e) => Left(MaidenRenderException)
+      case Failure(e) => { println(e); Left(MaidenRenderException) }
     }
     result match {
       case Right(b) => Ok(b)
