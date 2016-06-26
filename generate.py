@@ -47,7 +47,7 @@ class MigrationBuilder:
     self.data = data
     self.config = config
     self.template = """
-    package %s.models
+    package %s.migrations
 
     import com.imageworks.migration._
 
@@ -226,7 +226,7 @@ class DbAccessBuilder:
         SCALA_FILES.append(file_name)
 
         template = read_template(template)
-        props = template.replace("@@host@@", db_host).replace("@@port@@", db_port).replace("@@db@@", db_name).replace("@@user@@", db_user).replace("@@password@@", db_password)
+        props = template.replace("@@host@@", db_host).replace("@@port@@", db_port).replace("@@db@@", db_name).replace("@@user@@", db_user).replace("@@password@@", db_password).replace("@@package@@", self.config["package"]).replace("@@sourceDir@@", self.config["base_path"])
 
         #now write out the application.properties
         fd = open(os.path.join(self.config['config_path'], "application.properties"), "w+")

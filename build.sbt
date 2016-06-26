@@ -9,6 +9,7 @@ scalaVersion := "2.11.8"
 lazy val `maiden-framework` = (project in file("."))
   .settings(
     libraryDependencies ++= Seq(
+      "commons-io" % "commons-io" % "2.4",
       "com.github.finagle" % "finch-core_2.11" % "0.10.0",
       //"com.github.finagle" %% "finch-core" % "0.11.0-SNAPSHOT" changing(),
       //"com.github.finagle" %% "finch-circe" % "0.11.0-SNAPSHOT" changing(),

@@ -46,7 +46,7 @@ lazy val @@appName@@ = (project in file("."))
     unmanagedSourceDirectories in Test += baseDirectory.value / "test",
     migrate := Def.inputTaskDyn {
       val args: Seq[String] = spaceDelimited("<arg>").parsed
-      (runMain in Compile).toTask(s" @@namespace@@.@@appName@@.common.Migrate ${args.mkString(" ")}")
+      (runMain in Compile).toTask(s" maiden.models.Migrate ${args.mkString(" ")}")
     }.evaluated,
 
     libraryDependencies ++= Seq(
