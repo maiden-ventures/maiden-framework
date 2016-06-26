@@ -1,12 +1,12 @@
 organization := "com.maiden"
 
-name := "maiden-framework"
+//name := "maiden-framework"
 
 version := "0.1.0"
 
 scalaVersion := "2.11.8"
 
-lazy val maiden = (project in file("."))
+lazy val `maiden-framework` = (project in file("."))
   .settings(
     libraryDependencies ++= Seq(
       "com.github.finagle" % "finch-core_2.11" % "0.10.0",
@@ -85,7 +85,7 @@ lazy val maiden = (project in file("."))
 
     resolvers += "Twitter" at "http://maven.twttr.com",
 
-    //resolvers += Resolver.sonatypeRepo("snapshots"),
+    resolvers += Resolver.sonatypeRepo("snapshots"),
 
     scalacOptions ++= Seq("-Xlint", "-unchecked", "-deprecation"),
 

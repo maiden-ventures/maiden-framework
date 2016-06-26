@@ -38,13 +38,12 @@ object HelloApi extends MaidenApi {
     }
 
    */
-
   val hello: Endpoint[Hello] = (param("id").as[Long] :: param("name").as[String]).as[Hello]
 
   def createHello: Endpoint[Hello] =
     get(prefix :: "create" :: hello :: authorize) { (h: Hello, c: AuthenticatedClient) => {
       println(c)
-      render(getH(h))
+      render(h)
     }}
 
   /*def dumbHello: Endpoint[String] =

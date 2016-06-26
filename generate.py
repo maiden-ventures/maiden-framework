@@ -38,7 +38,7 @@ def read_template(name):
 
 def format_scala():
     for d in SCALA_FILES:
-        subprocess.call(["java", "-jar", "./tools/scalafmt.jar", "-i", "-f", d], stdout=subprocess.PIPE)
+        subprocess.call(["java", "-jar", "./tools/scalafmt.jar", "-i", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
 
 
 class MigrationBuilder:
@@ -186,8 +186,9 @@ class SbtBuilder:
 
 class DbAccessBuilder:
 
-    def __init__(self, config):
+    def __init__(self, models, config):
         self.config = config
+        self.models = models
         self.build()
 
     def build(self):
@@ -233,58 +234,94 @@ class DbAccessBuilder:
 
         fd.close()
 
+        schema = read_template("schema")
+        schema_list = ["lazy val %sQuery = quote(query[%s])" % (inflection.camelize(m["name"], False), inflection.camelize(m["name"])) for m in self.models]
 
+        schema_list_str = "\n".join(schema_list)
 
+        out = schema.replace("@@package@@", self.config["package"]).replace("@@schemaList@@", schema_list_str).replace("@@appName@@", inflection.camelize(self.config["app"]["name"]))
+
+        fd = open(os.path.join(self.config['base_path'], "models/Schema.scala"), "w+")
+        fd.write(out)
+        fd.close()
 
 class ModelBuilder:
 
   def __init__(self, data, config):
     self.data = data
     self.config = config
-    self.prelude = """
-  package %s.models
 
-  import java.time.LocalDateTime
-  import io.getquill._
-  import io.getquill.sources.sql.ops._
-  import maiden.implicits.DateImplicits._
-  import maiden.traits._
-  import DB._
+
+    self.prelude = """
+package %s.models
+
+import java.time.LocalDateTime
+import io.getquill._
+import io.getquill.sources.sql.ops._
+import maiden.implicits.DateImplicits._
+import maiden.traits._
+import DB._
 
   """ % (config["package"])
 
 
     self.build()
 
+
   def buildFindBy(self, model_name, field_name, field_type):
       s = """def findBy%s(value: %s) = {
-      val q = quote {
-        query[%s].filter(c => c.%s == lift(value))
-      }
-      db.run(q)
-    }""" % (inflection.camelize(field_name), DB_TO_SCALA[field_type], inflection.camelize(model_name), inflection.camelize(field_name, False))
+        db.run(%s.filter(c =>  c.%s == lift(value)))
+    }""" % (inflection.camelize(field_name), DB_TO_SCALA[field_type], self.query_name, inflection.camelize(field_name, False))
 
       return s
+
+  def buildFindByRange(self, model_name, field_name, field_type):
+      s = """def getRangeBy%s(start: Int = 0, count: Int = 20) = {
+        db.run(%s.sortBy(c =>  c.%s).drop(lift(start)).take(lift(count)))
+    }""" % (inflection.camelize(field_name, True), self.query_name, inflection.camelize(field_name, False))
+
+      return s
+
 
   def buildLikes(self, model_name, field_name):
       #only valid for varchar columns so we don't need a type
       s = """def findByLike%s(value: String) = {
       val likeQuery = s"%%${value}%%"
-      val q = quote {
-        query[%s].filter(c => c.%s like lift(likeQuery))
-      }
-      db.run(q)
-    }""" % (inflection.camelize(field_name), inflection.camelize(model_name), inflection.camelize(field_name, False))
+      db.run(%s.filter(c => c.%s like lift(likeQuery)))
+    }""" % (inflection.camelize(field_name), self.query_name, inflection.camelize(field_name, False))
 
       return s
 
   def buildTimestampRange(self, model_name, field_name):
       s = """def findBy%sRange(start: LocalDateTime, end: LocalDateTime) = {
+        db.run(%s.filter(c => c.%s > lift(start) && c.%s < lift(end)))
+    }""" % (inflection.camelize(field_name), self.query_name, inflection.camelize(field_name, False), inflection.camelize(field_name, False))
+
+      return s
+
+  def buildCreate(self, model_name, models):
+#      val a = quote {
+#  (personId: Int, phone: String) =>
+#    query[Contact].insert(_.personId -> personId, _.phone -> phone)
+#}
+
+#db.run(a)(List((999, "+1510488988")))
+
+      cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in models if c["name"] not in ("id", "created_at", "updated_at")]
+      create_args = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
+      create_param_args = " :: ".join(['param("%s")' % (c[0]) for c in cols])
+      create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
+      insert_params = ", ".join(["_.%s -> %s" % (c[0], c[0]) for c in cols])
+      model_creation_args = ", ".join([c[0] for c in cols])
+
+      s = """def create(%s) = {
       val q = quote {
-        query[%s].filter(c => c.%s > lift(start) && c.%s < lift(end) )
+        (%s) =>
+          query[%s].insert(%s)
       }
-      db.run(q)
-    }""" % (inflection.camelize(field_name), inflection.camelize(model_name), inflection.camelize(field_name, False), inflection.camelize(field_name, False))
+
+      db.run(q)(List(%s))
+      }""" % (create_args, create_args, inflection.camelize(model_name), insert_params, model_creation_args)
 
       return s
 
@@ -293,11 +330,8 @@ class ModelBuilder:
 
   def buildDeleteBy(self, model_name, field_name, field_type):
       s= """def deleteBy%s(value: %s) = {
-      val a = quote {
-        query[%s].filter(p => p.%s == lift(value)).delete
-      }
-      db.run(a)
-    }""" % (inflection.camelize(field_name), DB_TO_SCALA[field_type], inflection.camelize(model_name), inflection.camelize(field_name, False))
+        db.run(%s.filter(p => p.%s == lift(value)).delete)
+    }""" % (inflection.camelize(field_name), DB_TO_SCALA[field_type], self.query_name, inflection.camelize(field_name, False))
       return s
 
 
@@ -326,6 +360,7 @@ class ModelBuilder:
 
 
     for model in self.data:
+        self.query_name = "%sQuery" % (inflection.camelize(model["name"], False))
         model_path= os.path.join(models_dir, "%s.scala" % (inflection.camelize(model["name"])))
 
         add_timestamps = False
@@ -339,7 +374,7 @@ class ModelBuilder:
             model['db_name'] = model['name']
 
         case_class = "%s\ncase class %s (" % (case_class, model["name"])
-        companion = "\nobject %s {" % (model["name"])
+        companion = "\nobject %s {\n\n  import %sSchema._\n\n" % (model["name"], inflection.camelize(self.config["app"]["name"]))
 
         columns = []
         for col in model["columns"]:
@@ -359,13 +394,12 @@ class ModelBuilder:
         magic_methods = []
         for col in model["columns"]:
             magic_methods.append(self.buildFindBy(model["name"], col["name"], col['type']))
+            magic_methods.append(self.buildFindByRange(model["name"], col["name"], col['type']))
             magic_methods.append(self.buildDeleteBy(model["name"], col["name"], col["type"]))
             if 'references' in col:
                 ref = col['references']
                 magic_methods.append(self.buildReferences(ref["table"], ref["column"], model['name'], col['name']))
                 #TODO: and now the reverse reference
-
-
 
         if 'timestamps' in model:
             magic_methods.append(self.buildFindBy(model["name"], "created_at", "timestamp"))
@@ -381,6 +415,7 @@ class ModelBuilder:
             magic_methods.append(self.buildTimestampRange(model['name'], 'created_at'))
             magic_methods.append(self.buildTimestampRange(model['name'], 'updated_at'))
 
+        magic_methods.append(self.buildCreate(model['name'], model['columns']))
         companion = "%s\n  %s\n}" % (companion, "\n\n  ".join(magic_methods))
 
         out = "%s\n%s\n%s" % (self.prelude, case_class, companion)
@@ -465,9 +500,13 @@ class ApiBuilder:
         for model in self.models:
             param_str = """param("%s").as[%s]"""
 
-            cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model['columns']]
+            cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model['columns'] if c["name"] not in ("id", "created_at", "updated_at")]
             create_args = " :: ".join([param_str % (c[0], c[1]) for c in cols])
-            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args)
+            create_param_args = " :: ".join(['param("%s")' % (c[0]) for c in cols])
+            create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
+            model_creation_args = ", ".join([c[0] for c in cols])
+
+            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args).replace("@@createParamArgs@@", create_param_args).replace("@@createParams@@", create_params).replace("@@modelCreationArgs@@", model_creation_args)
 
             fd = open(os.path.join(self.api_dir, "%s.scala" % (model['name'])), "w+")
             fd.write(out)
@@ -551,7 +590,7 @@ if __name__ == "__main__":
     if key_with_default(gen_options, "models", True):
         print("Generating models...")
         model_builder = ModelBuilder(model_data, app_data)
-        access_builder =  DbAccessBuilder(app_data)
+        access_builder =  DbAccessBuilder(model_data, app_data)
 
     if key_with_default(gen_options, "migrations", True):
         print("Generating migrations...")

@@ -1,0 +1,10 @@
+package @@package@@.models
+
+import io.getquill._
+
+
+object @@appName@@Schema {
+
+  @@schemaList@@
+
+}

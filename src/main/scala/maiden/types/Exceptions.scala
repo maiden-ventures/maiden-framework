@@ -11,6 +11,7 @@ object Exceptions {
     val  message = _message
   }
 
+  case object MaidenRenderException extends MaidenException("Render Error Occured")
   case object MaidenModelNotFoundException extends MaidenException("Model Not Found")
   case object MaidenModelUnauthorizedException extends MaidenException("Unauthorized")
 

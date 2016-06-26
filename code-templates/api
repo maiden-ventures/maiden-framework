@@ -2,23 +2,27 @@ package @@package@@.api
 
 import java.time.LocalDateTime
 import scala.language.implicitConversions
+import io.finch.{Endpoint, _}
+import io.finch.circe._
+import io.circe.generic.semiauto._
+import io.circe.java8.time._
 import maiden.types.Exceptions._
 import maiden.types.MaidenApi
 import maiden.http.RequiredAuthRequestReader._
 import maiden.auth.AuthenticatedClient
-import maiden.http.Render.{render}
+import maiden.http.Render._
 import maiden.implicits.DateImplicits._
-import io.finch.{Endpoint, _}
+
 import @@package@@.models._
 
 object @@model@@Api extends MaidenApi {
 
   val prefix = "api" :: "@@lowerCaseModel@@"
 
-  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: doc@@model@@
+  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: doc@@model@@
 
   //helper for creating
-  val @@lowerCaseModel@@: Endpoint[@@model@@] = (@@createArgs@@ :: paramOption("createdAt").as[LocalDateTime] :: paramOption("updatedAt").as[LocalDateTime]).as[@@model@@]
+  //val @@lowerCaseModel@@: Endpoint[@@model@@] = (@@createArgs@@ :: param("createdAt").as[LocalDateTime] :: param("updatedAt").as[LocalDateTime]).as[@@model@@]
 
 
   def doc@@model@@: Endpoint[Map[String, String]] =
@@ -28,21 +32,35 @@ object @@model@@Api extends MaidenApi {
         "Base Endpoint" -> mount,
         "Doc" -> s"GET ${mount}/doc",
         "Get" -> s"GET ${mount}/:id",
-        "Delete" -> s"DELETE ${mount}/:id"
+        "Create" -> s"PUT ${mount} params = @@createParams@@",
+        "Delete" -> s"DELETE ${mount}/:id",
+        "List" -> s"GET ${mount} params = start: Int = 0, count: Int = 10, byColumn: String = 'id'"
       )
       Ok(doc)
     }}
 
   def get@@model@@: Endpoint[@@model@@] =
     get(prefix::long("id")) { (id: Long) =>
-      Ok(@@model@@.findById(id).head)
+      render(@@model@@.findById(id).head)
     }
 
   def delete@@model@@: Endpoint[Boolean] =
-    delete(prefix::long("id")) { (id: Long) => {
-      @@model@@.deleteById(id)
+    delete(prefix::long("id")) { (id: Long) =>
+      render(@@model@@.deleteById(id))
       Ok(true)
+    }
+
+  def create@@model@@: Endpoint[@@model@@] =
+    put(prefix :: @@createParamArgs@@) { (@@createParams@@) => render {
+      val id = @@model@@.create(@@modelCreationArgs@@)
+      val instance = @@model@@.findById(id.head)
+      instance.head
     }}
+
+  def list@@model@@: Endpoint[List[@@model@@]] =
+    get(prefix :: string("byColumn") :: int("start") :: int("count")) { (byColumn: String, start: Int, count: Int) =>
+      render(@@model@@.getRangeByFirstName(start, count))
+    }
 
 
 }
