@@ -294,7 +294,11 @@ import DB._
 
   def buildTimestampRange(self, model_name, field_name):
       s = """def findBy%sRange(start: LocalDateTime, end: LocalDateTime) = {
-        db.run(%s.filter(c => c.%s > lift(start) && c.%s < lift(end)))
+      val q = quote {
+        (s: LocalDateTime, e: LocalDateTime) =>
+          %s.filter(c => c.%s > s && c.%s < e)
+      }
+      db.run(q)(start, end)
     }""" % (inflection.camelize(field_name), self.query_name, inflection.camelize(field_name, False), inflection.camelize(field_name, False))
 
       return s
