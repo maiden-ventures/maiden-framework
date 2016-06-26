@@ -380,9 +380,6 @@ import DB._
             col_str = "  %s: %s" % (col_name, DB_TO_SCALA[col['type']])
 
             columns.append("\n%s" % (col_str))
-        if 'timestamps' in model:
-            columns.append("""  createdAt: LocalDateTime = LocalDateTime.now()""")
-            columns.append("""  updatedAt: LocalDateTime = LocalDateTime.now()""")
         modifiers = []
         case_class = "%s\n%s\n) extends MaidenModel with WithApi" % ( case_class, ",  \n".join(columns))
         #print case_class
@@ -406,9 +403,8 @@ import DB._
         for c in like_columns:
             magic_methods.append(self.buildLikes(model['name'], c['name']))
 
-        if 'timestamps' in model:
-            magic_methods.append(self.buildTimestampRange(model['name'], 'created_at'))
-            magic_methods.append(self.buildTimestampRange(model['name'], 'updated_at'))
+        magic_methods.append(self.buildTimestampRange(model['name'], 'created_at'))
+        magic_methods.append(self.buildTimestampRange(model['name'], 'updated_at'))
 
         magic_methods.append(self.buildCreate(model['name'], model['columns']))
         companion = "%s\n  %s\n}" % (companion, "\n\n  ".join(magic_methods))

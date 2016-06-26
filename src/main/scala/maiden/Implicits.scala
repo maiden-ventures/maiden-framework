@@ -13,9 +13,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 
 object DateImplicits {
-  //implicit conversions to/from joda
+
   implicit val decodeLocalTime = mappedEncoding[Date, LocalDateTime](date => LocalDateTime.ofInstant(date.toInstant, ZoneId.systemDefault()))
-  implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => new Date(time.toEpochSecond(ZoneOffset.of(ZoneId.systemDefault().getId))))
+  implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => Date.from(time.atZone(ZoneId.systemDefault).toInstant))
+                                                                       //new Date(time.toEpochSecond(ZoneOffset.of(ZoneId.systemDefault().getId))))
+  //implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => new Date(time.toEpochSecond(ZoneOffset.of(ZoneId.systemDefault().getId))))
 
   /*
    val jodaTzDateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ")
