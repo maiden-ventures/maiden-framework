@@ -586,7 +586,7 @@ def build_api_service(models, config):
     for api in api_names:
         apis.append("%sApi.%sApi()" % (inflection.camelize(api), inflection.camelize(api, False)))
 
-    apis = " :+: ".join(apis)
+    apis = " :+:\n".join(apis)
 
     app_name =  inflection.camelize(config['app']['name'])
     app_name_lower = inflection.camelize(config['app']['name'], False)
