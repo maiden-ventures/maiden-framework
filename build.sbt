@@ -14,6 +14,7 @@ lazy val `maiden-framework` = (project in file("."))
       //"com.github.finagle" %% "finch-core" % "0.11.0-SNAPSHOT" changing(),
       //"com.github.finagle" %% "finch-circe" % "0.11.0-SNAPSHOT" changing(),
       "com.github.finagle" %% "finch-circe" % "0.10.0",
+      "com.github.finagle" %% "finch-oauth2" % "0.10.0",
       "com.twitter" %% "twitter-server" % "1.20.0",
       "com.netaporter" %% "scala-uri" % "0.4.14",
 

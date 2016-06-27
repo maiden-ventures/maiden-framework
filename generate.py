@@ -107,7 +107,7 @@ class MigrationBuilder:
           s = """addForeignKey(on("%s" -> "%s"),
           references("%s" -> "%s"),
           OnDelete(%s),
-          Name("%s"))""" % (ref_table, ref_column, inflection.underscore(table).lower(), info['db_name'], on_delete, ref_name)
+          Name("%s"))""" % (inflection.underscore("table").lower(), info["db_name"], ref_table, ref_column, on_delete, ref_name)
 
           self.references.append(s)
 
@@ -263,13 +263,11 @@ import io.getquill.sources.sql.ops._
 import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
 import maiden.traits._
+import maiden.common.Converters._
 import DB._
 
   """ % (config["package"])
-
-
     self.build()
-
 
   def buildExists(self):
       s = """def exists(id: Long) = {
@@ -318,6 +316,18 @@ import DB._
       db.run(q)(start, end)
     }""" % (inflection.camelize(field_name), self.query_name, inflection.camelize(field_name, False), inflection.camelize(field_name, False))
 
+      return s
+
+  def buildGet(self):
+      s = """def get(id: Long) = {
+
+      val base = ccToMap(findById(id).head)
+      val refs = fkAccessors.par.map{ case (key, func) =>
+        key -> func(id)
+      }.seq
+
+      refs ++ base.map{ case(k,v) => k -> v }.toMap
+    }"""
       return s
 
   def buildCreate(self, model_name, models):
@@ -371,10 +381,6 @@ import DB._
 
       return s
 
-
-
-
-
   def buildDeleteBy(self, model_name, field_name, field_type):
       s= """def deleteBy%s(value: %s) = {
         db.run(%s.filter(p => p.%s == lift(value)).delete)
@@ -386,14 +392,14 @@ import DB._
       #grab a foreign key reference
       table1 = inflection.camelize(model_name)
       table2 = inflection.camelize(model2_name)
-      field1 = inflection.camelize(field_name)
-      field2 = inflection.camelize(field2_name)
+      field1 = inflection.camelize(field_name, False)
+      field2 = inflection.camelize(field2_name, False)
 
-      s = """def get%s() = {
+      s = """def get%s(id: Long) = {
       val q = quote {
-        query[%s].join(query[%s]).on((q1,q2) => q1.%s == q2.%s)
+        query[%s].join(query[%s]).on((q1,q2) => q1.%s == q2.%s && q2.id == lift(id))
       }
-      db.run(q)
+      db.run(q).map(x => x._1)
     }""" % (table1, table1, table2, inflection.camelize(field1, False), inflection.camelize(field2, False))
       return s
 
@@ -406,20 +412,35 @@ import DB._
         os.makedirs(models_dir)
 
 
+
     for model in self.data:
+        fk_accessors = []
         self.query_name = "%sQuery" % (inflection.camelize(model["name"], False))
         model_path= os.path.join(models_dir, "%s.scala" % (inflection.camelize(model["name"])))
 
         case_class = ""
         companion = ""
 
+
         if 'db_name' not in model:
             model['db_name'] = model['name']
 
-        case_class = "%s\ncase class %s (" % (case_class, model["name"])
-        companion = "\nobject %s {\n\n  import %sSchema._\n\n" % (model["name"], inflection.camelize(self.config["app"]["name"]))
+        case_class = "%s\ncase class %s (" % (case_class, inflection.camelize(model["name"]))
+        companion = "\nobject %s {\n\n  import %sSchema._\n\n" % (inflection.camelize(model["name"]), inflection.camelize(self.config["app"]["name"]))
 
         columns = []
+
+        #get all possible references to this model
+        reverse_refs = []
+        for m in self.data:
+            if m['name'] != model["name"]:
+                for c in m['columns']:
+                    if 'references' in c:
+                        if c['references']['table'] == model['name']:
+                            _ref = c['references']
+                            reverse_refs.append(self.buildReferences(inflection.camelize(m['name']), inflection.camelize(c['name'], False),  inflection.camelize(model["name"], True), inflection.camelize(_ref["column"], False)))
+
+                            fk_accessors.append(('"%s"' % (inflection.camelize(m["name"], False)), "get%s _" % inflection.camelize(m["name"])))
 
         for col in model["columns"]:
           modifiers = []
@@ -440,6 +461,7 @@ import DB._
         #now build the object which contains our magic queries
         magic_methods = []
         magic_methods.append(self.buildExists())
+        magic_methods.append(self.buildGet())
         for col in model["columns"]:
             magic_methods.append(self.buildFindBy(model["name"], col["name"], col['type']))
             magic_methods.append(self.buildFindByRange(model["name"], col["name"], col['type']))
@@ -447,8 +469,26 @@ import DB._
             if 'references' in col:
                 ref = col['references']
                 magic_methods.append(self.buildReferences(ref["table"], ref["column"], model['name'], col['name']))
-                #TODO: and now the reverse reference
 
+                fk_accessors.append(('"%s"' % (inflection.camelize(ref["table"], False)), "get%s _" % inflection.camelize(ref["table"])))
+
+                #fk_accessors_str = "val fkAccessors = Map(%s)" % (" %s -> %s ".join([(fk(0), fk[1]) for fk in fk_accessors]))
+
+
+
+        accessor_map = "%s -> %s,".join(["%s -> %s" % (c[0], c[1]) for c in fk_accessors])
+        fk_accessors_str = "val fkAccessors = Map(%s)" % (accessor_map)
+        print model["name"]
+        print(fk_accessors_str)
+        if len(fk_accessors) > 0:
+            #build  out the  getWithReferences method
+            #magic_methods.append(self.buildGetWithReferences(inflection.camelize(model["name"]), fk_accessors)
+            pass
+
+
+        magic_methods.insert(0, fk_accessors_str)
+
+        #find all references to *this* model and build accessors
         like_columns = [x for x in model['columns'] if x['type'] == "varchar"]
         for c in like_columns:
             magic_methods.append(self.buildLikes(model['name'], c['name']))
@@ -458,6 +498,10 @@ import DB._
 
         magic_methods.append(self.buildCreate(model['name'], model['columns']))
         magic_methods.append(self.buildUpdate(model["columns"]))
+
+        #handle our reverse_refs
+        magic_methods = magic_methods + reverse_refs
+
         companion = "%s\n  %s\n}" % (companion, "\n\n  ".join(magic_methods))
 
         out = "%s\n%s\n%s" % (self.prelude, case_class, companion)
@@ -557,7 +601,7 @@ class ApiBuilder:
 
             out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args).replace("@@createParamArgs@@", create_param_args).replace("@@createParams@@", create_params).replace("@@modelCreationArgs@@", model_creation_args).replace("@@modelColumns@@", all_model_cols_str).replace("@@optionalParams@@", optional_params).replace("@@paramList@@", param_list).replace("@@updateParams@@", update_params)
 
-            fd = open(os.path.join(self.api_dir, "%s.scala" % (model['name'])), "w+")
+            fd = open(os.path.join(self.api_dir, "%s.scala" % (inflection.camelize(model['name']))), "w+")
             fd.write(out)
             fd.close()
         SCALA_FILES.append(self.api_dir)
