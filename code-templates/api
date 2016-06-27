@@ -19,7 +19,7 @@ object @@model@@Api extends MaidenApi {
 
   val prefix = "api" :: "@@lowerCaseModel@@"
 
-  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: doc@@model@@
+  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: update@@model@@ :+: doc@@model@@
 
   def doc@@model@@: Endpoint[Map[String, String]] =
     get(prefix :: "doc") { () => {
@@ -53,6 +53,15 @@ object @@model@@Api extends MaidenApi {
       val instance = @@model@@.findById(id)
       instance.head
     }}
+
+
+  def update@@model@@: Endpoint[@@model@@] =
+    post(prefix :: long("id") :: @@optionalParams@@) { (id: Long, @@paramList@@) =>
+      render {
+        @@model@@.update(id, @@updateParams@@)
+      }
+    }
+
 
   def list@@model@@: Endpoint[List[@@model@@]] =
     get(prefix :: string("byColumn") :: int("start") :: int("count")) { (byColumn: String, start: Int, count: Int) =>

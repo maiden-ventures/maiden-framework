@@ -15,11 +15,11 @@ import subprocess
 SCALA_FILES = []
 
 DB_TO_SCALA = {
-  "varchar": "String",
-  "bigint": "Long",
-  "int": "Int",
-  "datetime": "LocalDateTime",
-  "timestamp": "LocalDateTime"
+    "varchar": "String",
+    "bigint": "Long",
+    "int": "Int",
+    "datetime": "LocalDateTime",
+    "timestamp": "LocalDateTime"
   }
 
 def exists_and_true(data, key):
@@ -271,6 +271,20 @@ import DB._
     self.build()
 
 
+  def buildExists(self):
+      s = """def exists(id: Long) = {
+        val q = quote {
+          %s.filter(_.id == lift(id))
+        }
+
+        db.run(q).headOption match {
+          case Some(x) => true
+          case _ => false
+        }
+      }""" % (self.query_name)
+
+      return s
+
   def buildFindBy(self, model_name, field_name, field_type):
       s = """def findBy%s(value: %s) = {
         db.run(%s.filter(c =>  c.%s == lift(value)))
@@ -324,8 +338,42 @@ import DB._
 
       return s
 
-  def buildUpdate(self, model_name, column_names):
-      pass
+  def __buildUpdateMatcher(self, field_name):
+      s = """%s match {
+        case Some(v) => if (v != existing.%s) existing.%s = v
+        case _ => ()
+      }""" % (field_name, field_name, field_name)
+
+      return s
+
+  def buildUpdate(self, columns ):
+      cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in columns if c["name"] not in ("id", "created_at", "updated_at")]
+      params = ", ".join(["%s: Option[%s] = None" % (c[0], c[1]) for c in cols])
+
+      matches = []
+      for c in cols:
+          matches.append(self.__buildUpdateMatcher(inflection.camelize(c[0], False)))
+
+      matches =  "\n  ".join(matches)
+      s = """def update(id: Long, %s) = {
+        val existing = findById(id).head
+        existing.updatedAt = LocalDateTime.now
+
+        %s
+
+        val q = quote {
+          %s.filter(_.id == lift(id)).update
+        }
+
+        db.run(q)(existing)
+        existing
+      }""" % (params, matches, self.query_name)
+
+      return s
+
+
+
+
 
   def buildDeleteBy(self, model_name, field_name, field_type):
       s= """def deleteBy%s(value: %s) = {
@@ -372,25 +420,26 @@ import DB._
         companion = "\nobject %s {\n\n  import %sSchema._\n\n" % (model["name"], inflection.camelize(self.config["app"]["name"]))
 
         columns = []
+
         for col in model["columns"]:
+          modifiers = []
+          col_name = inflection.camelize(col["name"], False)
+          if col_name == "id":
+              col_str = "  id: Long = -1"
+          elif col_name  == "createdAt":
+              col_str = "  createdAt: LocalDateTime = LocalDateTime.now"
+          elif col_name  == "updatedAt":
+              col_str = "  var updatedAt: LocalDateTime = LocalDateTime.now"
+          else:
+              col_str = "  var %s: %s" % (col_name, DB_TO_SCALA[col['type']])
 
-            modifiers = []
-            col_name = inflection.camelize(col["name"], False)
-            if col_name == "id":
-                col_str = "id: Long = -1"
-            elif col_name  == "createdAt":
-                col_str = "createdAt: LocalDateTime = LocalDateTime.now"
-            elif col_name  == "updatedAt":
-                col_str = "updatedAt: LocalDateTime = LocalDateTime.now"
-            else:
-                col_str = "  %s: %s" % (col_name, DB_TO_SCALA[col['type']])
-
-            columns.append("\n%s" % (col_str))
+          columns.append("\n%s" % (col_str))
         modifiers = []
         case_class = "%s\n%s\n) extends MaidenModel with WithApi" % ( case_class, ",  \n".join(columns))
         #print case_class
         #now build the object which contains our magic queries
         magic_methods = []
+        magic_methods.append(self.buildExists())
         for col in model["columns"]:
             magic_methods.append(self.buildFindBy(model["name"], col["name"], col['type']))
             magic_methods.append(self.buildFindByRange(model["name"], col["name"], col['type']))
@@ -400,11 +449,6 @@ import DB._
                 magic_methods.append(self.buildReferences(ref["table"], ref["column"], model['name'], col['name']))
                 #TODO: and now the reverse reference
 
-        #magic_methods.append(self.buildFindBy(model["name"], "created_at", "timestamp"))
-        #magic_methods.append(self.buildFindBy(model["name"], "updated_at", "timestamp"))
-        #magic_methods.append(self.buildDeleteBy(model["name"], "created_at", "timestamp"))
-        #magic_methods.append(self.buildDeleteBy(model["name"], "updated_at", "timestamp"))
-
         like_columns = [x for x in model['columns'] if x['type'] == "varchar"]
         for c in like_columns:
             magic_methods.append(self.buildLikes(model['name'], c['name']))
@@ -413,6 +457,7 @@ import DB._
         magic_methods.append(self.buildTimestampRange(model['name'], 'updated_at'))
 
         magic_methods.append(self.buildCreate(model['name'], model['columns']))
+        magic_methods.append(self.buildUpdate(model["columns"]))
         companion = "%s\n  %s\n}" % (companion, "\n\n  ".join(magic_methods))
 
         out = "%s\n%s\n%s" % (self.prelude, case_class, companion)
@@ -506,7 +551,11 @@ class ApiBuilder:
             create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
             model_creation_args = ", ".join([c[0] for c in cols])
 
-            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args).replace("@@createParamArgs@@", create_param_args).replace("@@createParams@@", create_params).replace("@@modelCreationArgs@@", model_creation_args).replace("@@modelColumns@@", all_model_cols_str)
+            optional_params = " :: ".join(['paramOption("%s")' % (c[0]) for c in cols])
+            param_list = ", ".join(["%s: Option[%s]" % (c[0], c[1]) for c in cols])
+            update_params = ", ".join([c[0] for c in cols])
+
+            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args).replace("@@createParamArgs@@", create_param_args).replace("@@createParams@@", create_params).replace("@@modelCreationArgs@@", model_creation_args).replace("@@modelColumns@@", all_model_cols_str).replace("@@optionalParams@@", optional_params).replace("@@paramList@@", param_list).replace("@@updateParams@@", update_params)
 
             fd = open(os.path.join(self.api_dir, "%s.scala" % (model['name'])), "w+")
             fd.write(out)
