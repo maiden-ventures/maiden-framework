@@ -52,21 +52,21 @@ object @@model@@Api extends MaidenApi {
     put(prefix :: @@createParamArgs@@) { (@@createParams@@) => render {
       val id = @@model@@.create(@@modelCreationArgs@@)
       val instance = @@model@@.findById(id)
-      @@model@@FullResponse(instance.head)
+      instance.head
     }}
 
 
   def update@@model@@: Endpoint[@@model@@FullResponse] =
     post(prefix :: long("id") :: @@optionalParams@@) { (id: Long, @@paramList@@) =>
       render {
-        @@model@@FullResponse(@@model@@.update(id, @@updateParams@@))
+        @@model@@.update(id, @@updateParams@@)
       }
     }
 
 
   def list@@model@@: Endpoint[List[@@model@@FullResponse]] =
     get(prefix :: string("byColumn") :: int("start") :: int("count")) { (byColumn: String, start: Int, count: Int) => {
-      val results = @@model@@.getRangeByFirstName(start, count).map(r => @@model@@FullResponse(r))
+      val results = @@model@@.getRangeByFirstName(start, count)
       render(results)
     }}
 

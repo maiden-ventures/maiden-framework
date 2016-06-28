@@ -3,4 +3,6 @@ def create(@@createParams@@) = {
     query[@@model@@].schema(_.generated(_.id)).insert
   }
   db.run(q)(@@model@@(@@modelCreateParams@@))
+  //val instance = findById(id)
+  //instance.head
 }

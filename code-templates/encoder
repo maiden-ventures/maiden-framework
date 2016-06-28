@@ -15,7 +15,7 @@ import @@package@@.models.{@@model@@, @@model@@FullResponse}
 
 trait @@model@@ResponseEncoders {
 
-  implicit def @@lowerCaseModel@@to@@model@@FullResponse(t: @@model@@): @@model@@FullResponse = @@model@@FullResponse(t)
+  //implicit def @@lowerCaseModel@@to@@model@@FullResponse(t: @@model@@): @@model@@FullResponse = @@model@@FullResponse(t)
 
   implicit def @@lowerCaseModel@@FullResponseEncoder: EncodeResponse[@@model@@FullResponse] =
     EncodeResponse(ContentTypeJson)(data =>

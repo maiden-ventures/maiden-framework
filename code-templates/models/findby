@@ -1,4 +1,4 @@
 
 def findBy@@columnUpper@@(value: @@columnType@@) = {
-  db.run(@@queryName@@.filter(c => c.@@columnLower@@ == lift(value)))
+  db.run(@@queryName@@.filter(c => c.@@columnLower@@ == lift(value))).map(x => @@model@@FullResponse.build(x))
 }

@@ -330,7 +330,11 @@ class ModelBuilder:
                             _ref = c['references']
                             reference_methods += (self.buildReferences(inflection.camelize(m['name']), inflection.camelize(c['name'], False),  inflection.camelize(model["name"], True), inflection.camelize(_ref["column"], False)))
 
-                            ref_fields.append((inflection.camelize(m['name'], False), inflection.camelize(m["name"])))
+                            #(name, type, local_model, local_field, ref_model, ref_field)
+                            ref_fields.append((inflection.camelize(m["name"], False),
+                                               DB_TO_SCALA[c["type"]],
+                                               inflection.camelize(_ref["table"]), inflection.camelize(_ref["column"], False),
+                                               inflection.camelize(m["name"]), inflection.camelize(c["name"], False)))
 
         for col in model["columns"]:
           col_name = inflection.camelize(col["name"], False)
@@ -381,7 +385,41 @@ class ModelBuilder:
         #now do create and update
         update_params = ", ".join(["%s: Option[%s] = None" % (c[0], c[1]) for c in create_columns])
         create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in create_columns])
-        model_create_params = ", ".join([c[0] for c in create_columns])
+        model_create_params = ", ".join(["%s = %s" % (c[0],c[0]) for c in create_columns])
+        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[4]) for r in ref_fields])
+        ref_constructor_fields = ", ".join(["%s = %s" % (r[0], r[0]) for r in ref_fields])
+        ref_from_db = ", ".join(["%s = %s.get%s(t.id)" % (r[0], self.model_name, r[4]) for r in ref_fields])
+
+        ref_yields = ", ".join([x[0] for x in ref_fields])
+        ref_count = len(ref_fields)
+
+        #test2  <- query[Test2].filter(x => x.firstName == lift(test.firstName))
+
+        if ref_count > 0:
+          ref_comprehensions = []
+          #(name, type local_model, local_field, ref_model, ref_field)
+          for r in ref_fields:
+              print r
+              ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], inflection.camelize(r[2], False), r[3]))
+
+          getallrefs = read_template("models/getallrefs").replace("@@refComprehensions@@", "\n".join(ref_comprehensions)) \
+                      .replace("@@refYields@@", ref_yields) \
+                      .replace("@@refCount@@", str(ref_count)) \
+                      .replace("@@lowerCaseModel@@", inflection.camelize(self.model_name, False))
+
+          magic_methods_str += "\n%s\n" % (getallrefs)
+          full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
+            val refs = @@model@@.getAllRefs(t)
+            (@@model@@FullResponse.apply _) tupled (@@model@@.unapply(t).get ++  refs.get)
+          }"""
+        else:
+          magic_methods_str += "\ndef getAllRefs(%s: %s) = None" % (inflection.camelize(m["name"], False), inflection.camelize(m["name"]))
+          full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
+            (@@model@@FullResponse.apply _) tupled (@@model@@.unapply(t).get)
+          }"""
+
+        full_response_build = full_response_build.replace("@@model@@", inflection.camelize(self.model_name))
+
 
         matches = []
         for c in create_columns:
@@ -400,9 +438,6 @@ class ModelBuilder:
           .replace("@@referenceMethods@@", reference_methods)
 
 
-        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[1]) for r in ref_fields])
-        ref_constructor_fields = ", ".join(["%s = %s" % (r[0], r[0]) for r in ref_fields])
-        ref_from_db = ", ".join(["%s = %s.%s(id)" % (r[0], self.model_name, inflection.camelize(r[0], False)) for r in ref_fields])
 
         if len(ref_fields_str) > 0: ref_fields_str = ", " +  ref_fields_str
         if len(ref_constructor_fields) > 0: ref_constructor_fields = ", " +  ref_constructor_fields
@@ -421,9 +456,9 @@ class ModelBuilder:
                    .replace("@@refFromDBFields@@", ref_from_db) \
                    .replace("@@baseConstructorFields@@", base_constructor_fields) \
                    .replace("@@package@@", self.config["package"]) \
-                   .replace("@@queryName@@", self.query_name)
-
-
+                   .replace("@@queryName@@", self.query_name) \
+                   .replace("@@fullResponseBuild@@", full_response_build) \
+                   .replace("@@baseModelFieldCount@@", str(len(model["columns"])))
 
         fd = open(model_path, "w+")
         fd.write(template)

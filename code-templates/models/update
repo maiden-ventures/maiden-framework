@@ -8,6 +8,6 @@ def update(id: Long, @@updateParams@@) = {
     @@queryName@@.filter(_.id == lift(id)).update
   }
 
-  db.run(q)(existing)
-  existing
+  db.run(q)(@@model@@FullResponse.extract(existing))
+  get(id)
 }

@@ -3,6 +3,8 @@ package @@package@@.models
 import java.time.LocalDateTime
 import io.getquill._
 import io.getquill.sources.sql.ops._
+import shapeless._
+import syntax.std.tuple._
 import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
 import maiden.traits._
@@ -16,13 +18,10 @@ case class @@model@@FullResponse (
 )
 
 object @@model@@FullResponse {
+  @@fullResponseBuild@@
 
-  /*def apply(t: @@model@@ @@refFields@@): @@model@@FullResponse =
-    @@model@@FullResponse(@@baseConstructorFields@@ @@refConstructorFields@@)
-  */
-
-  def apply(t: @@model@@): @@model@@FullResponse =
-    @@model@@FullResponse(@@baseConstructorFields@@ @@refFromDBFields@@)
+  def extract(t: @@model@@FullResponse) =
+    (@@model@@.apply _) tupled (@@model@@FullResponse.unapply(t).get.take(@@baseModelFieldCount@@))
 
 }
 
@@ -36,14 +35,19 @@ object @@model@@ {
 
   //val fkAccessors = Map(@@accessorsMap@@)
 
-  def exists(id: Long) =
-    @@queryName@@.filter(_.id == lift(id)) match {
-      case x: List[_] if x.size > 0 => true
-      case _ => false
+  def exists(id: Long) = {
+    val q = quote {
+      query[@@model@@].filter(_.id == lift(id))
     }
 
+    db.run(q.size) match {
+      case x: Long if x > 0 => true
+      case _ => false
+    }
+  }
+
   def get(id: Long) =
-    @@model@@FullResponse(findById(id).head)
+    findById(id).head
 
 
   @@magicMethods@@
