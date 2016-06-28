@@ -1,0 +1,4 @@
+
+def deleteBy@@columnUpper@@(value: @@columnType@@) = {
+  db.run(@@queryName@@.filter(p => p.@@columnLower@@ == lift(value)).delete)
+}

@@ -1,0 +1,4 @@
+def findByLike@@columnUpper@@(value: String) = {
+  val likeQuery = s"%${value}%"
+  db.run(@@queryName@@.filter(c => c.@@columnLower@@ like lift(likeQuery)))
+}

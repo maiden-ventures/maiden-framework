@@ -1,0 +1,4 @@
+
+def findBy@@columnUpper@@(value: @@columnType@@) = {
+  db.run(@@queryName@@.filter(c => c.@@columnLower@@ == lift(value)))
+}

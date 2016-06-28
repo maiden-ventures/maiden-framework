@@ -100,7 +100,7 @@ class MigrationBuilder:
           ref_column= ref['column']
           ref_name = "fk_%s_%s" % (ref_table, ref_column)
 
-          on_delete = "Ignore"
+          on_delete = "SetDefault"
           if 'on_delete' in ref:
               on_delete = ref['on_delete']
 
@@ -252,60 +252,7 @@ class ModelBuilder:
   def __init__(self, data, config):
     self.data = data
     self.config = config
-
-
-    self.prelude = """
-package %s.models
-
-import java.time.LocalDateTime
-import io.getquill._
-import io.getquill.sources.sql.ops._
-import maiden.implicits.DateImplicits._
-import maiden.implicits.DBImplicits._
-import maiden.traits._
-import maiden.common.Converters._
-import DB._
-
-  """ % (config["package"])
     self.build()
-
-  def buildExists(self):
-      s = """def exists(id: Long) = {
-        val q = quote {
-          %s.filter(_.id == lift(id))
-        }
-
-        db.run(q).headOption match {
-          case Some(x) => true
-          case _ => false
-        }
-      }""" % (self.query_name)
-
-      return s
-
-  def buildFindBy(self, model_name, field_name, field_type):
-      s = """def findBy%s(value: %s) = {
-        db.run(%s.filter(c =>  c.%s == lift(value)))
-    }""" % (inflection.camelize(field_name), DB_TO_SCALA[field_type], self.query_name, inflection.camelize(field_name, False))
-
-      return s
-
-  def buildFindByRange(self, model_name, field_name, field_type):
-      s = """def getRangeBy%s(start: Int = 0, count: Int = 20) = {
-        db.run(%s.sortBy(c =>  c.%s).drop(lift(start)).take(lift(count)))
-    }""" % (inflection.camelize(field_name, True), self.query_name, inflection.camelize(field_name, False))
-
-      return s
-
-
-  def buildLikes(self, model_name, field_name):
-      #only valid for varchar columns so we don't need a type
-      s = """def findByLike%s(value: String) = {
-      val likeQuery = s"%%${value}%%"
-      db.run(%s.filter(c => c.%s like lift(likeQuery)))
-    }""" % (inflection.camelize(field_name), self.query_name, inflection.camelize(field_name, False))
-
-      return s
 
   def buildTimestampRange(self, model_name, field_name):
       s = """def findBy%sRange(start: LocalDateTime, end: LocalDateTime) = {
@@ -318,36 +265,6 @@ import DB._
 
       return s
 
-  def buildGet(self):
-      s = """def get(id: Long) = {
-
-      val base = ccToMap(findById(id).head)
-      val refs = fkAccessors.par.map{ case (key, func) =>
-        key -> func(id)
-      }.seq
-
-      refs ++ base.map{ case(k,v) => k -> v }.toMap
-    }"""
-      return s
-
-  def buildCreate(self, model_name, models):
-      cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in models if c["name"] not in ("id", "created_at", "updated_at")]
-      create_args = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
-
-      case_class_args = ", ".join(["%s = %s" % (c[0], c[0]) for c in cols])
-
-      s = ""
-      if self.config["db"]["driver"] == "postgres":
-          s = """def create(%s) = {
-          val q = quote {
-            query[%s].schema(_.generated(_.id)).insert
-          }
-          db.run(q)(%s(%s))
-          }"""
-      s =  s % (create_args, inflection.camelize(model_name), inflection.camelize(model_name), case_class_args)
-
-      return s
-
   def __buildUpdateMatcher(self, field_name):
       s = """%s match {
         case Some(v) => if (v != existing.%s) existing.%s = v
@@ -355,38 +272,6 @@ import DB._
       }""" % (field_name, field_name, field_name)
 
       return s
-
-  def buildUpdate(self, columns ):
-      cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in columns if c["name"] not in ("id", "created_at", "updated_at")]
-      params = ", ".join(["%s: Option[%s] = None" % (c[0], c[1]) for c in cols])
-
-      matches = []
-      for c in cols:
-          matches.append(self.__buildUpdateMatcher(inflection.camelize(c[0], False)))
-
-      matches =  "\n  ".join(matches)
-      s = """def update(id: Long, %s) = {
-        val existing = findById(id).head
-        existing.updatedAt = LocalDateTime.now
-
-        %s
-
-        val q = quote {
-          %s.filter(_.id == lift(id)).update
-        }
-
-        db.run(q)(existing)
-        existing
-      }""" % (params, matches, self.query_name)
-
-      return s
-
-  def buildDeleteBy(self, model_name, field_name, field_type):
-      s= """def deleteBy%s(value: %s) = {
-        db.run(%s.filter(p => p.%s == lift(value)).delete)
-    }""" % (inflection.camelize(field_name), DB_TO_SCALA[field_type], self.query_name, inflection.camelize(field_name, False))
-      return s
-
 
   def buildReferences(self, model_name, field_name, model2_name, field2_name):
       #grab a foreign key reference
@@ -400,7 +285,7 @@ import DB._
         query[%s].join(query[%s]).on((q1,q2) => q1.%s == q2.%s && q2.id == lift(id))
       }
       db.run(q).map(x => x._1)
-    }""" % (table1, table1, table2, inflection.camelize(field1, False), inflection.camelize(field2, False))
+    }""" % (table1, table1, table2, field1, field2)
       return s
 
   def build(self):
@@ -414,36 +299,40 @@ import DB._
 
 
     for model in self.data:
-        fk_accessors = []
-        self.query_name = "%sQuery" % (inflection.camelize(model["name"], False))
-        model_path= os.path.join(models_dir, "%s.scala" % (inflection.camelize(model["name"])))
 
-        case_class = ""
-        companion = ""
+        columns = []
+
+        template = read_template("model")
+
+        self.model_name = inflection.camelize(model["name"])
+        self.query_name = "%sQuery" % (inflection.camelize(model["name"], False))
+        model_path= os.path.join(models_dir, "%s.scala" % (self.model_name))
+        self.app_name = inflection.camelize(self.config["app"]["name"])
+
+        fk_accessors = []
+
+        raw_columns = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model["columns"]]
+        create_columns = filter(lambda x: x[0] not in ("createdAt", "updatedAt", "id"), raw_columns)
 
 
         if 'db_name' not in model:
             model['db_name'] = model['name']
 
-        case_class = "%s\ncase class %s (" % (case_class, inflection.camelize(model["name"]))
-        companion = "\nobject %s {\n\n  import %sSchema._\n\n" % (inflection.camelize(model["name"]), inflection.camelize(self.config["app"]["name"]))
-
-        columns = []
 
         #get all possible references to this model
-        reverse_refs = []
+        ref_fields = []
+        reference_methods = ""
         for m in self.data:
             if m['name'] != model["name"]:
                 for c in m['columns']:
                     if 'references' in c:
                         if c['references']['table'] == model['name']:
                             _ref = c['references']
-                            reverse_refs.append(self.buildReferences(inflection.camelize(m['name']), inflection.camelize(c['name'], False),  inflection.camelize(model["name"], True), inflection.camelize(_ref["column"], False)))
+                            reference_methods += (self.buildReferences(inflection.camelize(m['name']), inflection.camelize(c['name'], False),  inflection.camelize(model["name"], True), inflection.camelize(_ref["column"], False)))
 
-                            fk_accessors.append(('"%s"' % (inflection.camelize(m["name"], False)), "get%s _" % inflection.camelize(m["name"])))
+                            ref_fields.append((inflection.camelize(m['name'], False), inflection.camelize(m["name"])))
 
         for col in model["columns"]:
-          modifiers = []
           col_name = inflection.camelize(col["name"], False)
           if col_name == "id":
               col_str = "  id: Long = -1"
@@ -455,59 +344,89 @@ import DB._
               col_str = "  var %s: %s" % (col_name, DB_TO_SCALA[col['type']])
 
           columns.append("\n%s" % (col_str))
-        modifiers = []
-        case_class = "%s\n%s\n) extends MaidenModel with WithApi" % ( case_class, ",  \n".join(columns))
-        #print case_class
-        #now build the object which contains our magic queries
+
+          like_columns = [c for c in raw_columns if c[1] == "String"]
+          ref_columns = [c for c in model['columns'] if 'references' in c]
+
+
+        base_fields = ",".join(columns)
+
+        template = template.replace("@@baseFields@@", base_fields)
         magic_methods = []
-        magic_methods.append(self.buildExists())
-        magic_methods.append(self.buildGet())
-        for col in model["columns"]:
-            magic_methods.append(self.buildFindBy(model["name"], col["name"], col['type']))
-            magic_methods.append(self.buildFindByRange(model["name"], col["name"], col['type']))
-            magic_methods.append(self.buildDeleteBy(model["name"], col["name"], col["type"]))
-            if 'references' in col:
-                ref = col['references']
-                magic_methods.append(self.buildReferences(ref["table"], ref["column"], model['name'], col['name']))
 
-                fk_accessors.append(('"%s"' % (inflection.camelize(ref["table"], False)), "get%s _" % inflection.camelize(ref["table"])))
+        findByTemplate = read_template("models/findby")
+        rangeByTemplate = read_template("models/rangeby")
+        deleteByTemplate = read_template("models/deleteby")
+        likeTemplate = read_template("models/findbylike")
+        updateTemplate = read_template("models/update")
+        createTemplate = read_template("models/create")
 
-                #fk_accessors_str = "val fkAccessors = Map(%s)" % (" %s -> %s ".join([(fk(0), fk[1]) for fk in fk_accessors]))
+        magic_methods_str = ""
 
-
-
-        accessor_map = "%s -> %s,".join(["%s -> %s" % (c[0], c[1]) for c in fk_accessors])
-        fk_accessors_str = "val fkAccessors = Map(%s)" % (accessor_map)
-        print model["name"]
-        print(fk_accessors_str)
-        if len(fk_accessors) > 0:
-            #build  out the  getWithReferences method
-            #magic_methods.append(self.buildGetWithReferences(inflection.camelize(model["name"]), fk_accessors)
-            pass
+        for c in raw_columns:
+            colUpper = inflection.camelize(c[0])
+            colLower = inflection.camelize(c[0], False)
+            colType = c[1]
+            if c[0] == "String":
+                full_template = "%s\n\n%s\n\n%s\n\n%s" % (findByTemplate, rangeByTemplate, likeTemplate, deleteByTemplate)
+            else:
+                full_template = "%s\n\n%s\n\n%s" % (findByTemplate, rangeByTemplate, deleteByTemplate)
 
 
-        magic_methods.insert(0, fk_accessors_str)
+            magic_methods_str += full_template.replace("@@columnUpper@@", colUpper).replace("@@columnLower@@", colLower).replace("@@columnType@@", colType).replace("@@queryName@@", self.query_name)
 
-        #find all references to *this* model and build accessors
-        like_columns = [x for x in model['columns'] if x['type'] == "varchar"]
-        for c in like_columns:
-            magic_methods.append(self.buildLikes(model['name'], c['name']))
+        for r in ref_columns:
+            reference_methods += "\n\n" + self.buildReferences(r["references"]["table"], r["references"]["column"], self.model_name, r["name"])
 
-        magic_methods.append(self.buildTimestampRange(model['name'], 'created_at'))
-        magic_methods.append(self.buildTimestampRange(model['name'], 'updated_at'))
+        #now do create and update
+        update_params = ", ".join(["%s: Option[%s] = None" % (c[0], c[1]) for c in create_columns])
+        create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in create_columns])
+        model_create_params = ", ".join([c[0] for c in create_columns])
 
-        magic_methods.append(self.buildCreate(model['name'], model['columns']))
-        magic_methods.append(self.buildUpdate(model["columns"]))
+        matches = []
+        for c in create_columns:
+          matches.append(self.__buildUpdateMatcher(inflection.camelize(c[0], False)))
 
-        #handle our reverse_refs
-        magic_methods = magic_methods + reverse_refs
+        update_matches = "\n\n".join(matches)
 
-        companion = "%s\n  %s\n}" % (companion, "\n\n  ".join(magic_methods))
+        magic_methods_str += "\n\n" + createTemplate.replace("@@createParams@@", create_params) \
+                             .replace("@@modelCreateParams@@", model_create_params)
 
-        out = "%s\n%s\n%s" % (self.prelude, case_class, companion)
+        magic_methods_str += "\n\n" + updateTemplate.replace("@@updateParams@@", update_params) \
+                             .replace("@@updateMatches@@", update_matches)
+
+
+        template = template.replace("@@magicMethods@@", magic_methods_str) \
+          .replace("@@referenceMethods@@", reference_methods)
+
+
+        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[1]) for r in ref_fields])
+        ref_constructor_fields = ", ".join(["%s = %s" % (r[0], r[0]) for r in ref_fields])
+        ref_from_db = ", ".join(["%s = %s.%s(id)" % (r[0], self.model_name, inflection.camelize(r[0], False)) for r in ref_fields])
+
+        if len(ref_fields_str) > 0: ref_fields_str = ", " +  ref_fields_str
+        if len(ref_constructor_fields) > 0: ref_constructor_fields = ", " +  ref_constructor_fields
+        if len(ref_from_db) > 0: ref_from_db = ", " +  ref_from_db
+
+
+        base_constructor_fields = ", ".join(["%s = t.%s" % (inflection.camelize(r["name"], False), inflection.camelize(r["name"], False)) for r in model["columns"]])
+
+
+        #TODO: Missing setReferencedColumn, removeReferencedColumnIgn
+
+        template = template.replace("@@model@@", self.model_name) \
+                   .replace("@@appNameUpper@@", self.app_name) \
+                   .replace("@@refFields@@", ref_fields_str) \
+                   .replace("@@refConstructorFields@@", ref_constructor_fields) \
+                   .replace("@@refFromDBFields@@", ref_from_db) \
+                   .replace("@@baseConstructorFields@@", base_constructor_fields) \
+                   .replace("@@package@@", self.config["package"]) \
+                   .replace("@@queryName@@", self.query_name)
+
+
 
         fd = open(model_path, "w+")
-        fd.write(out)
+        fd.write(template)
         fd.close()
     SCALA_FILES.append(models_dir)
 

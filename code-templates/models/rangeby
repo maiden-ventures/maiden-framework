@@ -1,0 +1,5 @@
+
+def getRangeBy@@columnUpper@@(start: Int = 0, count: Int = 20) = {
+    db.run(
+      @@queryName@@.sortBy(c => c.@@columnLower@@).drop(lift(start)).take(lift(count)))
+}

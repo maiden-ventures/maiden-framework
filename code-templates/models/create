@@ -1,0 +1,6 @@
+def create(@@createParams@@) = {
+  val q = quote {
+    query[@@model@@].schema(_.generated(_.id)).insert
+  }
+  db.run(q)(@@model@@(@@modelCreateParams@@))
+}

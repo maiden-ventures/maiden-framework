@@ -1,0 +1,53 @@
+package @@package@@.models
+
+import java.time.LocalDateTime
+import io.getquill._
+import io.getquill.sources.sql.ops._
+import maiden.implicits.DateImplicits._
+import maiden.implicits.DBImplicits._
+import maiden.traits._
+import maiden.common.Converters._
+import DB._
+
+
+case class @@model@@FullResponse (
+  @@baseFields@@
+  @@refFields@@
+)
+
+object @@model@@FullResponse {
+
+  /*def apply(t: @@model@@ @@refFields@@): @@model@@FullResponse =
+    @@model@@FullResponse(@@baseConstructorFields@@ @@refConstructorFields@@)
+  */
+
+  def apply(t: @@model@@): @@model@@FullResponse =
+    @@model@@FullResponse(@@baseConstructorFields@@ @@refFromDBFields@@)
+
+}
+
+case class @@model@@ (
+  @@baseFields@@
+) extends MaidenModel with WithApi
+
+object @@model@@ {
+
+  import @@appNameUpper@@Schema._
+
+  //val fkAccessors = Map(@@accessorsMap@@)
+
+  def exists(id: Long) =
+    @@queryName@@.filter(_.id == lift(id)) match {
+      case x: List[_] if x.size > 0 => true
+      case _ => false
+    }
+
+  def get(id: Long) =
+    @@model@@FullResponse(findById(id).head)
+
+
+  @@magicMethods@@
+
+  @@referenceMethods@@
+
+}

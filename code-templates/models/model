@@ -1,0 +1,12 @@
+package @@package@@.models
+
+import java.time.LocalDateTime
+import io.getquill._
+import io.getquill.sources.sql.ops._
+import maiden.implicits.DateImplicits._
+import maiden.traits._
+import DB._
+
+@@case_class@@
+
+@@companion@@

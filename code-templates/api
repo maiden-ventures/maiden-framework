@@ -31,15 +31,16 @@ object @@model@@Api extends MaidenApi {
         "Doc" -> s"GET ${mount}/doc",
         "Get" -> s"GET ${mount}/:id",
         "Create" -> s"PUT ${mount} params = @@createParams@@",
+        "Update" -> s"POST ${mount}/:id params = @@createParams@@",
         "Delete" -> s"DELETE ${mount}/:id",
         "List" -> s"GET ${mount} params = start: Int = 0, count: Int = 10, byColumn: String = 'id'"
       )
       Ok(doc)
     }}
 
-  def get@@model@@: Endpoint[@@model@@] =
+  def get@@model@@: Endpoint[@@model@@FullResponse] =
     get(prefix::long("id")) { (id: Long) =>
-      render(@@model@@.findById(id).head)
+      render(@@model@@.get(id))
     }
 
   def delete@@model@@: Endpoint[Long] =
@@ -47,26 +48,27 @@ object @@model@@Api extends MaidenApi {
       render(@@model@@.deleteById(id))
     }
 
-  def create@@model@@: Endpoint[@@model@@] =
+  def create@@model@@: Endpoint[@@model@@FullResponse] =
     put(prefix :: @@createParamArgs@@) { (@@createParams@@) => render {
       val id = @@model@@.create(@@modelCreationArgs@@)
       val instance = @@model@@.findById(id)
-      instance.head
+      @@model@@FullResponse(instance.head)
     }}
 
 
-  def update@@model@@: Endpoint[@@model@@] =
+  def update@@model@@: Endpoint[@@model@@FullResponse] =
     post(prefix :: long("id") :: @@optionalParams@@) { (id: Long, @@paramList@@) =>
       render {
-        @@model@@.update(id, @@updateParams@@)
+        @@model@@FullResponse(@@model@@.update(id, @@updateParams@@))
       }
     }
 
 
-  def list@@model@@: Endpoint[List[@@model@@]] =
-    get(prefix :: string("byColumn") :: int("start") :: int("count")) { (byColumn: String, start: Int, count: Int) =>
-      render(@@model@@.getRangeByFirstName(start, count))
-    }
+  def list@@model@@: Endpoint[List[@@model@@FullResponse]] =
+    get(prefix :: string("byColumn") :: int("start") :: int("count")) { (byColumn: String, start: Int, count: Int) => {
+      val results = @@model@@.getRangeByFirstName(start, count).map(r => @@model@@FullResponse(r))
+      render(results)
+    }}
 
 
 }

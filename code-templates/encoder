@@ -10,15 +10,20 @@ import io.circe.parser._
 import io.circe.syntax._
 import io.circe.java8.time._
 import io.finch.EncodeResponse
-import @@package@@.models.@@model@@
+import @@package@@.models.{@@model@@, @@model@@FullResponse}
 
 
 trait @@model@@ResponseEncoders {
 
-  /*implicit val @@lowerCaseModel@@Encoder = Encoder.instance[@@model@@] { m =>
-    Map("@@lowerCaseModel@@" -> Map(@@jsonFields@@)).asJson
-  }
-  */
+  implicit def @@lowerCaseModel@@to@@model@@FullResponse(t: @@model@@): @@model@@FullResponse = @@model@@FullResponse(t)
+
+  implicit def @@lowerCaseModel@@FullResponseEncoder: EncodeResponse[@@model@@FullResponse] =
+    EncodeResponse(ContentTypeJson)(data =>
+      Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
+
+  implicit def @@lowerCaseModel@@FullListResponseEncoder: EncodeResponse[List[@@model@@FullResponse]] =
+    EncodeResponse(ContentTypeJson)(data =>
+      Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
 
   implicit def @@lowerCaseModel@@ResponseEncoder: EncodeResponse[@@model@@] =
     EncodeResponse(ContentTypeJson)(data => Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
