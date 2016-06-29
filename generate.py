@@ -205,13 +205,15 @@ class DbAccessBuilder:
         if db_type == "postgres":
             default_port = "5432"
             dialect_name = "Postgres"
-            template = "postgres-props"
+            datasource_driver = "org.postgresql.ds.PGSimpleDataSource"
+            database_driver = "org.postgresql.Driver"
 
-        if db_type == "mysql":
+        elif db_type == "mysql":
             default_port = "3336"
             dialect_name = "MySQL"
-            template = "mysql-props"
 
+        else:
+            throw(Exception("UNKNOWN DATABASE TYPE"))
         db_port = db.get("port", default_port)
 
         #write out DB file
@@ -223,11 +225,23 @@ class DbAccessBuilder:
         fd.close()
         SCALA_FILES.append(file_name)
 
-        template = read_template(template)
-        props = template.replace("@@host@@", db_host).replace("@@port@@", db_port).replace("@@db@@", db_name).replace("@@user@@", db_user).replace("@@password@@", db_password).replace("@@package@@", self.config["package"]).replace("@@sourceDir@@", self.config["base_path"])
+        template = read_template("config")
+        props = template.replace("@@host@@", db_host)\
+                        .replace("@@dbPort@@", db_port)\
+                        .replace("@@appPort@@", str(self.config["app"]["port"]))\
+                        .replace("@@db@@", db_name)\
+                        .replace("@@databaseType@@", db_type)\
+                        .replace("@@user@@", db_user)\
+                        .replace("@@password@@", db_password)\
+                        .replace("@@package@@", self.config["package"])\
+                        .replace("@@sourceDir@@", self.config["base_path"])\
+                        .replace("@@databaseDriver@@", database_driver)\
+                        .replace("@@datasourceClassName@@", datasource_driver)\
+                        .replace("@@environment@@", self.config["app"]["environment"])\
+                        .replace("@@appId@@", self.config["app"]["name"])
 
         #now write out the application.properties
-        fd = open(os.path.join(self.config['config_path'], "application.properties"), "w+")
+        fd = open(os.path.join(self.config['config_path'], "maiden-%s.conf" % (self.config["app"]["environment"])), "w+")
         fd.write(props)
 
         fd.close()

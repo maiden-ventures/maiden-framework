@@ -71,7 +71,7 @@ lazy val `maiden-framework` = (project in file("."))
       "org.slf4j" % "slf4j-api" % "1.7.21",
 
       // Monitoring
-      "com.rollbar" % "rollbar" % "0.5.2",
+      //"com.rollbar" % "rollbar" % "0.5.2",
 
       // Testing
       "org.specs2" %% "specs2-core" % "3.8.3" % "test",

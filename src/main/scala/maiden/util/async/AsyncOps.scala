@@ -2,15 +2,14 @@ package maiden.util.async
 
 import java.util.concurrent.Executors.newFixedThreadPool
 import java.util.concurrent.TimeUnit._
-
 import com.twitter.util.{Future, FuturePool}
-import maiden.config.Config
+import maiden.config.MaidenConfig
 import maiden.util.log.Logger.log
 
 import scala.concurrent.ExecutionContext
 
 trait AsyncOps {
-  lazy val executorService = newFixedThreadPool(Config.miscThreadPoolSize)
+  lazy val executorService = newFixedThreadPool(MaidenConfig.get[Int]("thread_pool_size"))
   lazy val futurePool = FuturePool.interruptible(executorService)
   lazy val globalAsyncExecutionContext: ExecutionContext = scala.concurrent.ExecutionContext.fromExecutor(executorService)
 

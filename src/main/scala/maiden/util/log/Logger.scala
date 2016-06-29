@@ -1,10 +1,10 @@
 package maiden.util.log
 
-import maiden.config.Config
+import maiden.config.MaidenConfig
 import org.slf4j.LoggerFactory
 
 trait Logging {
-  lazy val log = new Logger(Config.coreLoggerName)
+  lazy val log = new Logger(MaidenConfig.get[String]("app.id"))
 }
 
 object Logger extends Logging

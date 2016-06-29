@@ -7,7 +7,7 @@ import com.twitter.finagle.http.Cookie
 import com.twitter.io.Buf
 import com.twitter.io.Buf.ByteArray.Owned
 import com.twitter.util.Duration
-import maiden.config.Environment
+import maiden.config.MaidenConfig
 
 trait HttpOps {
   val defaultCookieDuration = Duration(10 * 365, TimeUnit.DAYS)
@@ -22,7 +22,7 @@ trait HttpOps {
     val c = new Cookie(k, v)
     c.path = "/"
     c.httpOnly = true
-    c.isSecure = !Environment.env.isDevelopment
+    c.isSecure = true
     c.maxAge = age
     c
   }

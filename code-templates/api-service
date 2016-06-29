@@ -4,12 +4,12 @@ import io.finch.circe._
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import maiden.http.ErrorHandler.apiErrorHandler
-import maiden.config.Config.apiAuthenticationCredentials
+//import maiden.config.Config.apiAuthenticationCredentials
 import maiden.http.{ExceptionFilter, HawkAuthenticateRequestFilter, RequestLoggingFilter}
 import maiden.util.error.ErrorResponseEncoders
 import @@package@@.api._
 
-object AuthenticationFilter extends HawkAuthenticateRequestFilter(apiAuthenticationCredentials)
+//object AuthenticationFilter extends HawkAuthenticateRequestFilter(apiAuthenticationCredentials)
 
 object UnhandledExceptionsFilter extends ExceptionFilter[Request](ErrorResponseEncoders.exceptionResponseEncoder)
 

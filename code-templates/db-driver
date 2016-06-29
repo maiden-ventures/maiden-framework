@@ -1,13 +1,29 @@
 package @@package@@.models
 
+import java.util.Properties
+import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
 import io.getquill.{source, JdbcSourceConfig}
 import io.getquill.naming.SnakeCase
 import io.getquill.sources.sql.idiom.@@dbDialect@@Dialect
+import maiden.config.MaidenConfig
 
 object DB {
 
-  val dbType = "@@Dialect@@"
+  val dbType = "@@dbDialect@@"
 
-  lazy val db = source(new JdbcSourceConfig[@@dbDialect@@Dialect, SnakeCase]("db"))
-
+  lazy val db = source(new JdbcSourceConfig[@@dbDialect@@Dialect, SnakeCase]("db") {
+    override def dataSource = {
+      val props = new Properties
+      props.setProperty("dataSourceClassName", MaidenConfig.get[String]("db.dataSourceClassName"))
+      props.setProperty("dataSource.user", MaidenConfig.get[String]("db.dataSource.user"))
+      props.setProperty("dataSource.password", MaidenConfig.get[String]("db.dataSource.password"))
+      props.setProperty("dataSource.databaseName", MaidenConfig.get[String]("db.dataSource.databaseName"))
+      props.setProperty("dataSource.portNumber", MaidenConfig.get[String]("db.dataSource.portNumber"))
+      props.setProperty("dataSource.serverName", MaidenConfig.get[String]("db.dataSource.serverName"))
+      props.setProperty("connectionTimeout", MaidenConfig.get[String]("db.connectionTimeout"))
+      //props.put("dataSource.logWriter", new PrintWriter(System.out));
+      val config = new HikariConfig(props);
+      new HikariDataSource(config);
+    }
+  })
 }

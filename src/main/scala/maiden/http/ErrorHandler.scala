@@ -4,7 +4,6 @@ import com.twitter.finagle.CancelledRequestException
 import com.twitter.finagle.http.Status.{BadRequest => _, InternalServerError => _, NotFound => _, Unauthorized => _}
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
-import maiden.util.error.ErrorReporter._
 import maiden.util.error.{AuthenticationFailedError, NotFoundError}
 import maiden.util.log.Logger._
 import io.finch.Error._
@@ -30,7 +29,6 @@ trait ErrorHandler extends ResponseOps {
   private def unhandledException[REQUEST <: Request](request: REQUEST, t: Throwable, encoder: EncodeResponse[Throwable]): Future[Response] = {
     try {
       log.info(s"Unhandled exception on URI ${request.uri} with message $t")
-      errorReporter.error(t)
       respond(request, Status.InternalServerError, t, encoder)
     } catch {
       case e: Throwable => {

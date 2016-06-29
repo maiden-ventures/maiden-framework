@@ -5,22 +5,21 @@ import scala.util.Properties
 import org.apache.commons.io.filefilter.WildcardFileFilter
 import org.joda.time.format.ISODateTimeFormat
 import com.imageworks.migration._
-import com.typesafe.config.ConfigFactory
 import com.zaxxer.hikari.HikariDataSource
 import maiden.common.Text.pascalize
+import maiden.config.MaidenConfig
 
 object Migrate {
 
-  lazy val  conf = ConfigFactory.load()
-  val namespace  = conf.getString("migrations.namespace")
-  val driver_class_name = conf.getString("migrations.database_driver")
+  val namespace  = MaidenConfig.get[String]("migrations.namespace")
+  val driver_class_name = MaidenConfig.get[String]("migrations.database_driver")
   val vendor = Vendor.forDriver(driver_class_name)
   val migration_adapter = DatabaseAdapter.forVendor(vendor, None)
-  lazy val connectionString = s"jdbc:${conf.getString("migrations.database_type")}://${conf.getString("db.dataSource.serverName")}/${conf.getString("db.dataSource.databaseName")}"
+  lazy val connectionString = s"jdbc:${MaidenConfig.get[String]("migrations.database_type")}://${MaidenConfig.get[String]("db.dataSource.serverName")}/${MaidenConfig.get[String]("db.dataSource.databaseName")}"
   val dataSource = new HikariDataSource();
   dataSource.setJdbcUrl(connectionString);
-  dataSource.setUsername(conf.getString("db.dataSource.user"));
-  dataSource.setPassword(conf.getString("db.dataSource.password"));
+  dataSource.setUsername(MaidenConfig.get[String]("db.dataSource.user"));
+  dataSource.setPassword(MaidenConfig.get[String]("db.dataSource.password"));
 
   lazy val migrator = {
     new Migrator(dataSource, migration_adapter)
@@ -58,7 +57,7 @@ object Migrate {
   }
 
 
-  lazy val migrationPath = s"${System.getProperty("user.dir")}/${conf.getString("app.source_path")}/migrations"
+  lazy val migrationPath = s"${System.getProperty("user.dir")}/${MaidenConfig.get[String]("app.source_path")}/migrations"
 
   private def checkMigrationExists(name:String) = {
     val glob = s"*_${name}.scala"
@@ -85,7 +84,7 @@ object Migrate {
   }
 
   private def createTemplate(className: String) = {
-  s"""package ${conf.getString("migrations.namespace")}
+  s"""package ${MaidenConfig.get[String]("migrations.namespace")}
 
 import com.imageworks.migration._
 
