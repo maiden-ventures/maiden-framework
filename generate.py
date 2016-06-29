@@ -207,6 +207,7 @@ class DbAccessBuilder:
             dialect_name = "Postgres"
             datasource_driver = "org.postgresql.ds.PGSimpleDataSource"
             database_driver = "org.postgresql.Driver"
+            database_jdbc_name = "postgresql"
 
         elif db_type == "mysql":
             default_port = "3336"
@@ -230,7 +231,7 @@ class DbAccessBuilder:
                         .replace("@@dbPort@@", db_port)\
                         .replace("@@appPort@@", str(self.config["app"]["port"]))\
                         .replace("@@db@@", db_name)\
-                        .replace("@@databaseType@@", db_type)\
+                        .replace("@@databaseJdbcName@@", database_jdbc_name)\
                         .replace("@@user@@", db_user)\
                         .replace("@@password@@", db_password)\
                         .replace("@@package@@", self.config["package"])\
@@ -614,17 +615,12 @@ def build_api_service(models, config):
     fd.close()
     SCALA_FILES.append(file_name)
 
-def build_env(app_config):
-    template = read_template("env")
-    app = app_config["app"]
-    file_name = os.path.join(app['source_directory'], ".env")
-    port = str(app.get("port", "8888"))
-    env = app.get("environment", "development")
-    rollbar_access_key = app.get("rollbar_access_key", "1234")
+def build_logback(app_config):
+    template = read_template("logback")
+    appName = app_config["app"]["name"].lower()
+    file_name = os.path.join(app_config["app"]['source_directory'], "config/logback.xml")
 
-    out = template.replace("@@port@@", port)\
-                  .replace("@@env@@", env)\
-                  .replace("@@rollbar_access_key@@", rollbar_access_key)
+    out = template.replace("@@appName@@", appName)
 
     fd = open(file_name, "w+")
     fd.write(out)
@@ -700,7 +696,7 @@ if __name__ == "__main__":
         build_boot(app_data)
         build_api_service(model_data, app_data)
 
-    build_env(app_data)
+    build_logback(app_data)
 
     if key_with_default(gen_options, "format_source", True):
       print("Formatting Scala sources...")

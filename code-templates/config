@@ -5,7 +5,6 @@ app.source_path=@@sourceDir@@
 
 
 db.dataSourceClassName=@@datasourceClassName@@
-#org.postgresql.ds.PGSimpleDataSource
 db.dataSource.user=@@user@@
 db.dataSource.password=@@password@@
 db.dataSource.databaseName=@@db@@
@@ -14,5 +13,5 @@ db.dataSource.serverName=@@host@@
 db.connectionTimeout="30000"
 
 migrations.namespace=@@package@@.migrations
-migrations.database_type=@@databaseType@@ #postgresql
-migrations.database_driver=@@databaseDriver@@ #org.postgresql.Driver
+migrations.database_type=@@databaseJdbcName@@
+migrations.database_driver=@@databaseDriver@@

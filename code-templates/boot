@@ -32,7 +32,6 @@ final class App {
   }
 
   private def registerMetricsAndMonitoring(): Unit = {
-
     errorReporter.registerForUnhandledExceptions()
     JvmStats.register(LoadedStatsReceiver)
     TwitterStats.register(LoadedStatsReceiver)

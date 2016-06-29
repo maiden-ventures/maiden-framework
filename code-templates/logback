@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+  <!-- Set to INFO to avoid noisy log -->
+  <logger name="io.netty" level="ERROR"/>
+  <logger name="org.http4s" level="ERROR"/>
+  <logger name="io.getquill" level="ERROR"/>
+  <logger name="com.zaxxer.hikari" level="ERROR"/>
+  <logger name="ch.qos.logback" level="ERROR"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>[%level] %m%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Set to TRACE to see network transmission -->
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>./logs/@@appName@@.log</file>
+		<encoder>
+			<pattern>[%level] [%d{yy-MM-dd HH:mm:ss}] %c{1}: %m%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>./logs/@@appName@@.log.%d{yy-MM}</fileNamePattern>
+		</rollingPolicy>
+	</appender>
+
+	<!-- Set to TRACE to see network transmission -->
+	<root level="INFO">
+		<appender-ref ref="FILE"/>
+	</root>
+</configuration>
