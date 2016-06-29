@@ -6,7 +6,7 @@ import com.twitter.finagle.stats.{LoadedStatsReceiver, StatsReceiver}
 import com.twitter.server.util.{JvmStats, TwitterStats}
 import com.twitter.util.Await
 import maiden.util.async.AsyncOps
-//import maiden.util.error.ErrorReporter._
+import maiden.util.error.ErrorReporter._
 import maiden.util.log.Logger._
 import maiden.config.MaidenConfig
 import @@appNameUpper@@Api._
@@ -32,7 +32,8 @@ final class App {
   }
 
   private def registerMetricsAndMonitoring(): Unit = {
-    //errorReporter.registerForUnhandledExceptions()
+
+    errorReporter.registerForUnhandledExceptions()
     JvmStats.register(LoadedStatsReceiver)
     TwitterStats.register(LoadedStatsReceiver)
   }

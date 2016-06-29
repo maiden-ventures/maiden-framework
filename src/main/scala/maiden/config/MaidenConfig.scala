@@ -15,6 +15,12 @@ object MaidenConfig {
     conf.getValue(key).unwrapped.asInstanceOf[T]
   }
 
+  def getOption[T](key: String): Option[T] = try {
+    Option(get[T](key))
+  } catch {
+    case e: Throwable => None
+  }
+
   //get all key-value pairs where key starts with (or is) group
   def getGroup(group: String): Map[String, Any] = {
     conf

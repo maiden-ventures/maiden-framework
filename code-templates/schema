@@ -2,7 +2,6 @@ package @@package@@.models
 
 import io.getquill.{quote, query}
 
-
 object @@appName@@Schema {
 
   @@schemaList@@
