@@ -391,7 +391,6 @@ class ModelBuilder:
           ref_comprehensions = []
           #(name, type local_model, local_field, ref_model, ref_field)
           for r in ref_fields:
-              print r
               ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], inflection.camelize(r[2], False), r[3]))
 
           getallrefs = read_template("models/getallrefs").replace("@@refComprehensions@@", "\n".join(ref_comprehensions)) \
