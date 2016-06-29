@@ -65,8 +65,8 @@ object @@model@@Api extends MaidenApi {
 
 
   def list@@model@@: Endpoint[List[@@model@@FullResponse]] =
-    get(prefix :: string("byColumn") :: int("start") :: int("count")) { (byColumn: String, start: Int, count: Int) => {
-      val results = @@model@@.getRangeByFirstName(start, count)
+    get(prefix :: int("start") :: int("count")) { (start: Int, count: Int) => {
+      val results = @@model@@.getRangeById(start, count)
       render(results)
     }}
 

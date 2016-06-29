@@ -152,8 +152,6 @@ class MigrationBuilder:
     SCALA_FILES.append(migration_dir)
 
 
-
-
 class SbtBuilder:
 
     def __init__(self, config):
@@ -296,8 +294,6 @@ class ModelBuilder:
     if not os.path.exists(models_dir):
         os.makedirs(models_dir)
 
-
-
     for model in self.data:
 
         columns = []
@@ -314,10 +310,8 @@ class ModelBuilder:
         raw_columns = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model["columns"]]
         create_columns = filter(lambda x: x[0] not in ("createdAt", "updatedAt", "id"), raw_columns)
 
-
         if 'db_name' not in model:
             model['db_name'] = model['name']
-
 
         #get all possible references to this model
         ref_fields = []
@@ -420,7 +414,6 @@ class ModelBuilder:
 
         full_response_build = full_response_build.replace("@@model@@", inflection.camelize(self.model_name))
 
-
         matches = []
         for c in create_columns:
           matches.append(self.__buildUpdateMatcher(inflection.camelize(c[0], False)))
@@ -446,8 +439,7 @@ class ModelBuilder:
 
         base_constructor_fields = ", ".join(["%s = t.%s" % (inflection.camelize(r["name"], False), inflection.camelize(r["name"], False)) for r in model["columns"]])
 
-
-        #TODO: Missing setReferencedColumn, removeReferencedColumnIgn
+        #TODO: Missing setReferencedColumn, removeReferencedColumn
 
         template = template.replace("@@model@@", self.model_name) \
                    .replace("@@appNameUpper@@", self.app_name) \
@@ -553,7 +545,16 @@ class ApiBuilder:
             param_list = ", ".join(["%s: Option[%s]" % (c[0], c[1]) for c in cols])
             update_params = ", ".join([c[0] for c in cols])
 
-            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True)).replace("@@lowerCaseModel@@", inflection.camelize(model['name'], False)).replace("@@package@@", self.config['package']).replace("@@createArgs@@", create_args).replace("@@createParamArgs@@", create_param_args).replace("@@createParams@@", create_params).replace("@@modelCreationArgs@@", model_creation_args).replace("@@modelColumns@@", all_model_cols_str).replace("@@optionalParams@@", optional_params).replace("@@paramList@@", param_list).replace("@@updateParams@@", update_params)
+            out = self.template.replace("@@model@@", inflection.camelize(model['name'], True))\
+                               .replace("@@lowerCaseModel@@", inflection.camelize(model['name'],False)) \
+                               .replace("@@package@@", self.config['package'])\
+                               .replace("@@createArgs@@", create_args)\
+                               .replace("@@createParamArgs@@", create_param_args)\
+                               .replace("@@createParams@@", create_params)\
+                               .replace("@@modelCreationArgs@@", model_creation_args)\
+                               .replace("@@modelColumns@@", all_model_cols_str)\
+                               .replace("@@optionalParams@@", optional_params)\
+                               .replace("@@paramList@@", param_list).replace("@@updateParams@@", update_params)
 
             fd = open(os.path.join(self.api_dir, "%s.scala" % (inflection.camelize(model['name']))), "w+")
             fd.write(out)
@@ -565,7 +566,8 @@ def build_boot(app_data):
     app_name = app_data['app']['name']
     package = app_data['package']
 
-    out = template.replace("@@package@@", package).replace("@@appNameUpper@@", inflection.camelize(app_name))
+    out = template.replace("@@package@@", package)\
+                  .replace("@@appNameUpper@@", inflection.camelize(app_name))
 
     file_name = os.path.join(app_data['base_path'], "App.scala")
     fd = open(file_name, "w+")
@@ -590,7 +592,10 @@ def build_api_service(models, config):
     app_name_lower = inflection.camelize(config['app']['name'], False)
 
     service = read_template("api-service")
-    out = service.replace("@@package@@", config['package']).replace("@@app@@", app_name).replace("@@appLower@@", app_name_lower).replace("@@api_list@@", apis)
+    out = service.replace("@@package@@", config['package'])\
+                 .replace("@@app@@", app_name)\
+                 .replace("@@appLower@@", app_name_lower)\
+                 .replace("@@api_list@@", apis)
     file_name = os.path.join(config['base_path'], "%sApi.scala" % (app_name))
 
     fd = open(file_name, "w+")
@@ -606,7 +611,9 @@ def build_env(app_config):
     env = app.get("environment", "development")
     rollbar_access_key = app.get("rollbar_access_key", "1234")
 
-    out = template.replace("@@port@@", port).replace("@@env@@", env).replace("@@rollbar_access_key@@", rollbar_access_key)
+    out = template.replace("@@port@@", port)\
+                  .replace("@@env@@", env)\
+                  .replace("@@rollbar_access_key@@", rollbar_access_key)
 
     fd = open(file_name, "w+")
     fd.write(out)
@@ -614,6 +621,8 @@ def build_env(app_config):
 
 if __name__ == "__main__":
     #read in our configs
+
+
     model_stream = open("models.yml")
     app_stream = open("project.yml")
 
@@ -686,8 +695,9 @@ if __name__ == "__main__":
       print("Formatting Scala sources...")
       format_scala()
 
+    project_dir = os.path.realpath(app_data["app"]["source_directory"])
     message = """Your project is now available in %s. To run, simply
-    cd into %s and then type "sbt run". Your API will be available at http://localhost:%s/api/[model_name]""" % (app_data["base_path"], app_data["base_path"], app_data["app"]["port"])
+    cd into %s and then type "sbt run". Your API will be available at http://localhost:%s/api/[model_name]""" % (project_dir, project_dir, app_data["app"]["port"])
 
     print
     print(message)

@@ -49,7 +49,6 @@ object @@model@@ {
   def get(id: Long) =
     findById(id).head
 
-
   @@magicMethods@@
 
   @@referenceMethods@@

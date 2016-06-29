@@ -21,8 +21,8 @@ lazy val `maiden-framework` = (project in file("."))
       //for easier reflection
       "org.clapper" %% "classutil" % "1.0.11",
       "org.scala-lang" % "scalap" % "2.11.8",
-      "org.scalastuff" % "scalabeans" % "0.3",
-      "com.thoughtworks.paranamer" % "paranamer" % "2.4.1",
+      //"org.scalastuff" % "scalabeans" % "0.3",
+      //"com.thoughtworks.paranamer" % "paranamer" % "2.4.1",
       "com.twitter" % "util-eval_2.11" % "6.34.0",
 
       "com.geirsson" %% "scalafmt" % "0.2.8",
@@ -53,8 +53,6 @@ lazy val `maiden-framework` = (project in file("."))
       //for working with Facebook
       "com.restfb" % "restfb" % "1.14.0",
       "joda-time" % "joda-time" % "2.8.1",
-
-
 
       // Note. We use the latest 0.5.0 version of Circe as it pulls in the Cats 0.6.0 which Mouse depends on.
       "io.circe" %% "circe-generic" % "0.5.0-M1",
@@ -100,7 +98,6 @@ lazy val `maiden-framework` = (project in file("."))
     testOptions in Test += Tests.Setup(() => System.setProperty("ENV", "test")),
 
     //javaOptions in Test := Seq("-DENV=test")
-
     seq(Revolver.settings: _*)
 
 

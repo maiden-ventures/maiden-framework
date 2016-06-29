@@ -18,7 +18,7 @@
 
 - name: Test2
   columns:
-    - name: first_name
+    - name: fname
       type: varchar
       limit: 100
       references:
