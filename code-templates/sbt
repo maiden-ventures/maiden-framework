@@ -42,6 +42,13 @@ lazy val migrate = inputKey[Unit]("Run migrations")
 lazy val @@appName@@ = (project in file("."))
   .enablePlugins(BuildInfoPlugin)
   .settings(baseBuildSettings ++ Seq(
+    assemblyMergeStrategy in assembly := {
+      case PathList("io", "netty", xs @ _*) => MergeStrategy.last
+      case PathList(ps @ _*) if ps.last endsWith ".properties" => MergeStrategy.last
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    },
     unmanagedSourceDirectories in Compile += baseDirectory.value / "src",
     unmanagedSourceDirectories in Test += baseDirectory.value / "test",
     migrate := Def.inputTaskDyn {
