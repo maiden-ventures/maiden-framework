@@ -26,7 +26,6 @@ def exists_and_true(data, key):
     if key in data and data[key]: return True
     else: return False
 
-
 def key_with_default(data, key, default):
     if key in data and data[key]: return data[key]
     if key not in data: return default
@@ -75,7 +74,7 @@ class MigrationBuilder:
     self.build()
 
 
-  def buildColumn(self, table, info):
+  def build_column(self, table, info):
       modifiers = ["NotNull"]
 
       if 'db_name' not in info: info['db_name'] = info['name']
@@ -135,7 +134,7 @@ class MigrationBuilder:
         file_name = "%s.scala" % (class_name.replace("Migrate_", ""))
 
         for col in model['columns']:
-            self.buildColumn(model['db_name'], col)
+            self.build_column(model['db_name'], col)
 
 
         package = self.config['package']
@@ -175,7 +174,6 @@ class SbtBuilder:
         fd = open(os.path.join(self.config["app"]["source_directory"], "build.sbt"), "w+")
         fd.write(self.sbt_template)
         fd.close()
-
 
 
     def build_plugins(self):
@@ -252,7 +250,7 @@ class ModelBuilder:
     self.config = config
     self.build()
 
-  def buildTimestampRange(self, model_name, field_name):
+  def build_timestamp_range(self, model_name, field_name):
       s = """def findBy%sRange(start: LocalDateTime, end: LocalDateTime) = {
       val q = quote {
         (s: LocalDateTime, e: LocalDateTime) =>
@@ -263,7 +261,7 @@ class ModelBuilder:
 
       return s
 
-  def __buildUpdateMatcher(self, field_name):
+  def __build_update_matcher(self, field_name):
       s = """%s match {
         case Some(v) => if (v != existing.%s) existing.%s = v
         case _ => ()
@@ -271,7 +269,7 @@ class ModelBuilder:
 
       return s
 
-  def buildReferences(self, model_name, field_name, model2_name, field2_name):
+  def build_references(self, model_name, field_name, model2_name, field2_name):
       #grab a foreign key reference
       table1 = inflection.camelize(model_name)
       table2 = inflection.camelize(model2_name)
@@ -322,7 +320,7 @@ class ModelBuilder:
                     if 'references' in c:
                         if c['references']['table'] == model['name']:
                             _ref = c['references']
-                            reference_methods += (self.buildReferences(inflection.camelize(m['name']), inflection.camelize(c['name'], False),  inflection.camelize(model["name"], True), inflection.camelize(_ref["column"], False)))
+                            reference_methods += (self.build_references(inflection.camelize(m['name']), inflection.camelize(c['name'], False),  inflection.camelize(model["name"], True), inflection.camelize(_ref["column"], False)))
 
                             #(name, type, local_model, local_field, ref_model, ref_field)
                             ref_fields.append((inflection.camelize(m["name"], False),
@@ -374,7 +372,7 @@ class ModelBuilder:
             magic_methods_str += full_template.replace("@@columnUpper@@", colUpper).replace("@@columnLower@@", colLower).replace("@@columnType@@", colType).replace("@@queryName@@", self.query_name)
 
         for r in ref_columns:
-            reference_methods += "\n\n" + self.buildReferences(r["references"]["table"], r["references"]["column"], self.model_name, r["name"])
+            reference_methods += "\n\n" + self.build_references(r["references"]["table"], r["references"]["column"], self.model_name, r["name"])
 
         #now do create and update
         update_params = ", ".join(["%s: Option[%s] = None" % (c[0], c[1]) for c in create_columns])
@@ -416,7 +414,7 @@ class ModelBuilder:
 
         matches = []
         for c in create_columns:
-          matches.append(self.__buildUpdateMatcher(inflection.camelize(c[0], False)))
+          matches.append(self.__build_update_matcher(inflection.camelize(c[0], False)))
 
         update_matches = "\n\n".join(matches)
 
