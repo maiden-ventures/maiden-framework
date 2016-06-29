@@ -1,6 +1,6 @@
 package @@package@@.models
 
-import io.getquill._
+import io.getquill.{quote, query}
 
 
 object @@appName@@Schema {

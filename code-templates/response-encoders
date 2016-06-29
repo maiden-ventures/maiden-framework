@@ -1,19 +1,10 @@
 package @@package@@
 
-import com.twitter.finagle.http.Message
-import com.twitter.finagle.http.Message.ContentTypeJson
-import com.twitter.io.Buf._
-import io.circe._
-import io.circe.generic.auto._
-import io.circe.parser._
-import io.circe.syntax._
-import io.circe.java8.time._
-import io.finch.EncodeResponse
 import @@package@@.encoders._
 import maiden.util.error.ErrorResponseEncoders
 import maiden.traits._
 
-trait ResponseEncoders extends ErrorResponseEncoders @@response_encoders@@ //with HelloResponseEncoders
+trait ResponseEncoders extends ErrorResponseEncoders @@response_encoders@@
 
 
 object ResponseEncoders extends ResponseEncoders

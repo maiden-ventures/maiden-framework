@@ -1,25 +1,18 @@
 package @@package@@.api
 
 import java.time.LocalDateTime
-//import scala.language.implicitConversions
 import io.finch._
-/*
-import io.finch.circe._
-import io.circe.generic.semiauto._
-import io.circe.java8.time._
-*/
 import maiden.types.Exceptions._
 import maiden.types.MaidenApi
 import maiden.http.RequiredAuthRequestReader._
 import maiden.auth.AuthenticatedClient
 import maiden.http.Render._
 import maiden.implicits.DateImplicits._
-
-import @@package@@.models._
+import @@package@@.models.{@@model@@, @@model@@FullResponse}
 
 object @@model@@Api extends MaidenApi {
 
-  val prefix = "api" :: "@@lowerCaseModel@@"
+  private[this] val prefix = "api" :: "@@lowerCaseModel@@"
 
   def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: update@@model@@ :+: doc@@model@@
 

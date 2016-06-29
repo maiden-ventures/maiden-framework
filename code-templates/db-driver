@@ -1,6 +1,6 @@
 package @@package@@.models
 
-import io.getquill._
+import io.getquill.{source, JdbcSourceConfig}
 import io.getquill.naming.SnakeCase
 import io.getquill.sources.sql.idiom.@@dbDialect@@Dialect
 

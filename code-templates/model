@@ -1,13 +1,12 @@
 package @@package@@.models
 
 import java.time.LocalDateTime
-import io.getquill._
+import io.getquill.{lift, quote, query}
 import io.getquill.sources.sql.ops._
 import shapeless.syntax.std.tuple._
 import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
-import maiden.traits._
-import maiden.common.Converters._
+import maiden.traits.{MaidenFullResponse, MaidenModel, WithApi}
 import DB._
 
 

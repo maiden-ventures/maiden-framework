@@ -1,6 +1,5 @@
 package @@package@@
 
-import io.circe.generic.auto._
 import io.finch.circe._
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
@@ -15,7 +14,7 @@ object AuthenticationFilter extends HawkAuthenticateRequestFilter(apiAuthenticat
 object UnhandledExceptionsFilter extends ExceptionFilter[Request](ErrorResponseEncoders.exceptionResponseEncoder)
 
 object @@app@@Api extends ResponseEncoders {
-   def @@appLower@@Api = @@api_list@@ //TestApi.testApi() :+: Test2Api.test2Api()
+   def @@appLower@@Api = @@api_list@@
 
   def apiService: Service[Request, Response] =
     RequestLoggingFilter andThen
