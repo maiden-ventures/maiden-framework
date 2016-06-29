@@ -1,11 +1,13 @@
 package @@package@@.api
 
 import java.time.LocalDateTime
-import scala.language.implicitConversions
-import io.finch.{Endpoint, _}
+//import scala.language.implicitConversions
+import io.finch._
+/*
 import io.finch.circe._
 import io.circe.generic.semiauto._
 import io.circe.java8.time._
+*/
 import maiden.types.Exceptions._
 import maiden.types.MaidenApi
 import maiden.http.RequiredAuthRequestReader._

@@ -1,10 +1,9 @@
-package maiden.api.v1
+package maiden.http
 
 import com.twitter.finagle.CancelledRequestException
 import com.twitter.finagle.http.Status.{BadRequest => _, InternalServerError => _, NotFound => _, Unauthorized => _}
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.util.Future
-import maiden.http.ResponseOps
 import maiden.util.error.ErrorReporter._
 import maiden.util.error.{AuthenticationFailedError, NotFoundError}
 import maiden.util.log.Logger._

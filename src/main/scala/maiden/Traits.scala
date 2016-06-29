@@ -1,10 +1,12 @@
 package maiden.traits
 
 
-trait MaidenModel
+trait MaidenEncoder extends Product
+trait MaidenModel extends MaidenEncoder
 trait WithApi
 trait WithAdmin
 trait WithAuthorization
+trait MaidenFullResponse extends MaidenEncoder
 
 //some helper traits
 

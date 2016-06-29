@@ -19,13 +19,13 @@ lazy val `maiden-framework` = (project in file("."))
       "com.netaporter" %% "scala-uri" % "0.4.14",
 
       //for easier reflection
-      "org.clapper" %% "classutil" % "1.0.11",
+      //"org.clapper" %% "classutil" % "1.0.11",
       "org.scala-lang" % "scalap" % "2.11.8",
       //"org.scalastuff" % "scalabeans" % "0.3",
       //"com.thoughtworks.paranamer" % "paranamer" % "2.4.1",
-      "com.twitter" % "util-eval_2.11" % "6.34.0",
+      //"com.twitter" % "util-eval_2.11" % "6.34.0",
 
-      "com.geirsson" %% "scalafmt" % "0.2.8",
+      //"com.geirsson" %% "scalafmt" % "0.2.8",
 
       "org.scala-lang" % "scala-reflect" % "2.11.8",
 
@@ -36,13 +36,13 @@ lazy val `maiden-framework` = (project in file("."))
       "com.imageworks.scala-migrations" %% "scala-migrations" % "1.1.1",
 
       //quill
-      "io.getquill" % "quill_2.11" % "0.6.0",
-      "io.getquill" % "quill-sql_2.11" % "0.6.0",
+      "io.getquill" % "quill_2.11" % "0.6.1-SNAPSHOT",
+      "io.getquill" % "quill-sql_2.11" % "0.6.1-SNAPSHOT",
       //"io.getquill" % "quill-jdbc_2.11" % "0.6.0",
       //"io.getquill" % "quill-cassandra_2.11" % "0.6.0",
 
       //yaml stuff
-      "net.jcazevedo" %% "moultingyaml" % "0.2",
+      //"net.jcazevedo" %% "moultingyaml" % "0.2",
       //data drivers
       "mysql" % "mysql-connector-java" % "5.1.36",
       "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
@@ -55,10 +55,10 @@ lazy val `maiden-framework` = (project in file("."))
       "joda-time" % "joda-time" % "2.8.1",
 
       // Note. We use the latest 0.5.0 version of Circe as it pulls in the Cats 0.6.0 which Mouse depends on.
-      "io.circe" %% "circe-generic" % "0.5.0-M1",
-      "io.circe" % "circe-java8_2.11" % "0.5.0-M1",
-      "io.circe" %% "circe-core" % "0.5.0-M1",
-      "io.circe" %% "circe-parser" % "0.5.0-M1",
+      "io.circe" %% "circe-generic" % "0.5.0-M2",
+      "io.circe" % "circe-java8_2.11" % "0.5.0-M2",
+      "io.circe" %% "circe-core" % "0.5.0-M2",
+      "io.circe" %% "circe-parser" % "0.5.0-M2",
 
       // Utilities
       "joda-time" % "joda-time" % "2.9.3",

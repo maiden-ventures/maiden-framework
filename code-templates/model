@@ -3,8 +3,7 @@ package @@package@@.models
 import java.time.LocalDateTime
 import io.getquill._
 import io.getquill.sources.sql.ops._
-import shapeless._
-import syntax.std.tuple._
+import shapeless.syntax.std.tuple._
 import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
 import maiden.traits._
@@ -15,7 +14,7 @@ import DB._
 case class @@model@@FullResponse (
   @@baseFields@@
   @@refFields@@
-)
+) extends MaidenFullResponse
 
 object @@model@@FullResponse {
   @@fullResponseBuild@@

@@ -3,7 +3,6 @@ package maiden.http
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.util.{Future, NonFatal}
-import maiden.api.v1.ErrorHandler
 import io.finch.EncodeResponse
 
 // Copied from com.twitter.finagle.http.filter.ExceptionFilter
