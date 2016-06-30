@@ -15,7 +15,7 @@ trait TokenAuth extends MaidenAuth {
   def authorize: Endpoint[MaidenAuthUser]  =
     paramOption(paramToken).mapOutputAsync { maybeToken =>
       maybeToken.map(t => t == accessToken) match {
-        case Some(c) => authorized(AnonymousAuthUser())
+        case Some(c) if c == true => authorized(AnonymousAuthUser())
         case _ => unauthorized
       }
     }
