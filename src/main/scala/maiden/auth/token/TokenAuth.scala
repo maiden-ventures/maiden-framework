@@ -7,7 +7,7 @@ import maiden.util.error.Errors._
 import maiden.auth.{MaidenAuth, MaidenAuthUser, AnonymousAuthUser}
 import maiden.config.MaidenConfig
 
-object TokenAuth extends MaidenAuth {
+trait TokenAuth extends MaidenAuth {
 
   lazy val paramToken = MaidenConfig.get[String]("app.security.param_name")
   lazy val accessToken = MaidenConfig.get[String]("app.security.access_token")
@@ -26,3 +26,6 @@ object TokenAuth extends MaidenAuth {
   def unauthorized: Future[Output[AnonymousAuthUser]] =
     Future.value(Unauthorized(authFailedError(s"Missing auth token '${paramToken}'")))
 }
+
+
+object TokenAuth extends TokenAuth

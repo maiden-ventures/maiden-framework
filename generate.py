@@ -227,6 +227,14 @@ class DbAccessBuilder:
         SCALA_FILES.append(file_name)
 
         template = read_template("config")
+
+        #read in security (if it exsists)
+        if 'security' in self.config['app']:
+            sec = self.config['app']
+            #need to somehow generate the correct config here...
+
+
+
         props = template.replace("@@host@@", db_host)\
                         .replace("@@dbPort@@", db_port)\
                         .replace("@@appPort@@", str(self.config["app"]["port"]))\

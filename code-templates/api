@@ -4,11 +4,11 @@ import java.time.LocalDateTime
 import io.finch._
 import maiden.types.Exceptions._
 import maiden.types.MaidenApi
-import maiden.http.RequiredAuthRequestReader._
-import maiden.auth.AuthenticatedClient
 import maiden.http.Render._
 import maiden.implicits.DateImplicits._
 import @@package@@.models.{@@model@@, @@model@@FullResponse}
+import maiden.auth.MaidenAuthUser
+import maiden.auth.token.TokenAuth._
 
 object @@model@@Api extends MaidenApi {
 
@@ -34,17 +34,17 @@ object @@model@@Api extends MaidenApi {
     }}
 
   def get@@model@@: Endpoint[@@model@@FullResponse] =
-    get(prefix::long("id")) { (id: Long) =>
+    get(prefix :: long("id") :: authorize) { (id: Long, u: MaidenAuthUser) =>
       render(@@model@@.get(id))
     }
 
   def delete@@model@@: Endpoint[Long] =
-    delete(prefix::long("id")) { (id: Long) =>
+    delete(prefix::long("id") :: authorize) { (id: Long, u: MaidenAuthUser) =>
       render(@@model@@.deleteById(id))
     }
 
   def create@@model@@: Endpoint[@@model@@FullResponse] =
-    put(prefix :: @@createParamArgs@@) { (@@createParams@@) => render {
+    put(prefix :: @@createParamArgs@@ ::  authorize) { (@@createParams@@, u: MaidenAuthUser) => render {
       val id = @@model@@.create(@@modelCreationArgs@@)
       val instance = @@model@@.findById(id)
       instance.head
@@ -52,7 +52,7 @@ object @@model@@Api extends MaidenApi {
 
 
   def update@@model@@: Endpoint[@@model@@FullResponse] =
-    post(prefix :: long("id") :: @@optionalParams@@) { (id: Long, @@paramList@@) =>
+    post(prefix :: long("id") :: @@optionalParams@@ :: authorize) { (id: Long, @@paramList@@, u: MaidenAuthUser) =>
       render {
         @@model@@.update(id, @@updateParams@@)
       }
@@ -60,10 +60,9 @@ object @@model@@Api extends MaidenApi {
 
 
   def list@@model@@: Endpoint[List[@@model@@FullResponse]] =
-    get(prefix :: int("start") :: int("count")) { (start: Int, count: Int) => {
+    get(prefix :: int("start") :: int("count") :: authorize) { (start: Int, count: Int, u: MaidenAuthUser) => {
       val results = @@model@@.getRangeById(start, count)
       render(results)
     }}
-
 
 }
