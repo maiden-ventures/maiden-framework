@@ -655,7 +655,7 @@ app.security.access_token="%s"
         #add more here
     else:
         sec['security_import'] = "import maiden.auth.anon.AnonAuth._"
-        sec['param_config'] = ""
+        sec['security_config'] = ""
 
     return sec
 
