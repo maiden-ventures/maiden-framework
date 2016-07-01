@@ -4,9 +4,7 @@ import scala.util.{Try, Success, Failure}
 import io.finch.{Endpoint, _}
 import maiden.types._
 import maiden.types.Exceptions._
-/**
-  * Created by glen on 6/20/16.
-  */
+
 object Render {
 
   def render[T](body: => T) = {
