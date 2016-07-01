@@ -1,4 +1,3 @@
-
 package maiden.auth.anon
 
 import io.finch.{Endpoint,_}
@@ -8,6 +7,8 @@ import maiden.util.error.Errors._
 import maiden.auth.{MaidenAuth, MaidenAuthUser, AnonymousAuthUser}
 import maiden.config.MaidenConfig
 
+
+//an authorization that always succeeds
 trait AnonAuth extends MaidenAuth {
 
   def authorize: Endpoint[MaidenAuthUser]  = paramOption("xxx").mapOutputAsync {maybeToken =>
@@ -18,8 +19,8 @@ trait AnonAuth extends MaidenAuth {
   def authorized(u: MaidenAuthUser): Future[Output[MaidenAuthUser]] =
     Future.value(payload(u))
 
-  //def unauthorized: Future[Output[AnonymousAuthUser]] = authorized(AnonymousAuthUser())
-  def unauthorized = Future.value(payload(AnonymousAuthUser()))
+  def unauthorized: Future[Output[AnonymousAuthUser]] = ???//authorized(AnonymousAuthUser())
+
 }
 
 object AnonAuth extends AnonAuth

@@ -14,8 +14,8 @@ trait TokenAuth extends MaidenAuth {
 
   def authorize: Endpoint[MaidenAuthUser]  =
     paramOption(paramToken).mapOutputAsync { maybeToken =>
-      maybeToken.map(t => t == accessToken) match {
-        case Some(c) if c == true => authorized(AnonymousAuthUser())
+      maybeToken match {
+        case Some(t) if t == accessToken => authorized(AnonymousAuthUser())
         case _ => unauthorized
       }
     }
@@ -24,8 +24,7 @@ trait TokenAuth extends MaidenAuth {
     Future.value(payload(u))
 
   def unauthorized: Future[Output[AnonymousAuthUser]] =
-    Future.value(Unauthorized(authFailedError(s"Missing auth token '${paramToken}'")))
+    Future.value(Unauthorized(authFailedError(s"Missing auth token '${paramToken}' or value incorrect")))
 }
-
 
 object TokenAuth extends TokenAuth

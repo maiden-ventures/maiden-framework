@@ -228,12 +228,9 @@ class DbAccessBuilder:
 
         template = read_template("config")
 
-        #read in security (if it exsists)
-        if 'security' in self.config['app']:
-            sec = self.config['app']
-            #need to somehow generate the correct config here...
 
 
+        sec = security_info(self.config)
 
         props = template.replace("@@host@@", db_host)\
                         .replace("@@dbPort@@", db_port)\
@@ -247,7 +244,8 @@ class DbAccessBuilder:
                         .replace("@@databaseDriver@@", database_driver)\
                         .replace("@@datasourceClassName@@", datasource_driver)\
                         .replace("@@environment@@", self.config["app"]["environment"])\
-                        .replace("@@appId@@", self.config["app"]["name"])
+                        .replace("@@appId@@", self.config["app"]["name"]) \
+                        .replace("@@securityConfig@@", sec["security_config"])
 
         #now write out the application.properties
         fd = open(os.path.join(self.config['config_path'], "maiden-%s.conf" % (self.config["app"]["environment"])), "w+")
@@ -546,6 +544,7 @@ class ApiBuilder:
         if not os.path.exists(self.api_dir):
             os.makedirs(self.api_dir)
 
+        self.security_import = security_info(config)['security_import']
         self.build()
 
     def build(self):
@@ -568,6 +567,7 @@ class ApiBuilder:
             out = self.template.replace("@@model@@", inflection.camelize(model['name'], True))\
                                .replace("@@lowerCaseModel@@", inflection.camelize(model['name'],False)) \
                                .replace("@@package@@", self.config['package'])\
+                               .replace("@@securityImport@@", self.security_import)\
                                .replace("@@createArgs@@", create_args)\
                                .replace("@@createParamArgs@@", create_param_args)\
                                .replace("@@createParams@@", create_params)\
@@ -595,7 +595,6 @@ def build_boot(app_data):
     fd.close()
 
     SCALA_FILES.append(file_name)
-
 
 def build_api_service(models, config):
 
@@ -633,6 +632,33 @@ def build_logback(app_config):
     fd = open(file_name, "w+")
     fd.write(out)
     fd.close()
+
+def security_info(app_config):
+    sec = {}
+
+    #read in security (if it exsists)
+    if 'security' in app_config['app']:
+        base_sec = app_config['app']['security']
+        #need to somehow generate the correct config here...
+        if base_sec['method'] == "token":
+            sec['security_import'] ="import maiden.auth.token.TokenAuth._"
+            access_token = base_sec['access_token']
+            if 'param_name' in base_sec:
+                param_name = base_sec['param_name']
+            else:
+                sec_param_name = "access_token"
+
+            sec['security_config'] = """
+app.security.param_name="%s"
+app.security.access_token="%s"
+            """ % (param_name,  access_token)
+        #add more here
+    else:
+        sec['security_import'] = "import maiden.auth.anon.AnonAuth._"
+        sec['param_config'] = ""
+
+    return sec
+
 
 if __name__ == "__main__":
     #read in our configs

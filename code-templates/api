@@ -8,7 +8,7 @@ import maiden.http.Render._
 import maiden.implicits.DateImplicits._
 import @@package@@.models.{@@model@@, @@model@@FullResponse}
 import maiden.auth.MaidenAuthUser
-import maiden.auth.token.TokenAuth._
+@@securityImport@@
 
 object @@model@@Api extends MaidenApi {
 
@@ -17,7 +17,7 @@ object @@model@@Api extends MaidenApi {
   def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: update@@model@@ :+: doc@@model@@
 
   def doc@@model@@: Endpoint[Map[String, String]] =
-    get(prefix :: "doc") { () => {
+    get(prefix :: "doc" :: authorize) { (u: MaidenAuthUser) => {
       val mount = prefix.toString
       val doc = Map(
         "Base Endpoint" -> mount,

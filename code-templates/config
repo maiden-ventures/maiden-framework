@@ -2,7 +2,7 @@ app.port=@@appPort@@
 app.environment=@@environment@@
 app.id=@@appId@@
 app.source_path=@@sourceDir@@
-
+@@securityConfig@@
 
 db.dataSourceClassName=@@datasourceClassName@@
 db.dataSource.user=@@user@@
