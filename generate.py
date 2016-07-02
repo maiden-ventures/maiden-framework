@@ -603,9 +603,9 @@ def build_api_service(models, config):
     endpoints = ['doc', 'get', 'delete']
     api_names = [m["name"] for m in models]
     for api in api_names:
-        apis.append("%sApi.%sApi()" % (inflection.camelize(api), inflection.camelize(api, False)))
+        apis.append("%sApi.%sApi" % (inflection.camelize(api), inflection.camelize(api, False)))
 
-    apis = " :+:\n".join(apis)
+    apis = " :+: ".join(apis)
 
     app_name =  inflection.camelize(config['app']['name'])
     app_name_lower = inflection.camelize(config['app']['name'], False)

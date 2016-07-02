@@ -5,6 +5,7 @@ import maiden.util.json.JsonCodecOps
 import io.finch.EncodeResponse
 
 trait ResponseOps extends JsonCodecOps {
+
   def jsonResponse[A, R <: Request](request: R, status: Status, a: A)(implicit encoder: EncodeResponse[A]): Response = {
     val response = request.response
     response.status = status
@@ -12,6 +13,7 @@ trait ResponseOps extends JsonCodecOps {
     response.contentString = jsonString(a)
     response
   }
+
 }
 
 object ResponseOps extends ResponseOps

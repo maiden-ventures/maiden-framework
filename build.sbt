@@ -54,6 +54,11 @@ lazy val `maiden-framework` = (project in file("."))
       "com.restfb" % "restfb" % "1.14.0",
       "joda-time" % "joda-time" % "2.8.1",
 
+      //for HTTP client
+      "org.http4s" % "http4s-client_2.11" % "0.13.2a",
+      "org.http4s" % "http4s-blaze-client_2.11" % "0.13.2a",
+      "org.json4s" %% "json4s-native" % "3.3.0",
+
       // Note. We use the latest 0.5.0 version of Circe as it pulls in the Cats 0.6.0 which Mouse depends on.
       "io.circe" %% "circe-generic" % "0.5.0-M2",
       "io.circe" % "circe-java8_2.11" % "0.5.0-M2",

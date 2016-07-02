@@ -8,6 +8,7 @@ import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
 import maiden.traits.{MaidenFullResponse, MaidenModel, WithApi}
 import DB._
+import @@appNameUpper@@Schema._
 
 
 case class @@model@@FullResponse (
@@ -28,10 +29,6 @@ case class @@model@@ (
 ) extends MaidenModel with WithApi
 
 object @@model@@ {
-
-  import @@appNameUpper@@Schema._
-
-  //val fkAccessors = Map(@@accessorsMap@@)
 
   def exists(id: Long) = {
     val q = quote {

@@ -14,6 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object DateImplicits {
 
+  //conversions between LocalDateTime and java Date
   implicit val decodeLocalTime = mappedEncoding[Date, LocalDateTime](date => LocalDateTime.ofInstant(date.toInstant, ZoneId.systemDefault()))
   implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => Date.from(time.atZone(ZoneId.systemDefault).toInstant))
 

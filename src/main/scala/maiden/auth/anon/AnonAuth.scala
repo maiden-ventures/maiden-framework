@@ -19,6 +19,7 @@ trait AnonAuth extends MaidenAuth {
   def authorized(u: MaidenAuthUser): Future[Output[MaidenAuthUser]] =
     Future.value(payload(u))
 
+  //this will never get called for AnonAuth
   def unauthorized: Future[Output[AnonymousAuthUser]] = ???//authorized(AnonymousAuthUser())
 
 }

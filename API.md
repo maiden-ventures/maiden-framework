@@ -8,7 +8,7 @@ This is the FInch Template API. Conventions:
 
 * All calls run over TLS.
 * The API accepts & returns JSON, all `POST` & `PUT` payloads are specified in JSON (i.e. not `application/x-www-form-urlencoded`).
-* All calls accept (for `PUT` & `POST`) & return JSON objects, e.g. `{"data":{"foo":"bar"}}`
+* All calls except (for `PUT` & `POST`) & return JSON objects, e.g. `{"data":{"foo":"bar"}}`
 * All parameters are specified in a `data` object at the root level.
 * All responses return JSON objects, which will *one of* (but not both):
   * `error` - if an error ocurred.
