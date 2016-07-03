@@ -556,11 +556,11 @@ class ApiBuilder:
 
             cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model['columns'] if c["name"] not in ("id", "created_at", "updated_at")]
             create_args = " :: ".join([param_str % (c[0], c[1]) for c in cols])
-            create_param_args = " :: ".join(['param("%s")' % (c[0]) for c in cols])
+            create_param_args = " :: ".join(['param("%s").as[%s]' % (c[0], c[1]) for c in cols])
             create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
             model_creation_args = ", ".join([c[0] for c in cols])
 
-            optional_params = " :: ".join(['paramOption("%s")' % (c[0]) for c in cols])
+            optional_params = " :: ".join(['paramOption("%s").as[%s]' % (c[0], c[1]) for c in cols])
             param_list = ", ".join(["%s: Option[%s]" % (c[0], c[1]) for c in cols])
             update_params = ", ".join([c[0] for c in cols])
 
@@ -660,6 +660,29 @@ app.security.access_token="%s"
     return sec
 
 
+#some default models to add if the user selects
+#per-user authentication
+DEFAULT_USER_MODEL = {
+    "name": "User",
+    "columns": [
+        {"name": "user_name", "type": "varchar", "limit": 64,"index": True},
+        {"name": "access_token", "type": "varchar", "limit": 128, "index": True}
+    ]
+}
+
+DEFAULT_SOCIAL_USER_MODEL = {
+    "name": "SocialUser",
+    "columns": [
+        {"name": "user_id", "type": "bigint","index": True},
+        {"name": "provider", "type": "varchar", "limit": 100, "index": True},
+        {"name": "uid", "type": "varchar", "limit": 255, "index": True},
+        {"name": "access_token", "type": "varchar", "limit": 1024, "index": True},
+        {"name": "secret_key", "type": "varchar", "limit": 1024, "nullable": True, "index": True},
+        {"name": "extra", "type": "varchar", "limit": 8192, "nullable": True}
+    ]
+}
+
+
 if __name__ == "__main__":
     #read in our configs
 
@@ -680,6 +703,10 @@ if __name__ == "__main__":
 
     model_data = load(model_stream, Loader=Loader)
 
+    #automatically add user tables if selected
+    if 'users' in app_data['app']:
+        model_data.append(DEFAULT_USER_MODEL)
+        model_data.append(DEFAULT_SOCIAL_USER_MODEL)
 
     #make sure that all models have an id and timestamps
     for index in range(len(model_data)):

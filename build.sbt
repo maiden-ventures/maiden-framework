@@ -11,22 +11,13 @@ lazy val `maiden-framework` = (project in file("."))
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
       "com.github.finagle" % "finch-core_2.11" % "0.10.0",
-      //"com.github.finagle" %% "finch-core" % "0.11.0-SNAPSHOT" changing(),
-      //"com.github.finagle" %% "finch-circe" % "0.11.0-SNAPSHOT" changing(),
       "com.github.finagle" %% "finch-circe" % "0.10.0",
       "com.github.finagle" %% "finch-oauth2" % "0.10.0",
       "com.twitter" %% "twitter-server" % "1.20.0",
       "com.netaporter" %% "scala-uri" % "0.4.14",
 
       //for easier reflection
-      //"org.clapper" %% "classutil" % "1.0.11",
       "org.scala-lang" % "scalap" % "2.11.8",
-      //"org.scalastuff" % "scalabeans" % "0.3",
-      //"com.thoughtworks.paranamer" % "paranamer" % "2.4.1",
-      //"com.twitter" % "util-eval_2.11" % "6.34.0",
-
-      //"com.geirsson" %% "scalafmt" % "0.2.8",
-
       "org.scala-lang" % "scala-reflect" % "2.11.8",
 
       //for arg parsing
@@ -38,7 +29,6 @@ lazy val `maiden-framework` = (project in file("."))
       //quill
       "io.getquill" % "quill_2.11" % "0.6.1-SNAPSHOT",
       "io.getquill" % "quill-sql_2.11" % "0.6.1-SNAPSHOT",
-      //"io.getquill" % "quill-jdbc_2.11" % "0.6.0",
       //"io.getquill" % "quill-cassandra_2.11" % "0.6.0",
 
       //yaml stuff
@@ -73,7 +63,7 @@ lazy val `maiden-framework` = (project in file("."))
       // Logging
       "ch.qos.logback" % "logback-core" % "1.1.7",
       "ch.qos.logback" % "logback-classic" % "1.1.7",
-      "org.slf4j" % "slf4j-api" % "1.7.21",
+      //"org.slf4j" % "slf4j-api" % "1.7.21",
 
       // Monitoring
       "com.rollbar" % "rollbar" % "0.5.2",
