@@ -3,6 +3,11 @@ def create(@@createParams@@) = {
     query[@@model@@].schema(_.generated(_.id)).insert
   }
   db.run(q)(@@model@@(@@modelCreateParams@@))
-  //val instance = findById(id)
-  //instance.head
+}
+
+def create(data: @@model@@) = {
+  val q = quote {
+    query[@@model@@].schema(_.generated(_.id)).insert
+  }
+  db.run(q)(data)
 }

@@ -254,7 +254,18 @@ class DbAccessBuilder:
         fd.close()
 
         schema = read_template("schema")
-        schema_list = ["lazy val %sQuery = quote(query[%s])" % (inflection.camelize(m["name"], False), inflection.camelize(m["name"])) for m in self.models]
+        schema_list = []
+        for m in self.models:
+            lname = inflection.camelize(m["name"], False)
+            uname = inflection.camelize(m["name"], True)
+
+            if lname == "user" and not 'db_name' in m:
+                m['db_name'] = "users"
+            elif 'db_name' not in m:
+                m['db_name'] = lname
+
+            s = 'lazy val %sQuery = quote(query[%s].schema(_.entity("%s")))' % (lname, uname, inflection.underscore(m['db_name']))
+            schema_list.append(s)
 
         schema_list_str = "\n".join(schema_list)
 
@@ -663,7 +674,7 @@ app.security.access_token="%s"
 #some default models to add if the user selects
 #per-user authentication
 DEFAULT_USER_MODEL = {
-    "name": "User",
+    "name": "Users",
     "columns": [
         {"name": "user_name", "type": "varchar", "limit": 64,"index": True},
         {"name": "access_token", "type": "varchar", "limit": 128, "index": True}
@@ -712,6 +723,10 @@ if __name__ == "__main__":
     for index in range(len(model_data)):
         model = model_data[index]
         cols = model["columns"]
+
+        if 'db_name' not in model:
+            model_data[index]["db_name"] = inflection.underscore(model["name"])
+
         if "id" not in cols:
             model_data[index]["columns"].insert(0, {
                 "name": "id",

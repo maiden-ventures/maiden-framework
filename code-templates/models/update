@@ -11,3 +11,15 @@ def update(id: Long, @@updateParams@@) = {
   db.run(q)(@@model@@FullResponse.extract(existing))
   get(id)
 }
+
+def update(data: @@model@@) = {
+  data.updatedAt = LocalDateTime.now
+
+  val q = quote {
+    @@queryName@@.filter(_.id == lift(data.id)).update
+  }
+
+  db.run(q)(data)
+  get(data.id)
+
+}

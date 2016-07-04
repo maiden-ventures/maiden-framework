@@ -2,6 +2,8 @@ package @@package@@.api
 
 import java.time.LocalDateTime
 import io.finch.{Endpoint, _}
+import io.finch.circe._
+import io.circe.generic.auto._
 import maiden.types.Exceptions._
 import maiden.types.MaidenApi
 import maiden.http.Render._
@@ -14,7 +16,7 @@ object @@model@@Api extends MaidenApi {
 
   private[this] val prefix = "api" :: "@@lowerCaseModel@@"
 
-  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: update@@model@@ :+: doc@@model@@
+  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: /*create@@model@@FromJson :+: */ update@@model@@ :+: doc@@model@@
 
   def doc@@model@@: Endpoint[Map[String, String]] =
     get(prefix :: "doc" :: authorize) { (u: MaidenAuthUser) => {
@@ -49,6 +51,14 @@ object @@model@@Api extends MaidenApi {
       val instance = @@model@@.findById(id)
       instance.head
     }}
+
+  /*def create@@model@@FromJson: Endpoint[@@model@@FullResponse] =
+    put(prefix :: body.as[@@model@@] :: authorize) {data: @@model@@ =>
+      val id = @@model@@.create(data)
+      val instance = @@model@@.findById(id)
+      instance.head
+    }
+    */
 
 
   def update@@model@@: Endpoint[@@model@@FullResponse] =
