@@ -7,7 +7,7 @@ import shapeless.syntax.std.tuple._
 import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
 import maiden.traits.{MaidenFullResponse, MaidenModel, WithApi}
-import DB._
+import maiden.models.@@dbDriverName@@._
 import @@appNameUpper@@Schema._
 
 

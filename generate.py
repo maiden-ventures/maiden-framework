@@ -190,8 +190,6 @@ class DbAccessBuilder:
         self.build()
 
     def build(self):
-        db_file = read_template("db-driver")
-        file_name = os.path.join(self.config["base_path"], "models/DB.scala")
         db = self.config['db']
         db_type = db['driver']
         db_name = db['name']
@@ -217,14 +215,6 @@ class DbAccessBuilder:
             throw(Exception("UNKNOWN DATABASE TYPE"))
         db_port = db.get("port", default_port)
 
-        #write out DB file
-        driver = db_file.replace("@@package@@", self.config["package"]).replace("@@dbDialect@@", dialect_name)
-
-
-        fd = open(file_name, "w+")
-        fd.write(driver)
-        fd.close()
-        SCALA_FILES.append(file_name)
 
         template = read_template("config")
 
@@ -317,6 +307,12 @@ class ModelBuilder:
       return s
 
   def build(self):
+
+    db_type = self.config['db']['driver']
+
+    db_driver_name = ""
+    if db_type == "postgres": db_driver_name = "PostgresDB"
+    if db_type == "mysql": db_driver_name = "MySqlDB"
 
     models_dir = os.path.abspath(os.path.join(self.config["base_path"], "models"))
 
@@ -473,6 +469,7 @@ class ModelBuilder:
         template = template.replace("@@model@@", self.model_name) \
                    .replace("@@appNameUpper@@", self.app_name) \
                    .replace("@@refFields@@", ref_fields_str) \
+                   .replace("@@dbDriverName@@", db_driver_name)\
                    .replace("@@refConstructorFields@@", ref_constructor_fields) \
                    .replace("@@refFromDBFields@@", ref_from_db) \
                    .replace("@@baseConstructorFields@@", base_constructor_fields) \
