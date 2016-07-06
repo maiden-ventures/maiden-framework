@@ -27,8 +27,10 @@ lazy val `maiden-framework` = (project in file("."))
       "com.imageworks.scala-migrations" %% "scala-migrations" % "1.1.1",
 
       //quill
-      "io.getquill" % "quill_2.11" % "0.6.1-SNAPSHOT",
-      "io.getquill" % "quill-sql_2.11" % "0.6.1-SNAPSHOT",
+      //"io.getquill" % "quill_2.11" % "0.6.1-SNAPSHOT",
+      //"io.getquill" % "quill-sql_2.11" % "0.6.1-SNAPSHOT",
+      "io.getquill" % "quill_2.11" % "0.7.0",
+      "io.getquill" % "quill-sql_2.11" % "0.7.0",
       //"io.getquill" % "quill-cassandra_2.11" % "0.6.0",
 
       //yaml stuff
