@@ -12,7 +12,8 @@ class ExceptionFilter[REQUEST <: Request](encoder: EncodeResponse[Throwable]) ex
       try {
         service(request)
       } catch {
-        case NonFatal(e) => Future.exception(e)
+        case e: Exception => Future.exception(e)
+        //case NonFatal(e) => Future.exception(e)
       }
     }
     // TODO TJA Is this going to rework the API/Finch level error handling?

@@ -721,6 +721,8 @@ if __name__ == "__main__":
         if 'db_name' not in model:
             model_data[index]["db_name"] = inflection.underscore(model["name"])
 
+        model_data[index]["name"] = inflection.camelize(model["name"])
+
         if "id" not in cols:
             model_data[index]["columns"].insert(0, {
                 "name": "id",

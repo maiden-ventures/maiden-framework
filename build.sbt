@@ -11,6 +11,8 @@ lazy val `maiden-framework` = (project in file("."))
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
       "com.github.finagle" % "finch-core_2.11" % "0.10.0",
+      "com.twitter" % "finagle-stats_2.11" % "6.35.0",
+      "com.twitter" % "finagle-zipkin_2.11" % "6.35.0",
       "com.github.finagle" %% "finch-circe" % "0.10.0",
       "com.github.finagle" %% "finch-oauth2" % "0.10.0",
       "com.twitter" %% "twitter-server" % "1.20.0",

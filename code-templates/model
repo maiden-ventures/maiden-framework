@@ -8,6 +8,7 @@ import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
 import maiden.traits.{MaidenFullResponse, MaidenModel, WithApi}
 import maiden.models.@@dbDriverName@@._
+import maiden.exceptions._
 import @@appNameUpper@@Schema._
 
 
@@ -42,7 +43,10 @@ object @@model@@ {
   }
 
   def get(id: Long) =
-    findById(id).head
+    findById(id).headOption match {
+      case Some(x) => x
+      case _ => throw new EntityNotFoundException
+    }
 
   @@magicMethods@@
 
