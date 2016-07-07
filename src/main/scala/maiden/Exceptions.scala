@@ -37,6 +37,14 @@ class CreateOrUpdateFailedException(
   extends MaidenException(message, httpStatus, exc)
 
 
+
+class EntityNotFoundException(
+  message: String = "The entity cannot be found",
+  httpStatus: H = H.NOT_FOUND,
+  exc: Option[Exception] = None)
+    extends MaidenException(message, httpStatus, exc)
+
+
 class NoUserException(
     message: String = "The user cannot be found",
     httpStatus: H = H.NOT_FOUND,

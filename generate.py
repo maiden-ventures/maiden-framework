@@ -5,7 +5,7 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-import sys
+#import sys
 import os
 import time
 
@@ -130,7 +130,7 @@ class MigrationBuilder:
 
         migration_name = "Create%s" % (inflection.camelize(model["name"]))
         class_name = "Migrate_%s_%s"  % (now_ts, migration_name)
-        table_name = inflection.underscore(model["name"]).lower()
+        #table_name = inflection.underscore(model["name"]).lower()
         file_name = "%s.scala" % (class_name.replace("Migrate_", ""))
 
         for col in model['columns']:
@@ -202,17 +202,15 @@ class DbAccessBuilder:
         template = "postgres-props"
         if db_type == "postgres":
             default_port = "5432"
-            dialect_name = "Postgres"
             datasource_driver = "org.postgresql.ds.PGSimpleDataSource"
             database_driver = "org.postgresql.Driver"
             database_jdbc_name = "postgresql"
 
         elif db_type == "mysql":
             default_port = "3336"
-            dialect_name = "MySQL"
 
         else:
-            throw(Exception("UNKNOWN DATABASE TYPE"))
+            raise(Exception("UNKNOWN DATABASE TYPE"))
         db_port = db.get("port", default_port)
 
 
@@ -331,8 +329,6 @@ class ModelBuilder:
         model_path= os.path.join(models_dir, "%s.scala" % (self.model_name))
         self.app_name = inflection.camelize(self.config["app"]["name"])
 
-        fk_accessors = []
-
         raw_columns = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]]) for c in model["columns"]]
         create_columns = filter(lambda x: x[0] not in ("createdAt", "updatedAt", "id"), raw_columns)
 
@@ -376,8 +372,6 @@ class ModelBuilder:
         base_fields = ",".join(columns)
 
         template = template.replace("@@baseFields@@", base_fields)
-        magic_methods = []
-
         findByTemplate = read_template("models/findby")
         rangeByTemplate = read_template("models/rangeby")
         deleteByTemplate = read_template("models/deleteby")

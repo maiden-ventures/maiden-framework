@@ -17,5 +17,6 @@ class ExceptionFilter[REQUEST <: Request](encoder: EncodeResponse[Throwable]) ex
     }
     // TODO TJA Is this going to rework the API/Finch level error handling?
     finalResponse.rescue(ErrorHandler.topLevelErrorHandler(request, encoder))
+
   }
 }

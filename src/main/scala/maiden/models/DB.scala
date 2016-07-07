@@ -34,10 +34,11 @@ trait MaidenBaseDB {
 
 object PostgresDB extends MaidenBaseDB {
 
-
   lazy val db = source(new JdbcSourceConfig[PostgresDialect, SnakeCase]("db") {
     override def dataSource = createDataSource
   })
+
+
 }
 
 object MySqlDB extends MaidenBaseDB {
@@ -45,4 +46,5 @@ object MySqlDB extends MaidenBaseDB {
   lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
     override def dataSource = createDataSource
   })
+
 }
