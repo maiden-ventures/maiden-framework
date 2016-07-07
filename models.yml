@@ -1,20 +1,11 @@
-
 - name: test
   api: true
   admin: true
   columns:
-    #- name: id
-    #  auto_increment: true
-    #  type: bigint
-    #  primary_key: true
     - name: first_name
       type: varchar
       limit: 255
       index: true
-      #references:
-      #  table: test2
-      #  column: first_name
-
 
 - name: Test2
   columns:
@@ -24,4 +15,4 @@
       references:
         table: test
         column: first_name
-        on_delete: Cascade
+        on_delete: cascade

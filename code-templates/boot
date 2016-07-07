@@ -1,5 +1,6 @@
 package @@package@@
 
+import com.twitter.server.TwitterServer
 import com.twitter.finagle.param.Stats
 import com.twitter.finagle.{Http, ListeningServer}
 import com.twitter.finagle.stats.{LoadedStatsReceiver, StatsReceiver}
@@ -12,7 +13,8 @@ import maiden.config.MaidenConfig
 import @@appNameUpper@@Api._
 
 
-final class App {
+object @@appNameUpper@@Boot extends TwitterServer {
+
   lazy val systemId = MaidenConfig.get[String]("app.id")
   lazy val port = MaidenConfig.get[Int]("app.port")
   lazy val environment = MaidenConfig.get[String]("app.environment")
@@ -22,8 +24,7 @@ final class App {
     .configured(Stats(LoadedStatsReceiver))
     .serve(s":${port}", apiService)
 
-  def boot(): Unit = {
-
+  def main() = {
     log.info(
         s"Booting ${systemId} in ${environment} mode on ${server.boundAddress}")
     sys.addShutdownHook(shutdown())
@@ -40,11 +41,5 @@ final class App {
   private def shutdown(): Unit = {
     log.info(s"${systemId} is shutting down...")
     Await.ready(server.close())
-  }
-}
-
-object App {
-  def main(args: Array[String]): Unit = {
-    new App().boot()
   }
 }

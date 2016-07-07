@@ -108,7 +108,7 @@ class MigrationBuilder:
           s = """addForeignKey(on("%s" -> "%s"),
           references("%s" -> "%s"),
           OnDelete(%s),
-          Name("%s"))""" % (inflection.underscore("table").lower(), info["db_name"], ref_table, ref_column, on_delete, ref_name)
+          Name("%s"))""" % (inflection.underscore("table").lower(), info["db_name"], ref_table, ref_column, inflection.camelize(on_delete), ref_name)
 
           self.references.append(s)
 
