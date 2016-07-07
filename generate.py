@@ -143,7 +143,7 @@ class MigrationBuilder:
         references_str = "\n".join(self.references)
         table_str = model['db_name']
 
-        out = self.template % (package, class_name, table_str, column_str, indexes_str, references_str)
+        out = self.template % (package, table_str, table_str, column_str, indexes_str, references_str)
         fd = open(os.path.join(migration_dir, file_name), "w+")
         fd.write(out)
         fd.close()
@@ -665,7 +665,8 @@ app.security.access_token="%s"
 #some default models to add if the user selects
 #per-user authentication
 DEFAULT_USER_MODEL = {
-    "name": "Users",
+    "name": "User",
+    "db_name": "users",
     "columns": [
         {"name": "user_name", "type": "varchar", "limit": 64,"index": True},
         {"name": "access_token", "type": "varchar", "limit": 128, "index": True}
@@ -739,6 +740,11 @@ if __name__ == "__main__":
                 "type" : "timestamp",
                 "default": "NOW()"
             })
+
+    model_list = [(x["name"], x["db_name"]) for x in model_data]
+    print "Generating for the  following models:"
+    for m in model_list:
+        print("  %s (%s)" % (m[0], m[1]))
 
     if key_with_default(gen_options, "sbt", True):
         print("Generating project build files...")
