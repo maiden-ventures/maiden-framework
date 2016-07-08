@@ -15,4 +15,4 @@
       references:
         table: test
         column: first_name
-        on_delete: cascade
+        on_delete: Cascade

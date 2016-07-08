@@ -33,7 +33,7 @@ object @@model@@ {
 
   def exists(id: Long) = {
     val q = quote {
-      query[@@model@@].filter(_.id == lift(id))
+      @@queryName@@.filter(_.id == lift(id))
     }
 
     db.run(q.size) match {

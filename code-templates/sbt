@@ -1,4 +1,5 @@
 import sbt.complete.DefaultParsers._
+import NativePackagerHelper._
 
 val commonSettings = Seq(
   organization := "@@namespace@@",
@@ -42,6 +43,9 @@ lazy val migrate = inputKey[Unit]("Run migrations")
 lazy val @@appName@@ = (project in file("."))
   .enablePlugins(BuildInfoPlugin)
   .settings(baseBuildSettings ++ Seq(
+
+    mappings in Universal ++= directory("config"),
+    mappings in Univeral ++= file("tools/zipkin.jar"),
     assemblyMergeStrategy in assembly := {
       case PathList("io", "netty", xs @ _*) => MergeStrategy.last
       case PathList(ps @ _*) if ps.last endsWith ".properties" => MergeStrategy.last
@@ -58,10 +62,11 @@ lazy val @@appName@@ = (project in file("."))
 
     libraryDependencies ++= Seq(
       "com.maiden" %% "maiden-framework" % "0.1.0",
+      "io.github.benwhitehead.finch" %% "finch-server" % "0.9.1",
       "io.circe" %% "circe-generic" % "0.5.0-M1",
       "io.circe" % "circe-java8_2.11" % "0.5.0-M1",
       "io.circe" %% "circe-core" % "0.5.0-M1",
       "io.circe" %% "circe-parser" % "0.5.0-M1"
 
     )
-  ))
+  )).enablePlugins(JavaAppPackaging)

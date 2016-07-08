@@ -1,6 +1,7 @@
 package @@package@@
 
-import com.twitter.server.TwitterServer
+import java.net.InetAddress
+import io.github.benwhitehead.finch.FinchServer
 import com.twitter.finagle.param.Stats
 import com.twitter.finagle.{Http, ListeningServer}
 import com.twitter.finagle.stats.{LoadedStatsReceiver, StatsReceiver}
@@ -13,33 +14,27 @@ import maiden.config.MaidenConfig
 import @@appNameUpper@@Api._
 
 
-object @@appNameUpper@@Boot extends TwitterServer {
+object @@appNameUpper@@Boot extends FinchServer {
 
   lazy val systemId = MaidenConfig.get[String]("app.id")
   lazy val port = MaidenConfig.get[Int]("app.port")
   lazy val environment = MaidenConfig.get[String]("app.environment")
+
+  override lazy val serverName = InetAddress.getLocalHost.getHostName
+
+
 
   lazy val server: ListeningServer = Http.server
     .withLabel(systemId)
     .configured(Stats(LoadedStatsReceiver))
     .serve(s":${port}", apiService)
 
-  def main() = {
-    log.info(
-        s"Booting ${systemId} in ${environment} mode on ${server.boundAddress}")
-    sys.addShutdownHook(shutdown())
-    registerMetricsAndMonitoring()
-    Await.ready(server)
-  }
+
+  def service = apiService
 
   private def registerMetricsAndMonitoring(): Unit = {
     errorReporter.registerForUnhandledExceptions()
     JvmStats.register(LoadedStatsReceiver)
     TwitterStats.register(LoadedStatsReceiver)
-  }
-
-  private def shutdown(): Unit = {
-    log.info(s"${systemId} is shutting down...")
-    Await.ready(server.close())
   }
 }

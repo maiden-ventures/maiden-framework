@@ -1,3 +1,5 @@
+import NativePackagerHelper._
+
 organization := "com.maiden"
 
 //name := "maiden-framework"
@@ -8,6 +10,8 @@ scalaVersion := "2.11.8"
 
 lazy val `maiden-framework` = (project in file("."))
   .settings(
+
+    mappings in Universal ++= directory("config"),
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
       "com.github.finagle" % "finch-core_2.11" % "0.10.0",
@@ -15,7 +19,8 @@ lazy val `maiden-framework` = (project in file("."))
       "com.twitter" % "finagle-zipkin_2.11" % "6.35.0",
       "com.github.finagle" %% "finch-circe" % "0.10.0",
       "com.github.finagle" %% "finch-oauth2" % "0.10.0",
-      "com.twitter" %% "twitter-server" % "1.20.0",
+      //"com.twitter" %% "twitter-server" % "1.20.0",
+      "io.github.benwhitehead.finch" %% "finch-server" % "0.9.1",
       "com.github.rlazoti" % "finagle-metrics_2.11" % "0.0.3",
       "com.netaporter" %% "scala-uri" % "0.4.14",
 

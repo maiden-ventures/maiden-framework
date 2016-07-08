@@ -108,7 +108,7 @@ class MigrationBuilder:
           s = """addForeignKey(on("%s" -> "%s"),
           references("%s" -> "%s"),
           OnDelete(%s),
-          Name("%s"))""" % (inflection.underscore("table").lower(), info["db_name"], ref_table, ref_column, inflection.camelize(on_delete), ref_name)
+          Name("%s"))""" % (inflection.underscore("table").lower(), info["db_name"], ref_table, ref_column, on_delete, ref_name)
 
           self.references.append(s)
 
@@ -145,7 +145,7 @@ class MigrationBuilder:
         references_str = "\n".join(self.references)
         table_str = model['db_name']
 
-        out = self.template % (package, table_str, table_str, column_str, indexes_str, references_str)
+        out = self.template % (package, class_name, table_str, column_str, indexes_str, references_str)
         fd = open(os.path.join(migration_dir, file_name), "w+")
         fd.write(out)
         fd.close()
@@ -637,6 +637,24 @@ def build_logback(app_config):
     fd.write(out)
     fd.close()
 
+def build_app_ini(app_config):
+    template = read_template("application.ini")
+    file_name = os.path.join(app_config["app"]['source_directory'], "config/launcher.conf")
+    out = template.replace("@@httpInterface@@", ":%s" % (app_config['app']['port'])) \
+                  .replace("@@certificatePath@@", app_config['app']['certificate_path']) \
+                  .replace("@@keyPath@@", app_config['app']['key_path']) \
+                  .replace("@@maxRequestSize@@", app_config['app']['max_request_size']) \
+                  .replace("@@appNameLower@@", app_config['app']['app_name_lower'])
+
+    if app_config['app']['https_port'] != "":
+      out = out.replace("@@httpsInterface@@", ":%s" % (app_config['app']['https_port']))
+    else:
+        out = out.replace("@@httpsInterface@@", "")
+
+    fd = open(file_name, "w+")
+    fd.write(out)
+    fd.close()
+
 def security_info(app_config):
     sec = {}
 
@@ -703,6 +721,20 @@ if __name__ == "__main__":
     app_data['base_path'] = os.path.join(app_data['app']['source_directory'], "src/main/scala/%s" % (app_data['app']['name'].lower()))
     app_data['config_path'] = os.path.join(app_data['app']['source_directory'], "config")
 
+    app_data['app']['app_name_lower'] = app_data['app']['name'].lower()
+    if 'certificate_path' not in app_data['app']:
+      app_data['app']['certificate_path'] = ""
+
+    if 'key_path' not in app_data['app']:
+        app_data['app']['key_path'] = ""
+
+    if 'https_port' not in app_data['app']:
+        app_data['app']['https_port'] = ""
+
+    if 'max_request_size' not in app_data['app']:
+        app_data['app']['max_request_size'] = "10"
+
+
     if not os.path.exists(app_data['config_path']):
         os.makedirs(app_data['config_path'])
 
@@ -720,8 +752,6 @@ if __name__ == "__main__":
 
         if 'db_name' not in model:
             model_data[index]["db_name"] = inflection.underscore(model["name"])
-
-        model_data[index]["name"] = inflection.camelize(model["name"])
 
         if "id" not in cols:
             model_data[index]["columns"].insert(0, {
@@ -744,11 +774,6 @@ if __name__ == "__main__":
                 "type" : "timestamp",
                 "default": "NOW()"
             })
-
-    model_list = [(x["name"], x["db_name"]) for x in model_data]
-    print "Generating for the  following models:"
-    for m in model_list:
-        print("  %s (%s)" % (m[0], m[1]))
 
     if key_with_default(gen_options, "sbt", True):
         print("Generating project build files...")
@@ -774,6 +799,7 @@ if __name__ == "__main__":
         build_api_service(model_data, app_data)
 
     build_logback(app_data)
+    build_app_ini(app_data)
 
     if key_with_default(gen_options, "format_source", True):
       print("Formatting Scala sources...")
