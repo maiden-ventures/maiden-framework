@@ -43,9 +43,9 @@ lazy val migrate = inputKey[Unit]("Run migrations")
 lazy val @@appName@@ = (project in file("."))
   .enablePlugins(BuildInfoPlugin)
   .settings(baseBuildSettings ++ Seq(
-
+    bashScriptConfigLocation := Some("${app_home}/../config/launcher.conf"),
     mappings in Universal ++= directory("config"),
-    mappings in Univeral ++= file("tools/zipkin.jar"),
+    //mappings in Universal ++= Seq(file("tools/zipkin.jar")),
     assemblyMergeStrategy in assembly := {
       case PathList("io", "netty", xs @ _*) => MergeStrategy.last
       case PathList(ps @ _*) if ps.last endsWith ".properties" => MergeStrategy.last
