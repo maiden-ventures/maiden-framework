@@ -2,8 +2,7 @@ package maiden.http
 
 import scala.util.{Try, Success, Failure}
 import io.netty.handler.codec.http.{HttpResponseStatus => H}
-import io.finch.{Endpoint, _}
-import maiden.types._
+import io.github.benwhitehead.finch.FinchServer
 import maiden.exceptions._
 
 object Render {

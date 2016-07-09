@@ -10,7 +10,7 @@ except ImportError:
 #import sys
 import os
 import time
-
+import shutil
 from datetime import datetime
 import subprocess
 
@@ -655,6 +655,14 @@ def build_app_ini(app_config):
     fd.write(out)
     fd.close()
 
+
+def copy_tools(app_config):
+    base = os.path.join(app_config['app']['source_directory'], "tools")
+
+    if not os.path.exists(base):
+        os.mkdir(base)
+    shutil.copyfile("./tools/zipkin.jar", os.path.join(base, "zipkin.jar"))
+
 def security_info(app_config):
     sec = {}
 
@@ -800,6 +808,7 @@ if __name__ == "__main__":
 
     build_logback(app_data)
     build_app_ini(app_data)
+    copy_tools(app_data)
 
     if key_with_default(gen_options, "format_source", True):
       print("Formatting Scala sources...")
