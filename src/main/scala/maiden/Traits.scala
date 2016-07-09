@@ -13,7 +13,7 @@ trait MaidenModel extends MaidenEncoder {
 trait WithApi
 trait WithAdmin
 trait WithAuthorization
-trait MaidenFullResponse extends MaidenEncoder
+trait MaidenFullResponse extends MaidenModel
 
 //some helper traits
 //these are not actually used right now

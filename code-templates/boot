@@ -22,19 +22,6 @@ object @@appNameUpper@@Boot extends FinchServer {
 
   override lazy val serverName = InetAddress.getLocalHost.getHostName
 
-
-
-  lazy val server: ListeningServer = Http.server
-    .withLabel(systemId)
-    .configured(Stats(LoadedStatsReceiver))
-    .serve(s":${port}", apiService)
-
-
   def service = apiService
 
-  private def registerMetricsAndMonitoring(): Unit = {
-    errorReporter.registerForUnhandledExceptions()
-    JvmStats.register(LoadedStatsReceiver)
-    TwitterStats.register(LoadedStatsReceiver)
-  }
 }

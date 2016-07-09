@@ -2,13 +2,14 @@ package maiden.implicits
 
 import java.time.{ LocalDateTime, ZoneId, ZoneOffset }
 import java.util.{Date}
+import java.util.concurrent.Executors
 import io.getquill._
-import io.getquill.quotation._
-import io.getquill.naming.SnakeCase
-import io.getquill.sources.sql.ops._
-import cats.data.Xor, io.circe._, io.circe.jawn._
-import io.circe.java8._
-import scala.concurrent.ExecutionContext.Implicits.global
+//import io.getquill.quotation._
+//import io.getquill.naming.SnakeCase
+//import io.getquill.sources.sql.ops._
+//import cats.data.Xor, io.circe._, io.circe.jawn._
+//import io.circe.java8._
+import scala.concurrent.ExecutionContext
 
 
 
@@ -42,6 +43,17 @@ object DBImplicits {
 
   implicit class ReturningId[T](a: Action[T]) {
     def returningId = quote(infix"$a RETURNING ID".as[Query[T]])
+  }
+
+}
+
+object ExecutionImplicits {
+
+  implicit val ec = new ExecutionContext {
+    val threadPool = Executors.newFixedThreadPool(10);
+    override def reportFailure(cause: Throwable): Unit = {};
+    override def execute(runnable: Runnable): Unit = threadPool.submit(runnable);
+    def shutdown() = threadPool.shutdown();
   }
 
 }
