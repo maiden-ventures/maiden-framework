@@ -2,8 +2,8 @@ package maiden.traits
 
 import java.time.LocalDateTime
 
-
 trait MaidenEncoder extends Product
+
 trait MaidenModel extends MaidenEncoder {
   val id: Long
   val createdAt: LocalDateTime

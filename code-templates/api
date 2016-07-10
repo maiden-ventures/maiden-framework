@@ -1,12 +1,14 @@
 package @@package@@.api
 
 import java.time.LocalDateTime
+import spire.implicits._
 import io.finch.{Endpoint, _}
 import io.finch.circe._
 import io.circe.generic.auto._
 import maiden.types.Exceptions._
 import maiden.types.MaidenApi
 import maiden.http.Render._
+import maiden.http.Validations._
 import maiden.implicits.DateImplicits._
 import @@package@@.models.{@@model@@, @@model@@FullResponse}
 import maiden.auth.MaidenAuthUser
@@ -36,12 +38,12 @@ object @@model@@Api extends MaidenApi {
     }}
 
   def get@@model@@: Endpoint[@@model@@FullResponse] =
-    get(prefix :: long("id") :: authorize) { (id: Long, u: MaidenAuthUser) =>
+    get(prefix :: long("id").should(positive[Long]) :: authorize) { (id: Long, u: MaidenAuthUser) =>
       render(@@model@@.get(id))
     }
 
   def delete@@model@@: Endpoint[Long] =
-    delete(prefix::long("id") :: authorize) { (id: Long, u: MaidenAuthUser) =>
+    delete(prefix::long("id").should(positive[Long]) :: authorize) { (id: Long, u: MaidenAuthUser) =>
       render(@@model@@.deleteById(id))
     }
 
@@ -62,7 +64,7 @@ object @@model@@Api extends MaidenApi {
 
 
   def update@@model@@: Endpoint[@@model@@FullResponse] =
-    post(prefix :: long("id") :: @@optionalParams@@ :: authorize) { (id: Long, @@paramList@@, u: MaidenAuthUser) =>
+    post(prefix :: long("id").should(positive[Long]) :: @@optionalParams@@ :: authorize) { (id: Long, @@paramList@@, u: MaidenAuthUser) =>
       render {
         @@model@@.update(id, @@updateParams@@)
       }
@@ -70,7 +72,7 @@ object @@model@@Api extends MaidenApi {
 
 
   def list@@model@@: Endpoint[List[@@model@@FullResponse]] =
-    get(prefix :: int("start") :: int("count") :: authorize) { (start: Int, count: Int, u: MaidenAuthUser) => {
+    get(prefix :: int("start").should(positive[Int]) :: int("count").should(positive[Int]) :: authorize) { (start: Int, count: Int, u: MaidenAuthUser) => {
       val results = @@model@@.getRangeById(start, count)
       render(results)
     }}

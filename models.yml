@@ -6,6 +6,9 @@
       type: varchar
       limit: 255
       index: true
+      validations:
+        - longer_than: 5
+        - shorter_than: 10
 
 - name: Test2
   columns:

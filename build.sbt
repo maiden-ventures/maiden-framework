@@ -26,6 +26,7 @@ lazy val `maiden-framework` = (project in file("."))
   .settings(
     mappings in Universal ++= directory("config"),
     libraryDependencies ++= Seq(
+      "org.spire-math" % "spire_2.11" % "0.11.0",
       "commons-io" % "commons-io" % "2.4",
       "com.github.finagle" %% "finch-core" % finchVersion,
       "com.twitter" %% "finagle-stats" % finagleVersion,
