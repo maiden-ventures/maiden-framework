@@ -1,3 +1,4 @@
+
 package maiden.util.error
 
 import com.rollbar.Rollbar

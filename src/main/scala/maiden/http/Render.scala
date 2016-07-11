@@ -1,5 +1,6 @@
 package maiden.http
 
+import java.io.{StringWriter, PrintWriter}
 import scala.util.{Try, Success, Failure}
 import io.netty.handler.codec.http.{HttpResponseStatus => H}
 import io.finch._
@@ -13,7 +14,12 @@ object Render {
       case Success(x) => Right(x)
       //TODO:  handle speciality cases here
       case Failure(e) if e.isInstanceOf[MaidenException] => Left(e.asInstanceOf[MaidenException])
-      case _ => Left(new MaidenException("unhandled"))
+      case Failure(e) => {
+        val sw = new StringWriter
+        e.printStackTrace(new PrintWriter(sw))
+        println(sw.toString)
+        Left(new MaidenException("unhandled"))
+      }
     }
     result match {
       case Right(b) => Ok(b)

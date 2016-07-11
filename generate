@@ -285,7 +285,7 @@ class ModelBuilder:
 
   def __build_update_matcher(self, field_name):
       s = """%s match {
-        case Some(v) => if (v != existing.%s) existing.%s = v
+        case Some(v) => if (v != existing.%s) existing.%s = Some(v)
         case _ => ()
       }""" % (field_name, field_name, field_name)
 
@@ -357,13 +357,13 @@ class ModelBuilder:
         for col in model["columns"]:
           col_name = inflection.camelize(col["name"], False)
           if col_name == "id":
-              col_str = "  id: Long = -1"
+              col_str = "  id: Option[Long] = Some(-1l)"
           elif col_name  == "createdAt":
               col_str = "  createdAt: LocalDateTime = LocalDateTime.now"
           elif col_name  == "updatedAt":
               col_str = "  var updatedAt: LocalDateTime = LocalDateTime.now"
           else:
-              col_str = "  var %s: %s" % (col_name, DB_TO_SCALA[col['type']])
+              col_str = "  var %s: Option[%s]" % (col_name, DB_TO_SCALA[col['type']])
 
           columns.append("\n%s" % (col_str))
 
@@ -585,6 +585,12 @@ class ApiBuilder:
             all_model_cols_str = ", ".join(all_model_cols)
 
             cols = [(inflection.camelize(c["name"], False), DB_TO_SCALA[c["type"]], c.get("validations", [])) for c in model["columns"] if c["name"] not in ("id", "created_at", "updated_at")]
+
+            core_field_comprehension_mappings = "\n".join(['%s <- c.downField("%s").as[Option[%s]]' % (inflection.camelize(c[0], False), inflection.camelize(c[0], False), c[1]) for c in cols])
+
+            core_field_mappings = ",".join([inflection.camelize(c[0], False) for c in cols])
+
+
             create_args = " :: ".join([param_str % (c[0], c[1], c[2]) for c in cols])
             create_param_args = " :: ".join(['param("%s").as[%s]%s' % (c[0], c[1], self.add_validations(c[1], c[2])) for c in cols])
             create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
@@ -598,6 +604,8 @@ class ApiBuilder:
                                .replace("@@lowerCaseModel@@", inflection.camelize(model['name'],False)) \
                                .replace("@@package@@", self.config['package'])\
                                .replace("@@securityImport@@", self.security_import)\
+                               .replace("@@coreFieldComprehensionMappings@@", core_field_comprehension_mappings) \
+                               .replace("@@coreFieldMappings@@", core_field_mappings) \
                                .replace("@@createArgs@@", create_args)\
                                .replace("@@createParamArgs@@", create_param_args)\
                                .replace("@@createParams@@", create_params)\

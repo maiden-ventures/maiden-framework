@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 trait MaidenEncoder extends Product
 
 trait MaidenModel extends MaidenEncoder {
-  val id: Long
+  val id: Option[Long]
   val createdAt: LocalDateTime
   var updatedAt: LocalDateTime
 }

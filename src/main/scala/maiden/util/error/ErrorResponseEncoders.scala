@@ -9,6 +9,10 @@ import io.finch.EncodeResponse
 
 trait ErrorResponseEncoders {
   implicit val exceptionEncoder = Encoder.instance[Throwable] { e =>
+    if (e == null) {
+      println("FUCKED")
+
+    }
     val base = Map(
       "message" -> e.getMessage,
       "type" -> e.getClass.getSimpleName
@@ -18,7 +22,10 @@ trait ErrorResponseEncoders {
   }
 
   implicit def exceptionResponseEncoder: EncodeResponse[Throwable] =
-    EncodeResponse(ContentTypeJson)(e => Utf8(Map("error" -> exceptionEncoder.apply(e)).asJson.noSpaces))
+    EncodeResponse(ContentTypeJson)(e => {
+      Utf8(Map("error" -> exceptionEncoder.apply(e)).asJson.noSpaces)
+    })
 }
+
 
 object ErrorResponseEncoders extends ErrorResponseEncoders

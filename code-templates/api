@@ -4,6 +4,8 @@ import java.time.LocalDateTime
 import spire.implicits._
 import io.finch.{Endpoint, _}
 import io.finch.circe._
+import io.circe._
+import io.circe.java8.time._
 import io.circe.generic.auto._
 import maiden.types.Exceptions._
 import maiden.types.MaidenApi
@@ -16,9 +18,22 @@ import maiden.auth.MaidenAuthUser
 
 object @@model@@Api extends MaidenApi {
 
+  implicit val @@lowerCaseModel@@BodyDecoder = Decoder.instance[@@model@@](c =>
+    for {
+      id <- c.downField("id").as[Option[Long]]
+      @@coreFieldComprehensionMappings@@
+      createdAt <- c.downField("createdAt").as[Option[LocalDateTime]]
+      updatedAt <- c.downField("updatedAt").as[Option[LocalDateTime]]
+    } yield @@model@@(id, @@coreFieldMappings@@, createdAt.getOrElse(LocalDateTime.now), updatedAt.getOrElse(LocalDateTime.now))
+  )
+
+  val post@@model@@: Endpoint[@@model@@ => @@model@@] = body.as[@@model@@ => @@model@@]
+  val put@@model@@: Endpoint[@@model@@] = body.as[@@model@@]
+
+
   private[this] val prefix = "api" :: "@@lowerCaseModel@@"
 
-  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: /*create@@model@@FromJson :+: */ update@@model@@ :+: doc@@model@@
+  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: update@@model@@ :+: doc@@model@@
 
   def doc@@model@@: Endpoint[Map[String, String]] =
     get(prefix :: "doc" :: authorize) { (u: MaidenAuthUser) => {
@@ -48,25 +63,17 @@ object @@model@@Api extends MaidenApi {
     }
 
   def create@@model@@: Endpoint[@@model@@FullResponse] =
-    put(prefix :: @@createParamArgs@@ ::  authorize) { (@@createParams@@, u: MaidenAuthUser) => render {
-      val id = @@model@@.create(@@modelCreationArgs@@)
+    put(prefix :: put@@model@@ ::  authorize) { (@@lowerCaseModel@@: @@model@@, u: MaidenAuthUser) => render {
+      val id = @@model@@.create(@@lowerCaseModel@@)
       val instance = @@model@@.findById(id)
       instance.head
     }}
 
-  /*def create@@model@@FromJson: Endpoint[@@model@@FullResponse] =
-    put(prefix :: body.as[@@model@@] :: authorize) {data: @@model@@ =>
-      val id = @@model@@.create(data)
-      val instance = @@model@@.findById(id)
-      instance.head
-    }
-    */
-
-
   def update@@model@@: Endpoint[@@model@@FullResponse] =
-    post(prefix :: long("id").should(positive[Long]) :: @@optionalParams@@ :: authorize) { (id: Long, @@paramList@@, u: MaidenAuthUser) =>
+    post(prefix :: long("id").should(positive[Long]) :: post@@model@@ :: authorize) { (id: Long, @@lowerCaseModel@@: @@model@@ => @@model@@, u: MaidenAuthUser) =>
       render {
-        @@model@@.update(id, @@updateParams@@)
+        val old@@model@@ = @@model@@FullResponse.extract(@@model@@.get(id))
+        @@model@@.update(@@lowerCaseModel@@(old@@model@@))
       }
     }
 

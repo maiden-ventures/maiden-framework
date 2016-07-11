@@ -20,6 +20,6 @@ def update(data: @@model@@) = {
   }
 
   db.run(q)(data)
-  get(data.id)
+  get(data.id.get)
 
 }
