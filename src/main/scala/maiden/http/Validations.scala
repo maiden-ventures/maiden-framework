@@ -6,22 +6,31 @@ import io.finch.internal._
 import spire.math._
 import spire.implicits._
 import io.finch._
-
-
-//pimp String-like and Integral to support "should"
+import java.time.LocalDateTime
 
 
 object Validations {
 
+
+/* allow for *some* raw values to behave like Finch endpoints
+   with regard to validations
+*/
 abstract class EndpointLikeOps[T](value: T) {
-    def should(rule: ValidationRule[T]) =
-      if (rule.apply(value)) Future.value(value)
-      else Future.exception(new Exception(s" ${value} should ${rule}"))
+  def should(name: String)(rule: ValidationRule[T]) =
+    if (rule.apply(value)) Future.value(value)
+    else Future.exception(Error(s" ${name} should ${rule.description}"))
+
+  def should(rule: ValidationRule[T]): Future[T] = should(s""""${value.toString}"""")(rule)
 }
 
   implicit class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)
   implicit class EndpointLikeInt(i: Int) extends EndpointLikeOps[Int](i)
   implicit class EndpointLikeLong(l: Long) extends EndpointLikeOps[Long](l)
+  implicit class EndpointLikeDouble(d: Double) extends EndpointLikeOps[Double](d)
+  implicit class EndpointLikeFloat(f: Float) extends EndpointLikeOps[Float](f)
+  implicit class EndpointLikeLocalDateTime(d: LocalDateTime) extends EndpointLikeOps[LocalDateTime](d)
+
+
 
 
 
@@ -34,24 +43,11 @@ abstract class EndpointLikeOps[T](value: T) {
   )
 
   //Integers/Longs
-  def positive[V : Integral] = ValidationRule[V]("be positive") { x =>
-    x > 0
-  }
-
-  def negative[V : Integral] = ValidationRule[V]("be negative) { x =>
-    x < 0
-  }
-
-
-  def less_than[V : Integral](v: V) = ValidationRule[V](s"be less than $v") { x =>
-    x < v
-  }
-
-  def greater_than[V : Integral](v: V) = ValidationRule[V](s"be greater than $v") { x=>
-    x > v
-  }
-
-  def between[V : Integral](start: V, end: V) = ValidationRule[V](s"be between $start and $end") {
+  def positive[V : Numeric] = ValidationRule[V]("be positive") { _ > 0 }
+  def negative[V : Numeric] = ValidationRule[V]("be negative") { _ < 0 }
+  def less_than[V : Numeric](v: V) = ValidationRule[V](s"be less than $v") { _ < v }
+  def greater_than[V : Numeric](v: V) = ValidationRule[V](s"be greater than $v") { _ > v }
+  def between[V : Numeric](start: V, end: V) = ValidationRule[V](s"be between $start and $end") {
     x =>  x >= start && x <= end
   }
 
