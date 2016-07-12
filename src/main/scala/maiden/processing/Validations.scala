@@ -9,6 +9,8 @@ import spire.math._
 import spire.implicits._
 import io.finch._
 import com.google.i18n.phonenumbers._
+import io.circe.parser._
+import cats.data.Xor
 
 object Validations {
 
@@ -110,6 +112,8 @@ object Validations {
     }
   }
 
+  def phone: ValidationRule[String] = phone("US")
+
   //TODO: make this much more thorough
   def url = ValidationRule[String](s"be valid url number") { m: String =>
     try {
@@ -128,21 +132,61 @@ object Validations {
     }
   }
 
-  def postal_code(country: String = "US") = ValidationRule[String](s"be a valid Url") {m: String =>
-       false
+  def postal_code(country: String) = ValidationRule[String](s"be a valid postal code for $country") {m: String =>
+    if (PostalCodes.codes.contains(country)) {
+      PostalCodes.codes(country).findFirstIn(m) match {
+        case Some(x) => true
+        case _ => false
+      }
+    } else {
+      if (m == "") {
+        true
+      } else {
+        false
+      }
+    }
   }
+
+  //def postal_code: ValidationRule[String] = postal_code("US")
 
   //TODO: date related
   def date = ???
   def time = ???
   def date_time = ???
 
-  //TODO: is the string valid json or xml
-  def json = ???
-  def xml = ???
+  def json = ValidationRule[String](s"should be valid JSON") {m: String =>
+    parse(m).getOrElse(null) != null
+  }
 
-  //TODO: is this a Sequence of items
-  def list = ???
+  def xml = ValidationRule[String](s"should be valid XML") { m: String =>
+    try {
+      scala.xml.XML.loadString(m)
+      true
+    } catch {
+      case e: Exception => false
+    }
+
+  }
+
+  //a list with a minimum number of elements
+  def list_min(min_elems: Int) =
+    ValidationRule[String](s"should be a list with at least $min_elems elements") { m=>
+      try {
+        m.split(",").size >= min_elems
+      } catch {
+        case e: Exception => false
+      }
+  }
+
+  def list_max(max_elems: Int) =
+    ValidationRule[String](s"should be a list with at most $max_elems elements") { m=>
+      try {
+        m.split(",").size <= max_elems
+      } catch {
+        case e: Exception => false
+      }
+    }
+
   def map = ???
 
   //match via some function (String) => Boolean
