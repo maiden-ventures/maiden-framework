@@ -12,16 +12,33 @@ import java.time.LocalDateTime
 object Validations {
 
 
+  //handle implicit conversion from Type to Option[Type]
+
 /* allow for *some* raw values to behave like Finch endpoints
    with regard to validations
 */
-abstract class EndpointLikeOps[T](value: T) {
-  def should(name: String)(rule: ValidationRule[T]) =
-    if (rule.apply(value)) Future.value(value)
-    else Future.exception(Error(s" ${name} should ${rule.description}"))
 
-  def should(rule: ValidationRule[T]): Future[T] = should(s""""${value.toString}"""")(rule)
-}
+  abstract class EndpointLikeOps[T](value: T) {
+    def should(name: String)(rule: ValidationRule[T]) =
+      if (rule.apply(value)) Future.value(value)
+      else Future.exception(Error(s" ${name} should ${rule.description}"))
+
+    def should(rule: ValidationRule[T]): Future[T] = should(s""""${value.toString}"""")(rule)
+  }
+
+  abstract class EndpointOptionLikeOps[T](value: Option[T]) {
+    def should(name: String)(rule: ValidationRule[T]) =
+      value match {
+        case Some(value) => {
+          if (rule.apply(value)) Future.value(value)
+          else Future.exception(Error(s" ${name} should ${rule.description}"))
+        }
+        case _ =>
+          Future.exception(Error(s" ${name} should not be empty"))
+      }
+
+    def should(rule: ValidationRule[T]): Future[T] = should(s""""${value.toString}"""")(rule)
+  }
 
   implicit class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)
   implicit class EndpointLikeInt(i: Int) extends EndpointLikeOps[Int](i)
@@ -31,8 +48,23 @@ abstract class EndpointLikeOps[T](value: T) {
   implicit class EndpointLikeLocalDateTime(d: LocalDateTime) extends EndpointLikeOps[LocalDateTime](d)
 
 
+  implicit class EndpointLikeOptionString(o: Option[String])
+      extends EndpointOptionLikeOps[String](o)
 
+  implicit class EndpointLikeOptionInt(o: Option[Int])
+      extends EndpointOptionLikeOps[Int](o)
 
+  implicit class EndpointLikeOptionLong(o: Option[Long])
+      extends EndpointOptionLikeOps[Long](o)
+
+  implicit class EndpointLikeOptionDouble(o: Option[Double])
+      extends EndpointOptionLikeOps[Double](o)
+
+  implicit class EndpointLikeOptionFloat(o: Option[Float])
+      extends EndpointOptionLikeOps[Float](o)
+
+  implicit class EndpointLikeOLocalDateTime(o: Option[LocalDateTime])
+      extends EndpointOptionLikeOps[LocalDateTime](o)
 
   val predefinedRegexes = Map(
     "email" -> None,
