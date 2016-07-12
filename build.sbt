@@ -68,6 +68,9 @@ lazy val `maiden-framework` = (project in file("."))
       "org.http4s" %% "http4s-blaze-client" % http4sVersion,
       "org.json4s" %% "json4s-native" % "3.3.0",
 
+      //for validations
+      "com.googlecode.libphonenumber" % "libphonenumber" % "7.4.4",
+
       // Note. We use the latest 0.5.0 version of Circe as it pulls in the Cats 0.6.0 which Mouse depends on.
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" % "circe-java8_2.11" % circeVersion,

@@ -1,13 +1,13 @@
-package maiden.http
+package maiden.formatting
 
+import java.time.LocalDateTime
 import scala.util.matching._
 import com.twitter.util.{Future, Return, Throw, Try}
 import io.finch.internal._
 import spire.math._
 import spire.implicits._
 import io.finch._
-import java.time.LocalDateTime
-
+import com.google.i18n.phonenumbers._
 
 object Validations {
 
@@ -66,13 +66,6 @@ object Validations {
   implicit class EndpointLikeOLocalDateTime(o: Option[LocalDateTime])
       extends EndpointOptionLikeOps[LocalDateTime](o)
 
-  val predefinedRegexes = Map(
-    "email" -> None,
-    "phone" -> None,
-    "postal_code" -> None,
-    "country_code" -> None,
-    "url" ->  None
-  )
 
   //Integers/Longs
   def positive[V : Numeric] = ValidationRule[V]("be positive") { _ > 0 }
@@ -94,11 +87,39 @@ object Validations {
 
   def max_length(v: Int) = ValidationRule[String](s"no longer than $v characters") { _.size <= v }
 
+
+  def phone(country: String="US") = ValidationRule[String](s"be valid phone number") { m: String =>
+    try {
+      val phoneUtil = PhoneNumberUtil.getInstance
+      val parsed = phoneUtil.parse(m, "US")
+      phoneUtil.isValidNumber(parsed)
+    } catch {
+      case e: Exception => false
+    }
+  }
+
+  def url = ValidationRule[String](s"be valid url number") { m: String =>
+    false
+  }
+
+  def postal_code(country: String = "US") = ValidationRule[String](s"be a valid Url") {m: String =>
+       false
+  }
+
+  def email = ValidationRule[String](s"be a valid email") {m: String =>
+    false
+  }
+
+
+
+
+
+  //def phone = phone("US")
+
   //regex matching
   def must_match(v: String) = ValidationRule[String](s"must match $v") {m: String =>
     m match {
-      case s if predefinedRegexes.contains(m) => true//predefined regex
-      case _ => true //customm regex
+      case _ => false
     }
   }
 
