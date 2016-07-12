@@ -1,6 +1,7 @@
-package maiden.formatting
+package maiden.processing
 
 import java.time.LocalDateTime
+import java.net.URL
 import scala.util.matching._
 import com.twitter.util.{Future, Return, Throw, Try}
 import io.finch.internal._
@@ -67,7 +68,7 @@ object Validations {
       extends EndpointOptionLikeOps[LocalDateTime](o)
 
 
-  //Integers/Longs
+  //Numerics
   def positive[V : Numeric] = ValidationRule[V]("be positive") { _ > 0 }
   def negative[V : Numeric] = ValidationRule[V]("be negative") { _ < 0 }
   def less_than[V : Numeric](v: V) = ValidationRule[V](s"be less than $v") { _ < v }
@@ -75,7 +76,6 @@ object Validations {
   def between[V : Numeric](start: V, end: V) = ValidationRule[V](s"be between $start and $end") {
     x =>  x >= start && x <= end
   }
-
 
   //Strings
   def non_empty = ValidationRule[String]("be non-empty") { _.size > 0 }
@@ -87,6 +87,18 @@ object Validations {
 
   def max_length(v: Int) = ValidationRule[String](s"no longer than $v characters") { _.size <= v }
 
+  def contain(v: String) = ValidationRule[String](s"contain $v") { _.contains(v) }
+
+  def not_contain(v: String) = ValidationRule[String](s"not contain $v") { !_.contains(v) }
+
+  def email = ValidationRule[String]("be a valid email") { m =>
+    val re = """^[-a-z0-9!#$%&'*+/=?^_`{|}~]+(\.[-a-z0-9!#$%&'*+/=?^_`{|}~]+)*@([a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\.)*(aero|arpa|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|[a-z][a-z])$""".r
+
+    if (re.findFirstIn(m) == None)
+      false
+    else
+      true
+  }
 
   def phone(country: String="US") = ValidationRule[String](s"be valid phone number") { m: String =>
     try {
@@ -98,29 +110,49 @@ object Validations {
     }
   }
 
+  //TODO: make this much more thorough
   def url = ValidationRule[String](s"be valid url number") { m: String =>
-    false
+    try {
+      new URL(m)
+      true
+    } catch {
+      case e: Exception => false
+    }
+  }
+
+  def social_security = ValidationRule[String]("be a valid Social Security Number") { m: String =>
+    val re = "^(?!000|666)[0-8][0-9]{2}(?:-){0,1}(?!00)[0-9]{2}(?:-){0,1}(?!0000)[0-9]{4}$".r
+    re.findFirstIn(m) match {
+      case Some(x) => true
+      case _ => false
+    }
   }
 
   def postal_code(country: String = "US") = ValidationRule[String](s"be a valid Url") {m: String =>
        false
   }
 
-  def email = ValidationRule[String](s"be a valid email") {m: String =>
-    false
+  //TODO: date related
+  def date = ???
+  def time = ???
+  def date_time = ???
+
+  //TODO: is the string valid json or xml
+  def json = ???
+  def xml = ???
+
+  //TODO: is this a Sequence of items
+  def list = ???
+  def map = ???
+
+  //match via some function (String) => Boolean
+  def matches(s: => (String) => Boolean) = ValidationRule[String](s"must match $s") { m: String =>
+    s(m)
   }
-
-
-
-
-
-  //def phone = phone("US")
-
   //regex matching
   def must_match(v: String) = ValidationRule[String](s"must match $v") {m: String =>
     m match {
       case _ => false
     }
   }
-
 }
