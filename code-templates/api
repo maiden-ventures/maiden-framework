@@ -18,24 +18,24 @@ import maiden.auth.MaidenAuthUser
 
 object @@model@@Api extends MaidenApi {
 
-  implicit val @@lowerCaseModel@@BodyDecoder = Decoder.instance[@@model@@](c =>
+  private[this] implicit val @@lowerCaseModel@@BodyDecoder = Decoder.instance[@@model@@](c => {
     for {
       id <- c.downField("id").as[Option[Long]]
       @@coreFieldComprehensionMappings@@
       createdAt <- c.downField("createdAt").as[Option[LocalDateTime]]
       updatedAt <- c.downField("updatedAt").as[Option[LocalDateTime]]
     } yield @@model@@(id, @@coreFieldMappings@@, createdAt.getOrElse(LocalDateTime.now), updatedAt.getOrElse(LocalDateTime.now))
-  )
+  })
 
-  val post@@model@@: Endpoint[@@model@@ => @@model@@] = body.as[@@model@@ => @@model@@]
-  val put@@model@@: Endpoint[@@model@@] = body.as[@@model@@]
+  private[this] val post@@model@@: Endpoint[@@model@@ => @@model@@] = body.as[@@model@@ => @@model@@]
+  private[this] val put@@model@@: Endpoint[@@model@@] = body.as[@@model@@]
 
 
   private[this] val prefix = "api" :: "@@lowerCaseModel@@"
 
   def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: update@@model@@ :+: doc@@model@@
 
-  def doc@@model@@: Endpoint[Map[String, String]] =
+  private[this] def doc@@model@@: Endpoint[Map[String, String]] =
     get(prefix :: "doc" :: authorize) { (u: MaidenAuthUser) => {
       val mount = prefix.toString
       val doc = Map(
@@ -52,24 +52,24 @@ object @@model@@Api extends MaidenApi {
       Ok(doc)
     }}
 
-  def get@@model@@: Endpoint[@@model@@FullResponse] =
+  private[this] def get@@model@@: Endpoint[@@model@@FullResponse] =
     get(prefix :: long("id").should(positive[Long]) :: authorize) { (id: Long, u: MaidenAuthUser) =>
       render(@@model@@.get(id))
     }
 
-  def delete@@model@@: Endpoint[Long] =
+  private[this] def delete@@model@@: Endpoint[Long] =
     delete(prefix::long("id").should(positive[Long]) :: authorize) { (id: Long, u: MaidenAuthUser) =>
       render(@@model@@.deleteById(id))
     }
 
-  def create@@model@@: Endpoint[@@model@@FullResponse] =
+  private[this] def create@@model@@: Endpoint[@@model@@FullResponse] =
     put(prefix :: put@@model@@ ::  authorize) { (@@lowerCaseModel@@: @@model@@, u: MaidenAuthUser) => render {
       val id = @@model@@.create(@@lowerCaseModel@@)
       val instance = @@model@@.findById(id)
       instance.head
     }}
 
-  def update@@model@@: Endpoint[@@model@@FullResponse] =
+  private[this] def update@@model@@: Endpoint[@@model@@FullResponse] =
     post(prefix :: long("id").should(positive[Long]) :: post@@model@@ :: authorize) { (id: Long, @@lowerCaseModel@@: @@model@@ => @@model@@, u: MaidenAuthUser) =>
       render {
         val old@@model@@ = @@model@@FullResponse.extract(@@model@@.get(id))
@@ -78,7 +78,7 @@ object @@model@@Api extends MaidenApi {
     }
 
 
-  def list@@model@@: Endpoint[List[@@model@@FullResponse]] =
+  private[this] def list@@model@@: Endpoint[List[@@model@@FullResponse]] =
     get(prefix :: int("start").should(positive[Int]) :: int("count").should(positive[Int]) :: authorize) { (start: Int, count: Int, u: MaidenAuthUser) => {
       val results = @@model@@.getRangeById(start, count)
       render(results)

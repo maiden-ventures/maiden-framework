@@ -23,7 +23,9 @@ abstract class RequestLoggingFilter[REQ <: Request](val log: Logger, val formatt
     val elapsed = Stopwatch.start()
     val future = service(request)
     future.respond {
-      case Return(reply) => logSuccess(elapsed(), request, reply)
+      case Return(reply) => {
+          logSuccess(elapsed(), request, reply)
+      }
       case Throw(throwable) => logException(elapsed(), request, throwable)
     }
     future

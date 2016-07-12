@@ -40,7 +40,11 @@ def read_template(name):
 
 def format_scala():
     for d in SCALA_FILES:
-        subprocess.call(["java", "-jar", "./tools/scalafmt.jar", "-i", "-s", "default", "--alignByOpenParenCallSite", "true", "--alignByArrowEnumeratorGenerator", "true", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
+        #subprocess.call(["java", "-jar", "./tools/scalafmt.jar", "-i", "-s", "defaultWithAlign", "--binPackParentConstructors", "true", "--danglingParentheses", "true", "--continuationIndentCallSite", "2", "--continuationIndentDefnSite","2", "--alignByOpenParenCallSite", "true", "--alignByArrowEnumeratorGenerator", "true", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
+
+        subprocess.call(["java", "-jar", "./tools/scalafmt.jar", "-i", "-s", "defaultWithAlign", "--continuationIndentDefnSite","2", "--continuationIndentCallSite", "2", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
+
+        #subprocess.call(["java", "-jar", "./tools/scalariform.jar", d], stdout=subprocess.PIPE)
 
 
 class MigrationBuilder:
@@ -149,8 +153,8 @@ class MigrationBuilder:
         fd = open(os.path.join(migration_dir, file_name), "w+")
         fd.write(out)
         fd.close()
+        SCALA_FILES.append(os.path.join(migration_dir, file_name))
         time.sleep(2)
-    SCALA_FILES.append(migration_dir)
 
 
 class SbtBuilder:
@@ -264,6 +268,7 @@ class DbAccessBuilder:
         fd = open(os.path.join(self.config['base_path'], "models/Schema.scala"), "w+")
         fd.write(out)
         fd.close()
+        SCALA_FILES.append(os.path.join(self.config['base_path'], "models/Schema.scala"))
 
 class ModelBuilder:
 
@@ -477,7 +482,7 @@ class ModelBuilder:
         fd = open(model_path, "w+")
         fd.write(template)
         fd.close()
-    SCALA_FILES.append(models_dir)
+        SCALA_FILES.append(model_path)
 
 
 class EncoderBuilder:
@@ -520,9 +525,9 @@ class EncoderBuilder:
             fd = open(file_name, "w+")
             fd.write(out)
             fd.close()
+            SCALA_FILES.append(file_name)
             self.encoders.append("%sResponseEncoders" % (model_name))
 
-        SCALA_FILES.append(self.encoder_dir)
 
         #now write out the master response encoders file
         encoder_traits = ' '.join(["with %s" % (x) for x in self.encoders])
@@ -617,7 +622,7 @@ class ApiBuilder:
             fd = open(os.path.join(self.api_dir, "%s.scala" % (inflection.camelize(model['name']))), "w+")
             fd.write(out)
             fd.close()
-        SCALA_FILES.append(self.api_dir)
+            SCALA_FILES.append(os.path.join(self.api_dir, "%s.scala" % (inflection.camelize(model['name']))))
 
 def build_boot(app_data):
     template = read_template("boot")
