@@ -25,7 +25,8 @@ object Render {
       //TODO: pattern match on exception so we return the right status code
       case Left(e) => {
         e.httpStatus match {
-          case H.BAD_REQUEST => InternalServerError(e)
+          case H.BAD_REQUEST => BadRequest(e)
+          case H.NOT_ACCEPTABLE => BadRequest(e)
           case H.NOT_FOUND => NotFound(e)
           case _ => InternalServerError(e)
 

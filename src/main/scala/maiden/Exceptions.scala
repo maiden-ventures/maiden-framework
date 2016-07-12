@@ -30,6 +30,12 @@ class UserAccountMissingIdentityException(
   extends MaidenException(message, exc=None)
 
 
+class ParamIncorrectException(
+  message: String = "Incorrect Params",
+  status: H = H.NOT_ACCEPTABLE,
+  exc: Option[Exception] = None
+) extends MaidenException(message, status, exc = exc)
+
 class CreateOrUpdateFailedException(
     message: String = "The create/update operation failed",
     httpStatus: H = H.INTERNAL_SERVER_ERROR,

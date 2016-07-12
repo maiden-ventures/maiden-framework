@@ -1,6 +1,7 @@
 package @@package@@.api
 
 import java.time.LocalDateTime
+import com.twitter.util.Future
 import spire.implicits._
 import io.finch.{Endpoint, _}
 import io.finch.circe._
@@ -8,6 +9,7 @@ import io.circe._
 import io.circe.java8.time._
 import io.circe.generic.auto._
 import maiden.types.Exceptions._
+import maiden.exceptions._
 import maiden.types.MaidenApi
 import maiden.http.Render._
 import maiden.http.Validations._
@@ -30,6 +32,15 @@ object @@model@@Api extends MaidenApi {
   private[this] val post@@model@@: Endpoint[@@model@@ => @@model@@] = body.as[@@model@@ => @@model@@]
   private[this] val put@@model@@: Endpoint[@@model@@] = body.as[@@model@@]
 
+  private[this] def validate@@model@@(@@lowerCaseModel@@: @@model@@) = {
+    try {
+      Future.collect(Seq(
+        @@validations@@
+      )).get
+    } catch {
+      case e: Exception => throw new ParamIncorrectException(message = e.getMessage, exc = Option(e))
+    }
+  }
 
   private[this] val prefix = "api" :: "@@lowerCaseModel@@"
 
@@ -64,6 +75,7 @@ object @@model@@Api extends MaidenApi {
 
   private[this] def create@@model@@: Endpoint[@@model@@FullResponse] =
     put(prefix :: put@@model@@ ::  authorize) { (@@lowerCaseModel@@: @@model@@, u: MaidenAuthUser) => render {
+      validate@@model@@(@@lowerCaseModel@@)
       val id = @@model@@.create(@@lowerCaseModel@@)
       val instance = @@model@@.findById(id)
       instance.head
@@ -73,6 +85,7 @@ object @@model@@Api extends MaidenApi {
     post(prefix :: long("id").should(positive[Long]) :: post@@model@@ :: authorize) { (id: Long, @@lowerCaseModel@@: @@model@@ => @@model@@, u: MaidenAuthUser) =>
       render {
         val old@@model@@ = @@model@@FullResponse.extract(@@model@@.get(id))
+        validate@@model@@(@@lowerCaseModel@@(old@@model@@))
         @@model@@.update(@@lowerCaseModel@@(old@@model@@))
       }
     }

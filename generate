@@ -258,7 +258,7 @@ class DbAccessBuilder:
             elif 'db_name' not in m:
                 m['db_name'] = lname
 
-            s = 'lazy val %sQuery = quote(query[%s].schema(_.entity("%s")))' % (lname, uname, inflection.underscore(m['db_name']))
+            s = 'lazy val %sQuery = quote(query[%s].schema(_.entity("%s").generated(_.id)))' % (lname, uname, inflection.underscore(m['db_name']))
             schema_list.append(s)
 
         schema_list_str = "\n".join(schema_list)
@@ -557,7 +557,7 @@ class ApiBuilder:
         self.build()
 
 
-    def add_validations(self,  col_type, validations):
+    def add_validations(self,  col_type, validations, name = None):
 
         def handle_escape(v):
             try:
@@ -567,7 +567,11 @@ class ApiBuilder:
                 return '"%s"' % (v)
 
         if len(validations) > 0:
-            vstr = ".should(%s)"
+            if name:
+              vstr = '.should("' + name + '")(%s)'
+            else:
+                vstr = ".should(%s)"
+
             vals = []
             for v in validations:
                 if (type(v) == type("")):
@@ -575,7 +579,11 @@ class ApiBuilder:
                 elif type(v) == type({}):
                     for (key, value) in v.items():
                       value = str(value).split(" ")
-                      vals.append("%s[%s](%s)" % (key, col_type, ",".join([handle_escape(x) for x in value])))
+                      if col_type != "String":
+                        vals.append("%s[%s](%s)" % (key, col_type, ",".join([handle_escape(x) for x in value])))
+                      else:
+                        vals.append("%s(%s)" % (key, ",".join([handle_escape(x) for x in value])))
+
             vals = " and ".join([v for v in vals])
             return vstr % (vals)
 
@@ -605,6 +613,8 @@ class ApiBuilder:
             param_list = ", ".join(["%s: Option[%s]" % (c[0], c[1]) for c in cols])
             update_params = ", ".join([c[0] for c in cols])
 
+            validations = ",\n".join(["%s.%s%s" % (inflection.camelize(model['name'], False), c[0], self.add_validations(c[1], c[2], c[0])) for c in cols if c[2] != []])
+
             out = self.template.replace("@@model@@", inflection.camelize(model['name'], True))\
                                .replace("@@lowerCaseModel@@", inflection.camelize(model['name'],False)) \
                                .replace("@@package@@", self.config['package'])\
@@ -617,6 +627,7 @@ class ApiBuilder:
                                .replace("@@modelCreationArgs@@", model_creation_args)\
                                .replace("@@modelColumns@@", all_model_cols_str)\
                                .replace("@@optionalParams@@", optional_params)\
+                               .replace("@@validations@@", validations) \
                                .replace("@@paramList@@", param_list).replace("@@updateParams@@", update_params)
 
             fd = open(os.path.join(self.api_dir, "%s.scala" % (inflection.camelize(model['name']))), "w+")

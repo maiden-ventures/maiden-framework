@@ -8,7 +8,7 @@
 
 def create(data: @@model@@) = {
   val q = quote {
-    query[@@model@@].schema(_.generated(_.id)).insert
+    @@queryName@@.insert
   }
   db.run(q)(data)
 }
