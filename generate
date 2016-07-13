@@ -24,10 +24,10 @@ DB_MAP= {
     "datetime": {"db": "datetime", "scala": "LocalDateTime", "validations": []},
     "timestamp": {"db": "datetime", "scala": "LocalDateTime", "validations": []},
     "email": {"db": "varchar", "scala":"String", "validations": ['email']},
-    "phone": {"db": "varchar", "scala":"String", "validations": ['phone']},
+    "phone": {"db": "varchar", "scala":"String", "validations": [{'phone': "US"}]},
     "url": {"db": "varchar", "scala":"String", "validations": ['url']},
     "social_security": {"db": "varchar", "scala":"String", "validations": ['social_security']},
-    "postal_code": {"db": "varchar", "scala":"String", "validations": ['postal_code']},
+    "postal_code": {"db": "varchar", "scala":"String", "validations": [{'postal_code': "US"}]},
     "json": {"db": "varchar", "scala":"String", "validations": ['json']},
     "xml": {"db": "varchar", "scala":"String", "validations": ['xml']},
     "list": {"db": "varchar", "scala":"String", "validations": ['xml']},
@@ -52,7 +52,7 @@ def exists_and_true(data, key):
 
 def db_type(t): return DB_MAP[t]["db"]
 def scala_type(t): return DB_MAP[t]["scala"]
-def validations(t): return DB_MAP[t]["validations"]
+def get_validations(t): return DB_MAP[t]["validations"]
 
 def key_with_default(data, key, default):
     if key in data and data[key]: return data[key]
@@ -122,7 +122,7 @@ class MigrationBuilder:
 
       modifiers = ', '.join(modifiers)
 
-      self.columns.append("""t.%s("%s", %s)""" % (info['type'], info['db_name'], modifiers))
+      self.columns.append("""t.%s("%s", %s)""" % (db_type(info['type']), info['db_name'], modifiers))
 
       if 'index' in info:
           index_name = "%s_%s_index"  % (table, info['db_name'])
@@ -598,7 +598,7 @@ class ApiBuilder:
             all_model_cols = ["%s: %s" % (camelize(c["name"], False), db_type(c["type"])) for c in model['columns']]
             all_model_cols_str = ", ".join(all_model_cols)
 
-            cols = [(camelize(c["name"], False), scala_type(c["type"]), c.get("validations", [])) for c in model["columns"] if c["name"] not in ("id", "created_at", "updated_at")]
+            cols = [(camelize(c["name"], False), scala_type(c["type"]), c.get("validations", []), c["type"]) for c in model["columns"] if c["name"] not in ("id", "created_at", "updated_at")]
 
             core_field_comprehension_mappings = "\n".join(['%s <- c.downField("%s").as[Option[%s]]' % (camelize(c[0], False), camelize(c[0], False), c[1]) for c in cols])
 
@@ -606,15 +606,16 @@ class ApiBuilder:
 
 
             create_args = " :: ".join([param_str % (c[0], c[1], c[2]) for c in cols])
-            create_param_args = " :: ".join(['param("%s").as[%s]%s' % (c[0], c[1], self.add_validations(c[1], c[2])) for c in cols])
+            create_param_args = " :: ".join(['param("%s").as[%s]%s' % (c[0], c[1], self.add_validations(c[1], c[2] + get_validations(c[3]))) for c in cols])
             create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
             model_creation_args = ", ".join([c[0] for c in cols])
 
-            optional_params = " :: ".join(['paramOption("%s").as[%s]%s' % (c[0], c[1], self.add_validations(c[1], c[2])) for c in cols])
+            optional_params = " :: ".join(['paramOption("%s").as[%s]%s' % (c[0], c[1], self.add_validations(c[1], c[2] + get_validations(c[3]))) for c in cols])
             param_list = ", ".join(["%s: Option[%s]" % (c[0], c[1]) for c in cols])
             update_params = ", ".join([c[0] for c in cols])
 
-            validations = ",\n".join(["%s.%s%s" % (camelize(model['name'], False), c[0], self.add_validations(c[1], c[2], c[0])) for c in cols if c[2] != []])
+            validations = ",\n".join(["%s.%s%s" % (camelize(model['name'], False), c[0], self.add_validations(c[1], c[2] + get_validations(c[3]), c[0])) for c in cols if (c[2] != [] or get_validations(c[3]) != [])])
+
 
             out = self.template.replace("@@model@@", camelize(model['name'], True))\
                                .replace("@@lowerCaseModel@@", camelize(model['name'],False)) \
