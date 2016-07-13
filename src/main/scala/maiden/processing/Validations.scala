@@ -15,7 +15,6 @@ import cats.data.Xor
 object Validations {
 
 
-  //handle implicit conversion from Type to Option[Type]
 
 /* allow for *some* raw values to behave like Finch endpoints
    with regard to validations

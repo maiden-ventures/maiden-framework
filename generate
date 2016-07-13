@@ -21,8 +21,8 @@ DB_MAP= {
     "varchar": {"db": "varchar", "scala":"String", "validations": []},
     "bigint": {"db": "bigint", "scala": "Long", "validations": []},
     "int": {"db": "int", "scala": "Int", "validations": []},
-    "datetime": {"db": "datetime", "scala": "LocalDateTime", "validations": []},
-    "timestamp": {"db": "datetime", "scala": "LocalDateTime", "validations": []},
+    "datetime": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
+    "timestamp": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
     "email": {"db": "varchar", "scala":"String", "validations": ['email']},
     "phone": {"db": "varchar", "scala":"String", "validations": [{'phone': "US"}]},
     "url": {"db": "varchar", "scala":"String", "validations": ['url']},
@@ -821,6 +821,17 @@ if __name__ == "__main__":
                 "default": "NOW()"
             })
 
+        #handle implicit validations if there is a limit given
+        for i in range(len(model_data[index]["columns"])):
+            col = model_data[index]["columns"][i]
+            if not "validations" in col:
+                col["validations"] = []
+
+            if 'limit' in col:
+                col["validations"].append({"max_length": col["limit"]})
+
+            model_data[index]["columns"][i] = col
+
     if key_with_default(gen_options, "sbt", True):
         print("Generating project build files...")
         sbt_builder = SbtBuilder(app_data)
@@ -835,17 +846,20 @@ if __name__ == "__main__":
         migration_builder = MigrationBuilder(model_data, app_data)
 
     if key_with_default(gen_options, "encoders", True):
-        print("Generating JSON encoders...")
+        print("Generating JSON encoders/decoders...")
         encoder_builder = EncoderBuilder(model_data, app_data)
 
     if key_with_default(gen_options, "api", True):
-        print("Generating API...")
+        print("Generating API Endpoints...")
         api_builder = ApiBuilder(model_data, app_data)
         build_boot(app_data)
         build_api_service(model_data, app_data)
 
+    print("Generating logging configuration...")
     build_logback(app_data)
+    print("Generating app launch configuration..")
     build_app_ini(app_data)
+    print("Copying external tools...")
     copy_tools(app_data)
 
     if key_with_default(gen_options, "format_source", True):
