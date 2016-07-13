@@ -10,7 +10,6 @@ import spire.implicits._
 import io.finch._
 import com.google.i18n.phonenumbers._
 import io.circe.parser._
-import cats.data.Xor
 
 object Validations {
 
@@ -78,6 +77,11 @@ object Validations {
     x =>  x >= start && x <= end
   }
 
+  def one_of[V: Numeric](v: String) = ValidationRule[V](s"be one of $v") { m =>
+    val lst = v.split(",").map(_.trim).toList
+    lst.contains(m.toString)
+  }
+
   //Strings
   def non_empty = ValidationRule[String]("be non-empty") { _.size > 0 }
   def is_empty = ValidationRule[String]("be empty") { _.size == 0 }
@@ -91,6 +95,11 @@ object Validations {
   def contain(v: String) = ValidationRule[String](s"contain $v") { _.contains(v) }
 
   def not_contain(v: String) = ValidationRule[String](s"not contain $v") { !_.contains(v) }
+
+  def one_of(v: String) = ValidationRule[String](s"be one of $v") { m =>
+    val list = v.split(",").map(_.trim).toList
+    list.contains(m)
+  }
 
   def email = ValidationRule[String]("be a valid email") { m =>
     val re = """^[-a-z0-9!#$%&'*+/=?^_`{|}~]+(\.[-a-z0-9!#$%&'*+/=?^_`{|}~]+)*@([a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\.)*(aero|arpa|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|[a-z][a-z])$""".r

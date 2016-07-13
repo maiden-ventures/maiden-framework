@@ -421,9 +421,12 @@ class ModelBuilder:
         update_params = ", ".join(["%s: Option[%s] = None" % (c[0], c[1]) for c in create_columns])
         create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in create_columns])
         model_create_params = ", ".join(["%s = %s" % (c[0],c[0]) for c in create_columns])
-        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[4]) for r in ref_fields])
+
+        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[4]) \
+                                     for r in ref_fields])
         ref_constructor_fields = ", ".join(["%s = %s" % (r[0], r[0]) for r in ref_fields])
-        ref_from_db = ", ".join(["%s = %s.get%s(t.id)" % (r[0], self.model_name, r[4]) for r in ref_fields])
+        ref_from_db = ", ".join(["%s = %s.get%s(t.id)" % (r[0], self.model_name, r[4]) \
+                                 for r in ref_fields])
 
         ref_yields = ", ".join([x[0] for x in ref_fields])
         ref_count = len(ref_fields)
@@ -436,7 +439,8 @@ class ModelBuilder:
           for r in ref_fields:
               ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], camelize(r[2], False), r[3]))
 
-          getallrefs = read_template("models/getallrefs").replace("@@refComprehensions@@", "\n".join(ref_comprehensions)) \
+          getallrefs = read_template("models/getallrefs")\
+                      .replace("@@refComprehensions@@", "\n".join(ref_comprehensions)) \
                       .replace("@@refYields@@", ref_yields) \
                       .replace("@@refCount@@", str(ref_count)) \
                       .replace("@@lowerCaseModel@@", camelize(self.model_name, False))
@@ -527,7 +531,12 @@ class EncoderBuilder:
 
             json_fields_str = ", ".join(json_fields)
 
-            out = self.template.replace("@@package@@", package_name).replace("@@model@@", model_name).replace("@@lowerCaseModel@@", lower_model_name).replace("@@jsonFields@@", json_fields_str).replace("@@payloadKey@@", payload_key)
+            out = self.template\
+                      .replace("@@package@@", package_name)\
+                      .replace("@@model@@", model_name)\
+                      .replace("@@lowerCaseModel@@", lower_model_name)\
+                      .replace("@@jsonFields@@", json_fields_str)\
+                      .replace("@@payloadKey@@", payload_key)
 
             file_name = os.path.join(self.encoder_dir, "%s.scala" % (model_name))
 
@@ -540,7 +549,10 @@ class EncoderBuilder:
 
         app_name = self.config['app']['name']
         package = self.config['package']
-        out = enc.replace("@@package@@", package).replace("@@response_encoders@@", encoder_traits)
+        out = enc\
+              .replace("@@package@@", package)\
+              .replace("@@response_encoders@@", encoder_traits)
+
         file_name = os.path.join(self.config['base_path'], "ResponseEncoders.scala")
         write(file_name, out)
 
@@ -735,7 +747,8 @@ DEFAULT_USER_MODEL = {
     "columns": [
         {"name": "user_name", "type": "varchar", "limit": 64,"index": True,
          "validations": [{"longer_than": 3}, {"shorter_than":"64"}]},
-        {"name": "access_token", "type": "varchar", "limit": 128, "index": True}
+        {"name": "access_token", "type": "varchar", "limit": 128, "index": True,
+         "validations": [{"longer_than": 10}, {"shorter_than":"129"}]},
     ]
 }
 

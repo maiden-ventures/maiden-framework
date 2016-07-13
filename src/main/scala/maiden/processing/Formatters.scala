@@ -37,6 +37,7 @@ object Formatters {
     def asList: List[String] = asList(",")
 
     def asJson = parse(value).getOrElse(Json.Null)
+  }
 
   implicit class ImplicitStringFormatterOps(s: String) extends StringFormatterOps(s)
 
@@ -44,4 +45,4 @@ object Formatters {
   implicit class ImplicitOptionStringFormatterOps(s: Option[String])
       extends StringFormatterOps(s.getOrElse(""))
 
-  }
+}
