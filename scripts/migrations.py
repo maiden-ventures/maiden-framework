@@ -44,11 +44,11 @@ class MigrationBuilder:
 
       if col.index:
           index_name = "%s_%s_index"  % (table, col.db_name)
-          self.indexes.append("""addIndex(table, Array("%s"), Unique, Name("%s"))""" % (col.db_name, index_name))
+          self.indexes.append("""addIndex(table, Array("%s"), Name("%s"))""" % (col.db_name, index_name))
 
       if col.unique_index:
           index_name = "%s_%s_index"  % (table, col.db_name)
-          self.indexes.append("""addIndex(table, Array("%s"), Name("%s"))""" % (col.db_name, index_name))
+          self.indexes.append("""addIndex(table, Array("%s"), Unique, Name("%s"))""" % (col.db_name, index_name))
 
       if col.references:
           ref = col.references
