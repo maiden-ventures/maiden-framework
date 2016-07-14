@@ -1,0 +1,35 @@
+app:
+  name: service
+  environment: development
+  namespace: com.test
+  source_directory: test_api
+  payload_key: payload
+  port: 8000
+  users: True
+  security:
+    method: token
+    param_name: at
+    access_token: abcdefg
+    endpoints:
+      -create
+      -edit
+      -delete
+
+db:
+  driver: postgres
+  name: test
+  user: test
+  password: test
+  host: localhost
+
+social:
+  fb:
+    app_id:
+
+generator:
+  models: true
+  migrations: true
+  encoders: true
+  api: true
+  magic_methods: true
+  sbt: true

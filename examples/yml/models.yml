@@ -1,0 +1,25 @@
+- name: test
+  api: true
+  admin: true
+  columns:
+    - name: first_name
+      type: varchar
+      limit: 255
+      index: true
+      validations:
+        - longer_than: 5
+        - shorter_than: 10
+
+- name: Test2
+  columns:
+    - name: first_name
+      type: varchar
+      limit: 100
+      references:
+        table: test
+        column: first_name
+        on_delete: cascade
+    - name: telephone
+      type: phone
+    - name: zip_code
+      type: postal_code
