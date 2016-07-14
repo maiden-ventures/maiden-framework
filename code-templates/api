@@ -13,6 +13,7 @@ import maiden.exceptions._
 import maiden.types.MaidenApi
 import maiden.http.Render._
 import maiden.processing.Validations._
+import maiden.processing.Formatters._
 import maiden.implicits.DateImplicits._
 import @@package@@.models.{@@model@@, @@model@@FullResponse}
 import maiden.auth.MaidenAuthUser
@@ -76,7 +77,7 @@ object @@model@@Api extends MaidenApi {
   private[this] def create@@model@@: Endpoint[@@model@@FullResponse] =
     put(prefix :: put@@model@@ ::  authorize) { (@@lowerCaseModel@@: @@model@@, u: MaidenAuthUser) => render {
       validate@@model@@(@@lowerCaseModel@@)
-      val id = @@model@@.create(@@lowerCaseModel@@)
+      val id = @@model@@.create(@@lowerCaseModel@@.format)
       val instance = @@model@@.findById(id)
       instance.head
     }}
@@ -85,8 +86,9 @@ object @@model@@Api extends MaidenApi {
     post(prefix :: long("id").should(positive[Long]) :: post@@model@@ :: authorize) { (id: Long, @@lowerCaseModel@@: @@model@@ => @@model@@, u: MaidenAuthUser) =>
       render {
         val old@@model@@ = @@model@@FullResponse.extract(@@model@@.get(id))
-        validate@@model@@(@@lowerCaseModel@@(old@@model@@))
-        @@model@@.update(@@lowerCaseModel@@(old@@model@@))
+        val new@@model@@ = @@lowerCaseModel@@(old@@model@@).format
+        validate@@model@@(new@@model@@)
+        @@model@@.update(new@@model@@)
       }
     }
 

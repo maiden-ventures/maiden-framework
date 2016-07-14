@@ -9,6 +9,7 @@ import maiden.implicits.DBImplicits._
 import maiden.traits.{MaidenFullResponse, MaidenModel, WithApi}
 import maiden.models.@@dbDriverName@@._
 import maiden.exceptions._
+import maiden.processing.Formatters._
 import @@appNameUpper@@Schema._
 
 
@@ -27,7 +28,11 @@ object @@model@@FullResponse {
 
 case class @@model@@ (
   @@baseFields@@
-) extends MaidenModel with WithApi
+) extends MaidenModel with WithApi {
+
+  def format = @@model@@(@@formattedCols@@)
+
+}
 
 object @@model@@ {
 

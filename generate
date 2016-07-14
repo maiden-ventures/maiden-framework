@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+################################################################################
+#  This script needs a ton of refactoring... it's pretty much brute force now  #
+################################################################################
+
 import inflection
 from yaml import load, dump
 try:
@@ -145,7 +149,7 @@ class MigrationBuilder:
           s = """addForeignKey(on("%s" -> "%s"),
           references("%s" -> "%s"),
           OnDelete(%s),
-          Name("%s"))""" % (underscore("table"), info["db_name"], ref_table, ref_column, on_delete, ref_name)
+          Name("%s"))""" % (underscore(table), info["db_name"], ref_table, ref_column, on_delete, ref_name)
 
           self.references.append(s)
 
@@ -347,8 +351,17 @@ class ModelBuilder:
         model_path= os.path.join(models_dir, "%s.scala" % (self.model_name))
         self.app_name = camelize(self.config["app"]["name"])
 
-        raw_columns = [(camelize(c["name"], False), scala_type(c["type"])) for c in model["columns"]]
+        raw_columns = [(camelize(c["name"], False), scala_type(c["type"]), c["formatters"]) for c in model["columns"]]
         create_columns = filter(lambda x: x[0] not in ("createdAt", "updatedAt", "id"), raw_columns)
+
+        formatted_fields = []
+        for c in raw_columns:
+            if len(c[2]) > 0:
+               formatted_fields.append("%s.%s" % (camelize(c[0], False), ".".join(c[2])))
+            else:
+                formatted_fields.append(camelize(c[0], False))
+
+        formatted_columns = ",".join(formatted_fields)
 
         if 'db_name' not in model:
             model['db_name'] = model['name']
@@ -486,6 +499,7 @@ class ModelBuilder:
         #TODO: Missing setReferencedColumn, removeReferencedColumn
 
         template = template.replace("@@model@@", self.model_name) \
+                   .replace("@@formattedCols@@", formatted_columns)\
                    .replace("@@appNameUpper@@", self.app_name) \
                    .replace("@@refFields@@", ref_fields_str) \
                    .replace("@@dbDriverName@@", db_driver_name)\
@@ -610,11 +624,22 @@ class ApiBuilder:
             all_model_cols = ["%s: %s" % (camelize(c["name"], False), db_type(c["type"])) for c in model['columns']]
             all_model_cols_str = ", ".join(all_model_cols)
 
-            cols = [(camelize(c["name"], False), scala_type(c["type"]), c.get("validations", []), c["type"]) for c in model["columns"] if c["name"] not in ("id", "created_at", "updated_at")]
+            cols = [(camelize(c["name"], False), scala_type(c["type"]), c.get("validations", []), c["type"], c.get('formatters', []))\
+                    for c in model["columns"] if c["name"] not in ("id", "created_at", "updated_at")]
 
             core_field_comprehension_mappings = "\n".join(['%s <- c.downField("%s").as[Option[%s]]' % (camelize(c[0], False), camelize(c[0], False), c[1]) for c in cols])
 
-            core_field_mappings = ",".join([camelize(c[0], False) for c in cols])
+
+            #TODO: add a "formatters" field to column info
+            cfields = []
+            for cf in cols:
+                if len(cf[4]) > 0:
+                    #add the formatters
+                    cfields.append("%s.%s" % (camelize(cf[0], False), ".".join(cf[4])))
+                else:
+                    cfields.append(camelize(cf[0], False))
+
+            core_field_mappings = ",".join(cfields) #[camelize(c[0], False) for c in cols])
 
 
             create_args = " :: ".join([param_str % (c[0], c[1], c[2]) for c in cols])
@@ -835,6 +860,7 @@ if __name__ == "__main__":
             })
 
         #handle implicit validations if there is a limit given
+        #and also add any implicit formatters
         for i in range(len(model_data[index]["columns"])):
             col = model_data[index]["columns"][i]
             if not "validations" in col:
@@ -842,6 +868,14 @@ if __name__ == "__main__":
 
             if 'limit' in col:
                 col["validations"].append({"max_length": col["limit"]})
+
+            if not 'formatters' in col:
+                col['formatters'] = []
+
+            #some implicit formatters
+            if col['type'] in ('phone', 'postal_code', 'social_security', 'list'):
+                #add the formatters
+                col['formatters'].append(col['type'])
 
             model_data[index]["columns"][i] = col
 

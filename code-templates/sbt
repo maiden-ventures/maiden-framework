@@ -65,6 +65,7 @@ lazy val @@appName@@ = (project in file("."))
     libraryDependencies ++= Seq(
       "com.maiden" %% "maiden-framework" % "0.1.0",
       "org.spire-math" % "spire_2.11" % "0.11.0",
+      "com.googlecode.libphonenumber" % "libphonenumber" % "7.4.4",
       "io.github.benwhitehead.finch" %% "finch-server" % "0.9.1"
     )
   )).enablePlugins(JavaAppPackaging)
