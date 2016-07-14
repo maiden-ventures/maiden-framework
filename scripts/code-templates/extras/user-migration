@@ -1,0 +1,29 @@
+package @@package@@
+
+import com.imageworks.migration._
+
+class @@className@@ extends Migration {
+
+  val table = "users"
+
+  def up() {
+    createTable(table) { t =>
+      t.bigint("id", AutoIncrement, PrimaryKey)
+      t.varchar("user_name", Unique, NotNull, Limit(32), CharacterSet(Unicode))
+      t.varchar("email", Unique, Limit(100), CharacterSet(Unicode))
+      t.varchar("password", NotNull, Limit(128))
+      t.timestamp("created_at", NotNull, Default("NOW()"))
+      t.timestamp("updated_at", NotNull, Default("NOW()"))
+      t.varchar("access_token", NotNull, Unique, Limit(128)
+    }
+
+    addIndex(table, Array("user_name", "email"), Name("users_name_email_index"))
+    addIndex(table, Array("access_token"), Name("users_access_token_index"))
+  }
+
+  def down() {
+    dropTable(table)
+  }
+
+
+}

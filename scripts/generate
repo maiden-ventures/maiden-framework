@@ -1,0 +1,137 @@
+#!/usr/bin/env python
+
+################################################################################
+#  This script needs a ton of refactoring... it's pretty much brute force now  #
+################################################################################
+try:
+    from yaml import load, dumpCDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
+
+#import sys
+import os
+import time
+import shutil
+from datetime import datetime
+import subprocess
+
+from helpers import *
+from migrations import MigrationBuilder
+from sbt import SbtBuilder
+from db_access import security_info, DbAccessBuilder
+from models import ModelBuilder
+from encoders import EncoderBuilder
+from api import ApiBuilder
+from misc_builders import *
+from default_models import *
+from app import *
+
+
+if __name__ == "__main__":
+
+    model_stream = open("models.yml")
+    app_stream = open("project.yml")
+    app_data = load(app_stream, Loader=Loader)
+
+    gen_options = app_data['generator']
+
+    model_data = load(model_stream, Loader=Loader)
+
+    #automatically add user tables if selected
+    if 'users' in app_data['app']:
+        model_data.append(DEFAULT_USER_MODEL)
+        model_data.append(DEFAULT_SOCIAL_USER_MODEL)
+
+    #make sure that all models have an id and timestamps
+    for index in range(len(model_data)):
+        model = model_data[index]
+        Model(model)
+        cols = model["columns"]
+
+        if 'db_name' not in model:
+            model_data[index]["db_name"] = underscore(model["name"])
+
+        if "id" not in cols:
+            model_data[index]["columns"].insert(0, {
+                "name": "id",
+                "auto_increment" : True,
+                "type" : "bigint",
+                "primary_key" : True,
+                "validations": ["positive"]
+            })
+
+        if 'created_at' not in cols:
+            model_data[index]["columns"].append({
+                "name": "created_at",
+                "type" : "timestamp",
+                "default": "NOW()"
+            })
+
+        if 'updated_at' not in cols:
+            model_data[index]["columns"].append({
+                "name": "updated_at",
+                "type" : "timestamp",
+                "default": "NOW()"
+            })
+
+        #handle implicit validations if there is a limit given
+        #and also add any implicit formatters
+        for i in range(len(model_data[index]["columns"])):
+            col = model_data[index]["columns"][i]
+            if not "validations" in col:
+                col["validations"] = []
+
+            if 'limit' in col:
+                col["validations"].append({"max_length": col["limit"]})
+
+            if not 'formatters' in col:
+                col['formatters'] = []
+
+            #some implicit formatters
+            if col['type'] in ('phone', 'postal_code', 'social_security', 'list'):
+                #add the formatters
+                col['formatters'].extend(get_formatters(col['type']))
+
+            model_data[index]["columns"][i] = col
+    app = App(app_data, model_data)
+
+
+    if key_with_default(gen_options, "sbt", True):
+        print("Generating project build files...")
+        sbt_builder = SbtBuilder(app)
+
+    if key_with_default(gen_options, "models", True):
+        print("Generating models...")
+        model_builder = ModelBuilder(app)
+        access_builder =  DbAccessBuilder(app)
+
+    if key_with_default(gen_options, "migrations", True):
+        print("Generating migrations...")
+        migration_builder = MigrationBuilder(app)
+
+    if key_with_default(gen_options, "encoders", True):
+        print("Generating JSON encoders/decoders...")
+        encoder_builder = EncoderBuilder(app)
+
+    if key_with_default(gen_options, "api", True):
+        print("Generating API Endpoints...")
+        api_builder = ApiBuilder(app)
+        build_boot(app)
+        build_api_service(app)
+
+    print("Generating logging configuration...")
+    build_logback(app)
+    print("Generating app launch configuration..")
+    build_app_ini(app)
+    print("Copying external tools...")
+    copy_tools(app)
+
+    if key_with_default(gen_options, "format_source", True):
+      print("Formatting Scala sources...")
+      format_scala()
+
+    message = """Your project is now available in %s. To run, simply
+    cd into %s and then type "sbt run". Your API will be available at http://localhost:%s/api/[model_name]""" % (BASE_PATH, BASE_PATH,  app.port)
+
+    print
+    print(message)
