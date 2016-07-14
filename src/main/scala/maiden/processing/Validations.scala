@@ -120,8 +120,6 @@ object Validations {
     }
   }
 
-  def phone: ValidationRule[String] = phone("US")
-
   //TODO: make this much more thorough
   def url = ValidationRule[String](s"be valid url number") { m: String =>
     try {
@@ -154,8 +152,6 @@ object Validations {
       }
     }
   }
-
-  //def postal_code: ValidationRule[String] = postal_code("US")
 
   //TODO: date related
   def date = ???

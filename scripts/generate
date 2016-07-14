@@ -95,6 +95,11 @@ if __name__ == "__main__":
             model_data[index]["columns"][i] = col
     app = App(app_data, model_data)
 
+    scala_dirs = [app.base_path]
+
+    for d in ('api', 'encoders', 'models', 'migrations'):
+        scala_dirs.append(os.path.join(app.base_path, d))
+
 
     if key_with_default(gen_options, "sbt", True):
         print("Generating project build files...")
@@ -128,7 +133,7 @@ if __name__ == "__main__":
 
     if key_with_default(gen_options, "format_source", True):
       print("Formatting Scala sources...")
-      format_scala()
+      format_scala(scala_dirs)
 
     message = """Your project is now available in %s. To run, simply
     cd into %s and then type "sbt run". Your API will be available at http://localhost:%s/api/[model_name]""" % (BASE_PATH, BASE_PATH,  app.port)

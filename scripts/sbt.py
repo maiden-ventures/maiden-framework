@@ -10,7 +10,6 @@ class SbtBuilder:
 
         self.build_sbt()
         self.build_plugins()
-        print "built sbt"
 
 
     def build_sbt(self):

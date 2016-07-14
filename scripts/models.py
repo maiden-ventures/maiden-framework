@@ -62,7 +62,6 @@ class ModelBuilder:
         formatted_fields = []
         for c in raw_columns:
             if len(c[2]) > 0:
-               print c[2]
                formatted_fields.append("%s.%s" % (c[0], ".".join(c[2])))
             else:
                 formatted_fields.append(c[0])
@@ -86,7 +85,6 @@ class ModelBuilder:
                         if c.references.ref_table == model.db_name:
                             _ref = c.references
                             (ref_model, ref_field) = get_scala_names(_ref.table, _ref.column)
-                            print(ref_model, ref_field)
                             reference_methods += (self.build_references(m.name, c.name, ref_model, ref_field))
 
                             #(name, type, local_model, local_field, ref_model, ref_field)
@@ -160,7 +158,7 @@ class ModelBuilder:
           ref_comprehensions = []
           #(name, type local_model, local_field, ref_model, ref_field)
           for r in ref_fields:
-              ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], camelize(r[2], False), r[3]))
+              ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], model.name_lower, r[3]))
 
           getallrefs = read_template("models/getallrefs")\
                       .replace("@@refComprehensions@@", "\n".join(ref_comprehensions)) \

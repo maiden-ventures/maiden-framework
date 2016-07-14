@@ -30,6 +30,10 @@ class App:
         self.base_path = os.path.join(self.source_directory, "src/main/scala/%s" % (self.name_lower))
         self.config_path = os.path.join(self.source_directory, "config")
         self.environment = self.app_info.get("envirornment", "development")
+        self.max_request_size = self.app_info.get("max_request_size", "10")
+        self.https_port = self.app_info.get("https_port", "")
+        self.certificate_path = self.app_info.get("certificate_path", "")
+        self.key_path = self.app_info.get("key_path", "")
 
         #make sure our paths exist
 
@@ -66,7 +70,6 @@ class Model:
 
     def build_columns(self):
         self.columns = [Column(self, column) for column in self.info["columns"]]
-        print self.columns
 
 class ForeignKey:
 
@@ -96,7 +99,6 @@ class Column:
         self.db_name = self.info.get("db_name", col_info["name"])
         self.scala_type = db_map["scala"]
         self.validations = col_info.get("validations", [])
-        if col_info.get("formatters"): print col_info["formatters"]
         self.formatters = col_info.get("formatters", [])
 
         self.index = col_info.get("index", False)

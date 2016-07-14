@@ -6,7 +6,6 @@ from mapper import DB_MAP
 
 
 BASE_PATH = os.path.realpath(os.path.dirname(__file__))
-print BASE_PATH
 
 def camelize(s, capitalize=True):
     return inflection.camelize(s, capitalize)
@@ -40,7 +39,7 @@ def read_template(name):
 
 def format_scala(files):
     for d in files:
-        subprocess.call(["java", "-jar", os.path.join(BASE_PATH, "tools/scalafmt.jar"), "-i", "-s", "defaultWithAlign", "--continuationIndentDefnSite","2", "--continuationIndentCallSite", "2", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
+        subprocess.call(["java", "-jar", os.path.join(BASE_PATH, "../tools/scalafmt.jar"), "-i", "-s", "defaultWithAlign", "--continuationIndentDefnSite","2", "--continuationIndentCallSite", "2", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
 
 def write(name, content):
     fd = open(name, "w+")

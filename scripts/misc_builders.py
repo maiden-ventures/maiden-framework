@@ -2,15 +2,15 @@ from helpers import *
 import shutil
 import os
 
-def build_boot(app_data):
+def build_boot(app):
     template = read_template("boot")
-    app_name = app_data['app']['name']
-    package = app_data['package']
+    app_name = app.name
+    package = app.package
 
     out = template.replace("@@package@@", package)\
-                  .replace("@@appNameUpper@@", camelize(app_name))
+                  .replace("@@appNameUpper@@", app_name)
 
-    file_name = os.path.join(app_data['base_path'], "Boot.scala")
+    file_name = os.path.join(app.base_path, "Boot.scala")
     write(file_name, out)
 
 def build_api_service(app):
@@ -55,13 +55,12 @@ def copy_tools(app):
 
     if not os.path.exists(base):
         os.mkdir(base)
-    shutil.copyfile("./tools/zipkin.jar", os.path.join(base, "zipkin.jar"))
+    shutil.copyfile("../tools/zipkin.jar", os.path.join(base, "zipkin.jar"))
 
 def security_info(app_config):
     sec = {}
 
     #read in security (if it exsists)
-    print app_config
     if 'security' in app_config:
         base_sec = app_config['security']
         if base_sec['method'] == "token":
