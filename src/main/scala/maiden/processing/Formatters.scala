@@ -20,7 +20,18 @@ object Formatters {
     def phone: String = phone("US")
 
     def postal_code(country: String) = {
-      value
+      if (value.size > 5) {
+        //format at 98717-1641
+        val s = value.replace("-", "")
+        "%s-%s".format(
+          s.substring(0,5),
+          s.substring(5,9)
+        )
+
+      } else {
+        //format as 98717-0000
+        s"${value}-0000"
+      }
     }
 
     def postal_code: String = postal_code("US")
@@ -58,10 +69,33 @@ object Formatters {
     def phone: Option[String] = phone("US")
 
     def postal_code(country: String) = {
-      Option(v)
+      //hardcoded to US for now
+      val zip = if (v.size > 5) {
+        //format at 98717-1641
+        val v2 = v.replace("-", "")
+        "%s-%s".format(
+          v2.substring(0,5),
+          v2.substring(5,9)
+        )
+
+      } else {
+        //format as 98717-0000
+        s"${v}-0000"
+      }
+      Option(zip)
     }
 
     def postal_code: Option[String] = postal_code("US")
+
+    //TODO: error checking and convert to regex
+    def social_security = {
+      v.replace("-", "")
+      "%s-%s-%s".format(
+        v.substring(0,3),
+        v.substring(3,5),
+        v.substring(5,9)
+      )
+    }
 
     def list(sep: String) = Option(v.split(sep).map(_.trim).mkString(","))
 

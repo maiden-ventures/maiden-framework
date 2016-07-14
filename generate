@@ -28,13 +28,18 @@ DB_MAP= {
     "datetime": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
     "timestamp": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
     "email": {"db": "varchar", "scala":"String", "validations": ['email']},
-    "phone": {"db": "varchar", "scala":"String", "validations": [{'phone': "US"}]},
+    "phone": {"db": "varchar", "scala":"String", "validations": [{'phone': "US"}],
+              "formatters": [{"phone": "US"}]},
+
     "url": {"db": "varchar", "scala":"String", "validations": ['url']},
-    "social_security": {"db": "varchar", "scala":"String", "validations": ['social_security']},
-    "postal_code": {"db": "varchar", "scala":"String", "validations": [{'postal_code': "US"}]},
+    "social_security": {"db": "varchar", "scala":"String", "validations": ['social_security'],
+                        "formatters": ["social_security"]},
+    "postal_code": {"db": "varchar", "scala":"String", "validations": [{'postal_code': "US"}],
+                    "formatters": [{"postal_code": "US"}]},
     "json": {"db": "varchar", "scala":"String", "validations": ['json']},
     "xml": {"db": "varchar", "scala":"String", "validations": ['xml']},
-    "list": {"db": "varchar", "scala":"String", "validations": ['xml']},
+    "list": {"db": "varchar", "scala":"String", "validations": ['xml'],
+             "formatters": ["list"]},
     "map": {"db": "varchar", "scala":"String", "validations": ['xml']},
   }
 
@@ -82,9 +87,8 @@ def write(name, content):
 
 class MigrationBuilder:
 
-  def __init__(self, data, config):
-    self.data = data
-    self.config = config
+  def __init__(self, app):
+    self.app = app
     self.template = """
     package %s.migrations
 
@@ -113,76 +117,56 @@ class MigrationBuilder:
     self.build()
 
 
-  def build_column(self, table, info):
+  def build_column(self, table, col):
       modifiers = ["NotNull"]
 
-      if 'db_name' not in info: info['db_name'] = info['name']
-      if exists_and_true(info, 'auto_increment'): modifiers.append("AutoIncrement")
-      if exists_and_true(info, 'primary_key'): modifiers.append("PrimaryKey")
-      if exists_and_true(info, 'nullable'): modifiers.remove("NotNull")
-      if 'default' in info: modifiers.append("""Default("%s")""" % (info['default']))
-      if 'limit' in info: modifiers.append("""Limit(%s)""" % (info['limit']))
-      #if 'db_name' in info: info['db_name = info['db_name']
+      modifiers = ', '.join(col.migration_modifiers)
 
-      modifiers = ', '.join(modifiers)
+      self.columns.append("""t.%s("%s", %s)""" % (col.db_type, col.db_name, col.migration_modifiers))
 
-      self.columns.append("""t.%s("%s", %s)""" % (db_type(info['type']), info['db_name'], modifiers))
+      if col.index:
+          index_name = "%s_%s_index"  % (table, col.db_name)
+          self.indexes.append("""addIndex(table, Array("%s"), Unique, Name("%s"))""" % (col.db_name, index_name))
 
-      if 'index' in info:
-          index_name = "%s_%s_index"  % (table, info['db_name'])
-          self.indexes.append("""addIndex(table, Array("%s"), Unique, Name("%s"))""" % (info['db_name'], index_name))
+      if col.unique_index:
+          index_name = "%s_%s_index"  % (table, col.db_name)
+          self.indexes.append("""addIndex(table, Array("%s"), Name("%s"))""" % (col.db_name, index_name))
 
-      if 'unique_index' in info:
-          index_name = "%s_%s_index"  % (table, info['db_name'])
-          self.indexes.append("""addIndex(table, Array("%s"), Name("%s"))""" % (info['db_name'], index_name))
-
-      if 'references' in info:
-          ref = info['references']
-          ref_table = ref['table']
-          ref_column= ref['column']
-          ref_name = "fk_%s_%s" % (ref_table, ref_column)
-
-          on_delete = "SetDefault"
-          if 'on_delete' in ref:
-              on_delete = camelize(ref['on_delete'])
-
+      if col.references:
+          ref = col.references
           s = """addForeignKey(on("%s" -> "%s"),
           references("%s" -> "%s"),
           OnDelete(%s),
-          Name("%s"))""" % (underscore(table), info["db_name"], ref_table, ref_column, on_delete, ref_name)
+          Name("%s"))""" % (ref.table, ref.column, ref.ref_table, ref.ref_column, ref.on_delete, ref.name)
 
           self.references.append(s)
 
 
   def build(self):
-    migration_dir = os.path.abspath(os.path.join(self.config["base_path"], "migrations"))
 
-    make_dir(migration_dir)
+    migration_dir = os.path.abspath(os.path.join(self.app.base_path,  "migrations"))
 
-    for model in self.data:
-        if 'db_name' not in model:
-            model['db_name'] = underscore(model['name'])
-
+    for model in self.app.models:
         self.columns = []
         self.indexes = []
         self.references = []
 
         now_ts = str(datetime.now()).split(".")[0].replace("-","").replace(":","").replace(".","").replace(" ", "")
 
-        migration_name = "Create%s" % (camelize(model["name"]))
+        migration_name = "Create%s" % (model.name)
         class_name = "Migrate_%s_%s"  % (now_ts, migration_name)
         #table_name = underscore(model["name"]).lower()
         file_name = "%s.scala" % (class_name.replace("Migrate_", ""))
 
-        for col in model['columns']:
-            self.build_column(model['db_name'], col)
+        for col in model.columns:
+            self.build_column(model.db_name, col)
 
 
-        package = self.config['package']
+        package = self.app.package
         column_str = "\n".join(self.columns)
         indexes_str = "\n".join(self.indexes)
         references_str = "\n".join(self.references)
-        table_str = model['db_name']
+        table_str = model.db_name
 
         out = self.template % (package, class_name, table_str, column_str, indexes_str, references_str)
         write(os.path.join(migration_dir, file_name), out)
@@ -190,26 +174,25 @@ class MigrationBuilder:
 
 class SbtBuilder:
 
-    def __init__(self, config):
+    def __init__(self, app):
 
-        self.config = config
-        make_dir(self.config["app"]["source_directory"])
-
-        make_dir(os.path.join(self.config["app"]["source_directory"], "project"))
-
+        self.app = app
         self.sbt_template = read_template("sbt")
         self.plugins_template =  read_template("sbt-plugins")
 
         self.build_sbt()
         self.build_plugins()
+        print "built sbt"
 
 
     def build_sbt(self):
-        self.sbt_template = self.sbt_template.replace("@@namespace@@", self.config["app"]["namespace"]).replace("@@appName@@", self.config["app"]["name"])
-        write(os.path.join(self.config["app"]["source_directory"], "build.sbt"), self.sbt_template)
+        self.sbt_template = self.sbt_template\
+                                .replace("@@namespace@@", self.app.namespace)\
+                                .replace("@@appName@@", self.app.name_lower)
+        write(os.path.join(self.app.source_directory, "build.sbt"), self.sbt_template)
 
     def build_plugins(self):
-        write(os.path.join(self.config["app"]["source_directory"], "project", "plugins.sbt"),
+        write(os.path.join(self.app.source_directory, "project", "plugins.sbt"),
               self.plugins_template)
 
 class DbAccessBuilder:
@@ -338,7 +321,6 @@ class ModelBuilder:
     models_dir = os.path.abspath(os.path.join(self.config["base_path"], "models"))
 
     #make sure the models directory exists
-    make_dir(models_dir)
 
     for model in self.data:
 
@@ -525,7 +507,6 @@ class EncoderBuilder:
 
         self.encoder_dir = os.path.join(self.config['base_path'], "encoders")
 
-        make_dir(self.encoder_dir)
         self.build()
 
     def build(self):
@@ -572,15 +553,12 @@ class EncoderBuilder:
 
 class ApiBuilder:
 
-    def __init__(self, models, config):
-        self.models = models
-        self.config = config
+    def __init__(self, app):
         self.template = read_template("api")
-        self.api_dir = os.path.join(self.config['base_path'], "api")
+        self.api_dir = os.path.join(app.base_path, "api")
 
-        make_dir(self.api_dir)
 
-        self.security_import = security_info(config)['security_import']
+        self.security_import = app.security["security_import"]
         self.build()
 
 
@@ -618,40 +596,39 @@ class ApiBuilder:
             return ""
 
     def build(self):
-        for model in self.models:
+        for model in app.models:
+
+            #Endpoint params
             param_str = """param("%s").as[%s]%s"""
 
-            all_model_cols = ["%s: %s" % (camelize(c["name"], False), db_type(c["type"])) for c in model['columns']]
+            all_model_cols = ["%s: %s" % (c.name, c.db_type) for c in model.columns]
             all_model_cols_str = ", ".join(all_model_cols)
 
-            cols = [(camelize(c["name"], False), scala_type(c["type"]), c.get("validations", []), c["type"], c.get('formatters', []))\
-                    for c in model["columns"] if c["name"] not in ("id", "created_at", "updated_at")]
+            cols = [c for c in model.columns if c.name not in ("id", "createdAt", "updatedAt")]
 
-            core_field_comprehension_mappings = "\n".join(['%s <- c.downField("%s").as[Option[%s]]' % (camelize(c[0], False), camelize(c[0], False), c[1]) for c in cols])
+            #for creating the body Decoder
+            core_field_comprehension_mappings = "\n".join(['%s <- c.downField("%s").as[Option[%s]]' % (c.name, c.name, c.scala_type) for c in model.columns])
 
 
-            #TODO: add a "formatters" field to column info
             cfields = []
-            for cf in cols:
-                if len(cf[4]) > 0:
+            for cf in model.columns:
+                if len(cf.formatters) > 0:
                     #add the formatters
-                    cfields.append("%s.%s" % (camelize(cf[0], False), ".".join(cf[4])))
+                    cfields.append("%s.%s" % (cf.name, ".".join(cf.formatters)))
                 else:
-                    cfields.append(camelize(cf[0], False))
+                    cf.fields.append(cf.name)
 
-            core_field_mappings = ",".join(cfields) #[camelize(c[0], False) for c in cols])
+            core_field_mappings = ",".join(cfields)
 
 
-            create_args = " :: ".join([param_str % (c[0], c[1], c[2]) for c in cols])
-            create_param_args = " :: ".join(['param("%s").as[%s]%s' % (c[0], c[1], self.add_validations(c[1], c[2] + get_validations(c[3]))) for c in cols])
-            create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in cols])
-            model_creation_args = ", ".join([c[0] for c in cols])
+            create_param_args = " :: ".join(['param("%s").as[%s]%s' % (c[0], c[1], self.add_validations(c.validations)) for c in model.columns])
+            create_params = ", ".join(["%s: %s" % (c.name, c.scala_type) for c in cols])
+            model_creation_args = ", ".join([c.name for c in cols])
 
-            optional_params = " :: ".join(['paramOption("%s").as[%s]%s' % (c[0], c[1], self.add_validations(c[1], c[2] + get_validations(c[3]))) for c in cols])
-            param_list = ", ".join(["%s: Option[%s]" % (c[0], c[1]) for c in cols])
-            update_params = ", ".join([c[0] for c in cols])
+            param_list = ", ".join(["%s: Option[%s]" % (c.name, c.scala_type) for c in cols])
+            update_params = ", ".join([c.name for c in cols])
 
-            validations = ",\n".join(["%s.%s%s" % (camelize(model['name'], False), c[0], self.add_validations(c[1], c[2] + get_validations(c[3]), c[0])) for c in cols if (c[2] != [] or get_validations(c[3]) != [])])
+            validations = ",\n".join(["%s.%s%s" % (model.name_lower, c.name, self.add_validations(c.validations)) for c in cols if c.validations != []])
 
 
             out = self.template.replace("@@model@@", camelize(model['name'], True))\
@@ -682,56 +659,45 @@ def build_boot(app_data):
     file_name = os.path.join(app_data['base_path'], "Boot.scala")
     write(file_name, out)
 
-def build_api_service(models, config):
-
-    apis = []
-    #add create, search, etc...
-    endpoints = ['doc', 'get', 'delete']
-    api_names = [m["name"] for m in models]
-    for api in api_names:
-        apis.append("%sApi.%sApi" % (camelize(api), camelize(api, False)))
-
+def build_api_service(app):
+    apis = ["%sApi.%sApi" % (m.name, m.name_lower) for m in app.models]
     apis = " :+: ".join(apis)
 
-    app_name =  camelize(config['app']['name'])
-    app_name_lower = camelize(config['app']['name'], False)
-
     service = read_template("api-service")
-    out = service.replace("@@package@@", config['package'])\
-                 .replace("@@app@@", app_name)\
-                 .replace("@@appLower@@", app_name_lower)\
+    out = service.replace("@@package@@", app.package)\
+                 .replace("@@app@@", app.name)\
+                 .replace("@@appLower@@", app.name_lower)\
                  .replace("@@api_list@@", apis)
-    file_name = os.path.join(config['base_path'], "%sApi.scala" % (app_name))
+    file_name = os.path.join(app.base_path, "%sApi.scala" % (app.name))
 
     write(file_name, out)
 
-def build_logback(app_config):
+def build_logback(app):
     template = read_template("logback")
-    appName = app_config["app"]["name"].lower()
-    file_name = os.path.join(app_config["app"]['source_directory'], "config/logback.xml")
+    file_name = os.path.join(app.source_directory, "config/logback.xml")
 
-    out = template.replace("@@appName@@", appName)
+    out = template.replace("@@appName@@", app.name_lower)
 
     write(file_name, out)
 
-def build_app_ini(app_config):
+def build_app_ini(app):
     template = read_template("application.ini")
-    file_name = os.path.join(app_config["app"]['source_directory'], "config/launcher.conf")
-    out = template.replace("@@httpInterface@@", ":%s" % (app_config['app']['port'])) \
-                  .replace("@@certificatePath@@", app_config['app']['certificate_path']) \
-                  .replace("@@keyPath@@", app_config['app']['key_path']) \
-                  .replace("@@maxRequestSize@@", app_config['app']['max_request_size']) \
-                  .replace("@@appNameLower@@", app_config['app']['app_name_lower'])
+    file_name = os.path.join(app.source_directory, "config/launcher.conf")
+    out = template.replace("@@httpInterface@@", ":%s" % (app.port)) \
+                  .replace("@@certificatePath@@", app.certificate_path) \
+                  .replace("@@keyPath@@", app.key_path) \
+                  .replace("@@maxRequestSize@@", app.max_request_size) \
+                  .replace("@@appNameLower@@", app.name_lower)
 
-    if app_config['app']['https_port'] != "":
-      out = out.replace("@@httpsInterface@@", ":%s" % (app_config['app']['https_port']))
+    if app.https_port != "":
+      out = out.replace("@@httpsInterface@@", ":%s" % self.https_port)
     else:
         out = out.replace("@@httpsInterface@@", "")
 
     write(file_name, out)
 
-def copy_tools(app_config):
-    base = os.path.join(app_config['app']['source_directory'], "tools")
+def copy_tools(app):
+    base = os.path.join(app.source_directory, "tools")
 
     if not os.path.exists(base):
         os.mkdir(base)
@@ -741,9 +707,8 @@ def security_info(app_config):
     sec = {}
 
     #read in security (if it exsists)
-    if 'security' in app_config['app']:
-        base_sec = app_config['app']['security']
-        #need to somehow generate the correct config here...
+    if 'security' in app_config:
+        base_sec = app_config['security']
         if base_sec['method'] == "token":
             sec['security_import'] ="import maiden.auth.token.TokenAuth._"
             access_token = base_sec['access_token']
@@ -790,6 +755,130 @@ DEFAULT_SOCIAL_USER_MODEL = {
 }
 
 
+class App:
+
+    def __init__(self, info, model_info):
+        self.info = info
+        self.app_info = self.info["app"]
+        self.db_info = self.info["db"]
+        self.social_info = self.info["social"]
+
+        self.model_info = model_info
+        #build out our models
+        self.models = [Model(model) for model in model_info]
+
+        #build out meta info
+        self.name = camelize(self.app_info["name"])
+        self.name_lower = underscore(self.name).lower()
+
+        self.namespace = self.app_info["namespace"].lower()
+        self.package = "%s.%s" % (self.namespace, self.name_lower)
+        self.payload_key = self.app_info.get("payload_key", "payload")
+        self.port = self.app_info["port"]
+        self.http_port = self.app_info.get("https_port", "")
+        self.certificate_path = self.app_info.get("certificate_path", "")
+        self.key_path = self.app_info.get("key_path", "")
+
+        self.source_directory = self.app_info["source_directory"]
+        self.base_path = os.path.join(self.source_directory, "src/main/scala/%s" % (self.name_lower))
+        self.config_path = os.path.join(self.source_directory, "config")
+
+        #make sure our paths exist
+
+        print("Creating directories under %s" % (self.source_directory))
+        make_dir(self.config_path)
+        make_dir(os.path.join(self.source_directory, "project"))
+        make_dir(self.base_path)
+        for d in ('api', 'encoders', "migrations", "models"):
+            make_dir(os.path.join(self.base_path, d))
+
+
+        #build out our data structures
+        self.security = security_info(self.app_info)
+        #self.database  = build_database(self.app_info)
+        self.social = self.build_social()
+
+        sbt = SbtBuilder(self)
+        MigrationBuilder(self)
+        build_api_service(self)
+
+    def build_security(self):
+        pass
+
+    def build_database(self):
+        pass
+
+    def build_social(self):
+        pass
+
+class Model:
+    def __init__(self, model_info):
+        self.info = model_info
+
+        self.name = camelize(self.info["name"])
+        self.name_lower = camelize(self.info["name"], False)
+        self.db_name = self.info.get("db_name", underscore(self.name).lower())
+        self.build_columns()
+
+    def build_columns(self):
+        self.columns = [Column(self, column) for column in self.info["columns"]]
+        print self.columns
+
+
+
+class ForeignKey:
+
+    def __init__(self, col):
+        self.ref_table = col.info["references"]["table"]
+        self.ref_column = col.info["references"]["column"]
+        self.column = col.db_name
+        self.table = col.table
+        self.on_delete = camelize(col.info["references"].get("on_delete", "SetDefault"))
+        self.name = "fk_%s_%s" % (self.ref_table, self.ref_column)
+
+class Column:
+    def __init__(self, model, col_info):
+
+        self.info = col_info
+        self.table = model.db_name
+        self.model = model.name
+
+        self.name = camelize(self.info["name"], False)
+        self.named_type = self.info["type"]
+        db_map = DB_MAP[self.info["type"]]
+        self.db_type = DB_MAP[self.named_type]["db"]
+        self.index = self.info.get("index", False)
+        self.limit = self.info.get("limit", None)
+        self.db_name = self.info.get("db_name", col_info["name"])
+        self.scale_type = db_map["scala"]
+        self.validations = col_info.get("validations", [])
+        self.formatters = col_info.get("formatters", [])
+
+        self.index = col_info.get("index", False)
+        self.unique_index = col_info.get("unique_index", False)
+
+        if 'validations' in db_map: self.validations.extend(db_map["validations"])
+        if 'formatters' in db_map: self.formatters.extend(db_map["formatters"])
+
+        self.build_references()
+        self.build_migration_modifiers()
+
+
+    def build_references(self):
+        self.references = None
+        if 'references' in self.info:
+            self.references = ForeignKey(self)
+
+    def build_migration_modifiers(self):
+        modifiers = ["NotNull"]
+        if exists_and_true(self.info, 'auto_increment'): modifiers.append("AutoIncrement")
+        if exists_and_true(self.info, 'primary_key'): modifiers.append("PrimaryKey")
+        if exists_and_true(self.info, 'nullable'): modifiers.remove("NotNull")
+        if 'default' in self.info: modifiers.append("""Default("%s")""" % (self.info['default']))
+        if 'limit' in self.info: modifiers.append("""Limit(%s)""" % (self.info['limit']))
+
+        self.migration_modifiers = ', '.join(modifiers)
+
 if __name__ == "__main__":
     #read in our configs
 
@@ -801,25 +890,7 @@ if __name__ == "__main__":
 
     gen_options = app_data['generator']
 
-    app_data['package'] = ("%s.%s" % (app_data['app']['namespace'], app_data['app']['name'])).lower()
-    app_data['base_path'] = os.path.join(app_data['app']['source_directory'], "src/main/scala/%s" % (app_data['app']['name'].lower()))
-    app_data['config_path'] = os.path.join(app_data['app']['source_directory'], "config")
-
-    app_data['app']['app_name_lower'] = app_data['app']['name'].lower()
-    if 'certificate_path' not in app_data['app']:
-      app_data['app']['certificate_path'] = ""
-
-    if 'key_path' not in app_data['app']:
-        app_data['app']['key_path'] = ""
-
-    if 'https_port' not in app_data['app']:
-        app_data['app']['https_port'] = ""
-
-    if 'max_request_size' not in app_data['app']:
-        app_data['app']['max_request_size'] = "10"
-
-
-    make_dir(app_data['config_path'])
+    #make_dir(app_data['config_path'])
 
     model_data = load(model_stream, Loader=Loader)
 
@@ -831,6 +902,7 @@ if __name__ == "__main__":
     #make sure that all models have an id and timestamps
     for index in range(len(model_data)):
         model = model_data[index]
+        Model(model)
         cols = model["columns"]
 
         if 'db_name' not in model:
@@ -878,6 +950,9 @@ if __name__ == "__main__":
                 col['formatters'].append(col['type'])
 
             model_data[index]["columns"][i] = col
+    app = App(app_data, model_data)
+    sys.exit()
+
 
     if key_with_default(gen_options, "sbt", True):
         print("Generating project build files...")
