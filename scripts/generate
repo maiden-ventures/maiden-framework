@@ -14,6 +14,7 @@ import time
 import shutil
 from datetime import datetime
 import subprocess
+import argparse
 
 from helpers import *
 from migrations import MigrationBuilder
@@ -29,10 +30,18 @@ from app import *
 
 if __name__ == "__main__":
 
-    model_stream = open("models.yml")
-    app_stream = open("project.yml")
+    parser = argparse.ArgumentParser("generate")
+    parser.add_argument("-p", "--project-file", help="location of project.yml", required=True)
+    parser.add_argument("-m", "--model-file", help="location of model.yml", required=True)
+    args = parser.parse_args()
+
+    model_stream = open(args.model_file)
+    app_stream = open(args.project_file)
     app_data = load(app_stream, Loader=Loader)
 
+
+    print app_data
+    sys.exit(1)
     gen_options = app_data['generator']
 
     model_data = load(model_stream, Loader=Loader)
