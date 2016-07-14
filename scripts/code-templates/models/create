@@ -1,11 +1,3 @@
-/*def create(@@createParams@@) = {
-  val q = quote {
-    query[@@model@@].schema(_.generated(_.id)).insert
-  }
-  db.run(q)(@@model@@(@@modelCreateParams@@))
-}
-*/
-
 def create(data: @@model@@) = {
   val q = quote {
     @@queryName@@.insert
