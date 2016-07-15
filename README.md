@@ -25,7 +25,7 @@
 
   * ```curl -H "Content-Type: application/json" -X PUT -d '{"firstName": "test_user", "telephone": "206-300-2339", "zipCode": "98117"}' http://localhost:7070/api/test2?at=abcdefg```
 
-  * To see what you get open your browser and go to `http://localhost:7070/api/test1`
+  * To see what you get open your browser and go to `http://localhost:7070/api/test/1`
 
   * To benchmark: install `wrk` and type ```wrk -t8 -c1000 -d10s http://localhost:7070/api/test/1/\?at\=abcdefg```
 
