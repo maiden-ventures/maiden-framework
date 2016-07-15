@@ -7,7 +7,7 @@ app:
   users: True
   security:
     method: token
-    header_name: at
+    header_name: X-MAIDEN-AT
     access_token: abcdefg
     endpoints:
       -create
