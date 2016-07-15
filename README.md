@@ -25,7 +25,10 @@
 
   * ```curl -H "Content-Type: application/json" -X PUT -H "X-MAIDEN-AT: abcdefg" -d '{"firstName": "test_user", "telephone": "206-300-2339", "zipCode": "98117"}' http://localhost:7070/api/test2```
 
-  * To benchmark: install `wrk` and type ```wrk -t8 -c1000 -d10s http://localhost:7070/api/test/1/\?at\=abcdefg```
+  * To view in your browser visit ```http://localhost:7070/api/test/1?token=abcdefg`
+  (*NOTE* -- token can be passed either in the headers or in the URL params)
+
+  * To benchmark: install `wrk` and type ```wrk -t8 -c1000 -d10s http://localhost:7070/api/test/1/\?token=abcdefg```
 
   *NOTE* Run the above 4 or 5 times and you will  see the req/s increase. The JVM needs some time to warm-up. On moderate hardware you should see in excess of 5k req/sec
 
