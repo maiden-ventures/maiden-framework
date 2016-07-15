@@ -7,7 +7,7 @@ app:
   users: True
   security:
     method: token
-    param_name: at
+    header_name: at
     access_token: abcdefg
     endpoints:
       -create
