@@ -20,10 +20,12 @@ trait TokenAuth extends MaidenAuth {
     val auth = (paramOption(paramToken).as[String] :: headerOption(headerToken).as[String])
 
     auth.mapOutputAsync { tok =>
-      println(tok)
-      if (!tok(0).isEmpty && tok(0) == Option(accessToken)) authorized(AnonymousAuthUser())
-      else if (!tok(1).isEmpty && tok(1) == Option(accessToken)) authorized(AnonymousAuthUser())
-      else unauthorized
+      tok match {
+        case Some(x) :: None :: HNil if x == accessToken => authorized(AnonymousAuthUser())
+        case None :: Some(x) :: HNil if x == accessToken => authorized(AnonymousAuthUser())
+        case Some(x) :: Some(y) :: HNil if x == accessToken || y == accessToken => authorized(AnonymousAuthUser())
+        case _ => unauthorized
+      }
     }
   }
 
