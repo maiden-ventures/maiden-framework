@@ -55,7 +55,7 @@ def copy_tools(app):
 
     if not os.path.exists(base):
         os.mkdir(base)
-    shutil.copyfile("../tools/zipkin.jar", os.path.join(base, "zipkin.jar"))
+    shutil.copyfile(os.path.join(BASE_ROOT_PATH, "tools/zipkin.jar"), os.path.join(base, "zipkin.jar"))
 
 def security_info(app_config):
     sec = {}

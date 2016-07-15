@@ -2,7 +2,6 @@ app:
   name: service
   environment: development
   namespace: com.test
-  source_directory: test_api
   payload_key: payload
   port: 8000
   users: True

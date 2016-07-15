@@ -33,15 +33,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("generate")
     parser.add_argument("-p", "--project-file", help="location of project.yml", required=True)
     parser.add_argument("-m", "--model-file", help="location of model.yml", required=True)
+    parser.add_argument("-d", "--source-directory", help="location generated sources", default=".")
     args = parser.parse_args()
 
-    model_stream = open(args.model_file)
+    model_stream = open(os.path.abspath(args.model_file))
     app_stream = open(args.project_file)
     app_data = load(app_stream, Loader=Loader)
 
+    app_data["app"]["source_directory"] = os.path.abspath(args.source_directory)
 
-    print app_data
-    sys.exit(1)
     gen_options = app_data['generator']
 
     model_data = load(model_stream, Loader=Loader)
@@ -102,13 +102,13 @@ if __name__ == "__main__":
                 col['formatters'].extend(get_formatters(col['type']))
 
             model_data[index]["columns"][i] = col
+
     app = App(app_data, model_data)
 
     scala_dirs = [app.base_path]
 
     for d in ('api', 'encoders', 'models', 'migrations'):
         scala_dirs.append(os.path.join(app.base_path, d))
-
 
     if key_with_default(gen_options, "sbt", True):
         print("Generating project build files...")
@@ -145,7 +145,7 @@ if __name__ == "__main__":
       format_scala(scala_dirs)
 
     message = """Your project is now available in %s. To run, simply
-    cd into %s and then type "sbt run". Your API will be available at http://localhost:%s/api/[model_name]""" % (BASE_PATH, BASE_PATH,  app.port)
+    cd into %s and then type "sbt run". Your API will be available at http://localhost:%s/api/[model_name]""" % (app.source_directory, app.source_directory, app.port)
 
     print
     print(message)

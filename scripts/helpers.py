@@ -6,6 +6,7 @@ from mapper import DB_MAP
 
 
 BASE_PATH = os.path.realpath(os.path.dirname(__file__))
+BASE_ROOT_PATH = os.path.abspath(os.path.join(BASE_PATH, ".."))
 
 def camelize(s, capitalize=True):
     return inflection.camelize(s, capitalize)
