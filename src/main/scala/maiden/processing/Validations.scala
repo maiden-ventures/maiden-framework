@@ -102,12 +102,8 @@ object Validations {
   }
 
   def email = ValidationRule[String]("be a valid email") { m =>
-    val re = """^[-a-z0-9!#$%&'*+/=?^_`{|}~]+(\.[-a-z0-9!#$%&'*+/=?^_`{|}~]+)*@([a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\.)*(aero|arpa|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|[a-z][a-z])$""".r
-
-    if (re.findFirstIn(m) == None)
-      false
-    else
-      true
+    val re = """^[-a-z0-9!#$%&'*+/=?^_`{|}~]+(\.[-a-z0-9!#$%&'*+/=?^_`{|}~]+)*@([a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\.)*(aero|arpa|asia|biz|cat|com|coop|edu|gov|info|int|jobs|mil|mobi|museum|name|net|org|pro|tel|travel|[a-z][a-z])$"""
+    m.matches(re)
   }
 
   def phone(country: String="US") = ValidationRule[String](s"be valid phone number") { m: String =>
@@ -130,20 +126,20 @@ object Validations {
     }
   }
 
+  def ip_address = ValidationRule[String](s"be valid IP Address") { m: String =>
+    val reg = """(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})"""
+    m.matches(reg)
+  }
+
+
   def social_security = ValidationRule[String]("be a valid Social Security Number") { m: String =>
-    val re = "^(?!000|666)[0-8][0-9]{2}(?:-){0,1}(?!00)[0-9]{2}(?:-){0,1}(?!0000)[0-9]{4}$".r
-    re.findFirstIn(m) match {
-      case Some(x) => true
-      case _ => false
-    }
+    val re = "^(?!000|666)[0-8][0-9]{2}(?:-){0,1}(?!00)[0-9]{2}(?:-){0,1}(?!0000)[0-9]{4}$"
+    m.matches(re)
   }
 
   def postal_code(country: String) = ValidationRule[String](s"be a valid postal code for $country") {m: String =>
     if (PostalCodes.codes.contains(country)) {
-      PostalCodes.codes(country).findFirstIn(m) match {
-        case Some(x) => true
-        case _ => false
-      }
+      m.matches(PostalCodes.codes(country))
     } else {
       if (m == "") {
         true
