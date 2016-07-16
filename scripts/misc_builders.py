@@ -69,12 +69,19 @@ def security_info(app_config):
             if 'param_name' in base_sec:
                 param_name = base_sec['param_name']
             else:
-                sec_param_name = "access_token"
+                param_name = "access_token"
+
+            if 'header_name' in base_sec:
+                header_name = base_sec['header_name']
+            else:
+                header_name = "X-ACCESS-TOKEN"
+
 
             sec['security_config'] = """
 app.security.param_name="%s"
+app.security.header_name="%s"
 app.security.access_token="%s"
-            """ % (param_name,  access_token)
+            """ % (param_name, header_name, access_token)
         #add more here
     else:
         sec['security_import'] = "import maiden.auth.anon.AnonAuth._"
