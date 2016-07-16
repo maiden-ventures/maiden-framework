@@ -189,14 +189,8 @@ object Validations {
 
   def map = ???
 
-  //match via some function (String) => Boolean
-  def matches(s: => (String) => Boolean) = ValidationRule[String](s"must match $s") { m: String =>
-    s(m)
-  }
   //regex matching
-  def must_match(v: String) = ValidationRule[String](s"must match $v") {m: String =>
-    m match {
-      case _ => false
-    }
+  def matches(v: String) = ValidationRule[String](s"must match $v") {m: String =>
+    m.matches(v)
   }
 }
