@@ -8,6 +8,7 @@ app:
   security:
     method: token
     header_name: X-MAIDEN-AT
+    param_name: token
     access_token: abcdefg
     endpoints:
       -create
