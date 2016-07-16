@@ -83,6 +83,9 @@ class ForeignKey:
         self.on_delete = camelize(col.info["references"].get("on_delete", "SetDefault"))
         self.name = "fk_%s_%s" % (self.ref_table, self.ref_column)
 
+    def __str__(self):
+        return "ref_table: %s, ref_column: %s, table: %s, column: %s" % (self.ref_table, self.ref_column, self.table, self.field_name)
+
 class Column:
     def __init__(self, model, col_info):
 

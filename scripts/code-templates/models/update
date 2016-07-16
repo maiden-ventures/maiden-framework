@@ -1,16 +1,3 @@
-def update(id: Long, @@updateParams@@) = {
-  val existing = findById(id).head
-  existing.updatedAt = LocalDateTime.now
-
-  @@updateMatches@@
-
-  val q = quote {
-    @@queryName@@.filter(_.id == lift(id)).update
-  }
-
-  db.run(q)(@@model@@FullResponse.extract(existing))
-  get(id)
-}
 
 def update(data: @@model@@) = {
   data.updatedAt = LocalDateTime.now

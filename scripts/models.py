@@ -29,10 +29,10 @@ class ModelBuilder:
       #grab a foreign key reference
       s = """def get%s(id: Long) = {
       val q = quote {
-        query[%s].join(query[%s]).on((q1,q2) => q1.%s == q2.%s && q2.id == lift(id))
+        query[%s].join(query[%s]).on((q1,q2) => q1.%s == q2.%s && q1.id == lift(id))
       }
       db.run(q).map(x => x._1)
-    }""" % (model_name, model_name, model2_name, field_name, field2_name)
+    }""" % (model2_name, model2_name, model_name, field2_name, field_name)
       return s
 
   def build(self):
@@ -85,13 +85,14 @@ class ModelBuilder:
                         if c.references.ref_table == model.db_name:
                             _ref = c.references
                             (ref_model, ref_field) = get_scala_names(_ref.table, _ref.column)
-                            reference_methods += (self.build_references(m.name, c.name, ref_model, ref_field))
+                            (tb,co) = get_scala_names(_ref.ref_table, _ref.ref_column)
+                            reference_methods += "\n\n" + self.build_references(tb, co,  ref_model, ref_field)
 
                             #(name, type, local_model, local_field, ref_model, ref_field)
                             ref_fields.append((m.name_lower,
                                                c.scala_type,
                                                ref_model, ref_field,
-                                               m.name, c.name))
+                                               tb, co))
 
         for col in model.columns:
           col_name = col.name
@@ -145,7 +146,7 @@ class ModelBuilder:
         create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in create_columns])
         model_create_params = ", ".join(["%s = %s" % (c[0],c[0]) for c in create_columns])
 
-        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[4]) \
+        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[2]) \
                                      for r in ref_fields])
         ref_constructor_fields = ", ".join(["%s = %s" % (r[0], r[0]) for r in ref_fields])
         ref_from_db = ", ".join(["%s = %s.get%s(t.id)" % (r[0], model.name, r[4]) \
@@ -158,10 +159,12 @@ class ModelBuilder:
           ref_comprehensions = []
           #(name, type local_model, local_field, ref_model, ref_field)
           for r in ref_fields:
-              ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], model.name_lower, r[3]))
+              ref_comprehensions.append("get%s(%s.%s.get)" %(r[2], model.name_lower, r[5]))
+              #ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], model.name_lower, r[3]))
 
+          ref_comprehensions = "(" + ",".join(ref_comprehensions) + ")"
           getallrefs = read_template("models/getallrefs")\
-                      .replace("@@refComprehensions@@", "\n".join(ref_comprehensions)) \
+                      .replace("@@refComprehensions@@", ref_comprehensions) \
                       .replace("@@refYields@@", ref_yields) \
                       .replace("@@refCount@@", str(ref_count)) \
                       .replace("@@lowerCaseModel@@", model.name_lower)
@@ -169,7 +172,7 @@ class ModelBuilder:
           magic_methods_str += "\n%s\n" % (getallrefs)
           full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
             val refs = @@model@@.getAllRefs(t)
-            (@@model@@FullResponse.apply _) tupled (@@model@@.unapply(t).get ++  refs.get)
+            (@@model@@FullResponse.apply _) tupled (@@model@@.unapply(t).get ++  refs)
           }"""
         else:
           magic_methods_str += "\ndef getAllRefs(%s: %s) = None" % (m.name_lower,m.name)

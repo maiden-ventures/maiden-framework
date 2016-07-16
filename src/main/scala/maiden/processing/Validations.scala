@@ -149,6 +149,12 @@ object Validations {
     }
   }
 
+  def country_code = ValidationRule[String](s"be a valid country code") { m: String =>
+
+    Countries.countries.contains(m)
+
+  }
+
   //TODO: date related
   def date = ???
   def time = ???

@@ -30,7 +30,7 @@ class ApiBuilder:
 
             vals = []
             for v in validations:
-                if (type(v) == type("")):
+                if type(v) == type("") and scala_type != "String":
                     vals.append("%s[%s]" % (v, scala_type))
                 elif type(v) == type({}):
                     for (key, value) in v.items():

@@ -1,11 +1,4 @@
 
 def getAllRefs(@@lowerCaseModel@@: @@model@@) = {
-  val q = quote {
-    for {
-      @@refComprehensions@@
-    } yield(@@refYields@@)
-
-
-  }
-  Option(Tuple@@refCount@@(db.run(q)))
+  @@refComprehensions@@
 }

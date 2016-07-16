@@ -40,7 +40,11 @@ class MigrationBuilder:
 
       modifiers = ', '.join(col.migration_modifiers)
 
-      self.columns.append("""t.%s("%s", %s)""" % (col.db_type, col.db_name, col.migration_modifiers))
+      if len(col.migration_modifiers) > 0:
+        self.columns.append("""t.%s("%s", %s)""" % (col.db_type, col.db_name, col.migration_modifiers))
+      else:
+        self.columns.append("""t.%s("%s")""" % (col.db_type, col.db_name))
+
 
       if col.index:
           index_name = "%s_%s_index"  % (table, col.db_name)

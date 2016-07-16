@@ -1,6 +1,6 @@
 package @@package@@.api
 
-import java.time.LocalDateTime
+import java.time._
 import com.twitter.util.Future
 import spire.implicits._
 import io.finch.{Endpoint, _}

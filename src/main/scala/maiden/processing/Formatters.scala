@@ -89,12 +89,12 @@ object Formatters {
 
     //TODO: error checking and convert to regex
     def social_security = {
-      v.replace("-", "")
-      "%s-%s-%s".format(
-        v.substring(0,3),
-        v.substring(3,5),
-        v.substring(5,9)
-      )
+      val s = v.replace("-", "")
+      Option("%s-%s-%s".format(
+        s.substring(0,3),
+        s.substring(3,5),
+        s.substring(5,9)
+      ))
     }
 
     def list(sep: String) = Option(v.split(sep).map(_.trim).mkString(","))
