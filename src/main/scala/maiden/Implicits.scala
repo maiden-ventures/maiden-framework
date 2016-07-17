@@ -26,27 +26,47 @@ object DateImplicits {
   implicit val encodeOptionDateTime = mappedEncoding[Option[LocalDate], Option[Date]](localDate =>
     localDate match {
       case Some(s) => Option(Date.from(s.atStartOfDay(ZoneId.systemDefault).toInstant))
-      case _ => None
+      case _ => Option(new Date(0))
     })
 
   implicit val decodeOptionLocalDate = mappedEncoding[Option[Date], Option[LocalDate]](d =>
     d match {
       case Some(x) => Option(dateToLocalDate(x))
-      case _ => None
+      case _ => {
+        val d = new Date(0)
+        Option(Instant.ofEpochMilli(d.getTime()).atZone(ZoneId.systemDefault).toLocalDate())
+
+      }
     })
 
   implicit val encodeOptionLocalDateTime = mappedEncoding[Option[LocalDateTime], Option[Date]](localDate =>
     localDate match {
       case Some(s) =>
         Option(Date.from(s.atZone(ZoneId.systemDefault).toInstant))
-      case _ => None
+      case _ => {
+        val d = new Date(0)
+        Option(d)
+
+      }
     })
 
+  implicit val encodeOptionLocalDateTimeToDate = mappedEncoding[Option[LocalDateTime], Date](localDate =>
+    localDate match {
+      case Some(s) =>
+        Date.from(s.atZone(ZoneId.systemDefault).toInstant)
+      case _ => {
+        val d = new Date(0)
+        d
+      }
+    })
   implicit val decodeOptionLocalDateTime = mappedEncoding[Option[Date], Option[LocalDateTime]](date =>
     date match {
       case Some(x) =>
         Option(LocalDateTime.ofInstant(x.toInstant, ZoneId.systemDefault()))
-      case _ => None
+      case _ => {
+        val d = new Date(0)
+        Option(LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault()))
+      }
     })
 
 
