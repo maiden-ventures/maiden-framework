@@ -7,7 +7,7 @@ trait MaidenEncoder extends Product
 trait MaidenModel extends MaidenEncoder {
   val id: Option[Long]
   val createdAt: LocalDateTime
-  var updatedAt: LocalDateTime
+  val updatedAt: LocalDateTime
 }
 
 trait WithApi

@@ -29,10 +29,10 @@ class ModelBuilder:
       #grab a foreign key reference
       s = """def get%s(id: Long) = {
       val q = quote {
-        query[%s].join(query[%s]).on((q1,q2) => q1.%s == q2.%s && q1.id == lift(id))
+        %sQuery.join(%sQuery).on((q1,q2) => q1.%s == q2.%s && q2.id == lift(id))
       }
       db.run(q).map(x => x._1)
-    }""" % (model2_name, model2_name, model_name, field2_name, field_name)
+    }""" % (model2_name, camelize(model2_name, False), camelize(model_name, False), field2_name, field_name)
       return s
 
   def build(self):
@@ -101,9 +101,9 @@ class ModelBuilder:
           elif col_name  == "createdAt":
               col_str = "  createdAt: LocalDateTime = LocalDateTime.now"
           elif col_name  == "updatedAt":
-              col_str = "  var updatedAt: LocalDateTime = LocalDateTime.now"
+              col_str = "  updatedAt: LocalDateTime = LocalDateTime.now"
           else:
-              col_str = "  var %s: Option[%s]" % (col_name, col.scala_type)
+              col_str = "  %s: Option[%s]" % (col_name, col.scala_type)
 
           columns.append("\n%s" % (col_str))
 
@@ -128,9 +128,12 @@ class ModelBuilder:
             colLower = camelize(c[0], False)
             colType = c[1]
             if c[0] == "String":
-                full_template = "%s\n\n%s\n\n%s\n\n%s" % (findByTemplate, rangeByTemplate, likeTemplate, deleteByTemplate)
+                full_template = "%s\n\n%s\n\n%s" % (findByTemplate, likeTemplate, deleteByTemplate)
             else:
-                full_template = "%s\n\n%s\n\n%s" % (findByTemplate, rangeByTemplate, deleteByTemplate)
+                full_template = "%s\n\n%s" % (findByTemplate, deleteByTemplate)
+
+            if colLower == "id":
+              full_template = "%s\n%s" % (full_template, rangeByTemplate)
 
 
             magic_methods_str += full_template.replace("@@columnUpper@@", colUpper)\

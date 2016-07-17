@@ -31,7 +31,23 @@ case class @@model@@ (
   @@baseFields@@
 ) extends MaidenModel with WithApi {
 
-  def format = @@model@@(@@formattedCols@@)
+  def save() = id match {
+    case Some(i) if i != -1l => {
+      if (@@model@@.exists(i)) {
+        @@model@@.update(this)
+      } else {
+        @@model@@.create(this)
+      }
+    }
+    case _ => @@model@@.create(this)
+  }
+
+  def delete() = id match {
+    case Some(i) => @@model@@.deleteById(i)
+    case _ => -1l
+  }
+
+  def format() = @@model@@(@@formattedCols@@)
 
 }
 

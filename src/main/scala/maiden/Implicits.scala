@@ -22,6 +22,34 @@ object DateImplicits {
   implicit val encodeDateTime = mappedEncoding[LocalDate, Date](localDate =>
     Date.from(localDate.atStartOfDay(ZoneId.systemDefault).toInstant))
 
+
+  implicit val encodeOptionDateTime = mappedEncoding[Option[LocalDate], Option[Date]](localDate =>
+    localDate match {
+      case Some(s) => Option(Date.from(s.atStartOfDay(ZoneId.systemDefault).toInstant))
+      case _ => None
+    })
+
+  implicit val decodeOptionLocalDate = mappedEncoding[Option[Date], Option[LocalDate]](d =>
+    d match {
+      case Some(x) => Option(dateToLocalDate(x))
+      case _ => None
+    })
+
+  implicit val encodeOptionLocalDateTime = mappedEncoding[Option[LocalDateTime], Option[Date]](localDate =>
+    localDate match {
+      case Some(s) =>
+        Option(Date.from(s.atZone(ZoneId.systemDefault).toInstant))
+      case _ => None
+    })
+
+  implicit val decodeOptionLocalDateTime = mappedEncoding[Option[Date], Option[LocalDateTime]](date =>
+    date match {
+      case Some(x) =>
+        Option(LocalDateTime.ofInstant(x.toInstant, ZoneId.systemDefault()))
+      case _ => None
+    })
+
+
   //handle ordering of datetimes
   implicit val localDateTimeOrder: Ordering[LocalDateTime] = null
   implicit val localDateOrder: Ordering[LocalDate] = null
@@ -45,6 +73,8 @@ object DateImplicits {
 }
 
 object DBImplicits {
+
+  val SqlNull = quote(infix"null")
 
   implicit class ForUpdate[T](q: Query[T]) {
     def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
