@@ -9,6 +9,7 @@ import maiden.implicits.DBImplicits._
 import io.circe.java8._
 import maiden.traits.{MaidenFullResponse, MaidenModel, WithApi}
 import maiden.models.@@dbDriverName@@._
+import db._
 import maiden.exceptions._
 import maiden.processing.Formatters._
 import @@appNameUpper@@Schema._

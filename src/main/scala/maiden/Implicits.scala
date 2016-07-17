@@ -3,10 +3,12 @@ package maiden.implicits
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 import java.util.Date
 import java.util.concurrent.Executors
-import io.getquill._
+import io.getquill.context._
 import scala.concurrent.ExecutionContext
+import maiden.models.DB._
 
 object DateImplicits {
+  import db._
   private[this] def dateToLocalDate(date: Date) =
     Instant.ofEpochMilli(date.getTime).atZone(ZoneId.systemDefault).toLocalDate
 
@@ -94,6 +96,7 @@ object DateImplicits {
 
 object DBImplicits {
 
+  import db._
   val SqlNull = quote(infix"null")
 
   implicit class ForUpdate[T](q: Query[T]) {

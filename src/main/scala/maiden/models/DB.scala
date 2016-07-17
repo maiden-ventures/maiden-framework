@@ -3,8 +3,8 @@ package maiden.models
 import java.util.Properties
 import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
 import io.getquill._
-import io.getquill.naming.SnakeCase
-import io.getquill.sources.sql.idiom.{PostgresDialect, MySQLDialect}
+//import io.getquill.SnakeCase
+//import io.getquill.{MySQLDialect, PostgresDialect}
 import maiden.config.MaidenConfig
 
 trait MaidenBaseDB {
@@ -31,20 +31,22 @@ trait MaidenBaseDB {
   }
 }
 
-
+object DB extends MaidenBaseDB {
+  val db = PostgresDB.db
+}
 object PostgresDB extends MaidenBaseDB {
 
-  lazy val db = source(new JdbcSourceConfig[PostgresDialect, SnakeCase]("db") {
-    override def dataSource = createDataSource
-  })
+  lazy val db = new JdbcContext[PostgresDialect, SnakeCase]("db") {
+    def dataContext = createDataSource
+  }
 
 
 }
 
 object MySqlDB extends MaidenBaseDB {
 
-  lazy val db = source(new JdbcSourceConfig[MySQLDialect, SnakeCase]("db") {
-    override def dataSource = createDataSource
-  })
+  lazy val db = new JdbcContext[MySQLDialect, SnakeCase]("db") {
+    def dataContext = createDataSource
+  }
 
 }
