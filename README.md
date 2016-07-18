@@ -1,7 +1,7 @@
 
 Maiden Framework is a light-weight REST API generator tool for Scala that sits on top of Finch and Quill.
 
-*THIS IS CURRENTLY BROKEN! A QUILL UPGRADE HAS CAUSED A NUMBER OF ISSUES TO ARISE*
+*THIS IS CURRENTLY VERY MUCH A WORK IN PROGRRESS! BETTER EXAMPLES COMING *
 
 [Quick Start](https://github.com/maiden-ventures/maiden-framework/wiki/Quick-Start)
 
