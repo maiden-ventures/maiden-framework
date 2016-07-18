@@ -28,17 +28,14 @@ object Validations {
   }
 
   abstract class EndpointOptionLikeOps[T](value: Option[T]) {
-    def should(name: String)(rule: ValidationRule[T]) =
-      value match {
-        case Some(v) => {
-          if (rule.apply(v)) Future.value(value)
-          else Future.exception(Error(s" ${name} should ${rule.description}"))
-        }
-        case _ =>
-          Future.value(None)
-      }
 
-    def should(rule: ValidationRule[T]): Future[Option[T]] = should(s""""${value.toString}"""")(rule)
+    def should(name: String)(rule: ValidationRule[T]) =
+      value.map(v =>
+          if (rule.apply(v)) Future.value(v)
+          else Future.exception(Error(s" ${name} should ${rule.description}"))
+     )
+
+    def should(rule: ValidationRule[T]): Option[Future[T]] = should(s""""${value.toString}"""")(rule)
   }
 
   implicit class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)
@@ -69,6 +66,9 @@ object Validations {
 
 
   //Numerics
+
+  //Numerics
+  def non_empty_numeric[V: Numeric] = ValidationRule[V]("be non-empty") { _ != null}
   def positive[V : Numeric] = ValidationRule[V]("be positive") { _ > 0 }
   def negative[V : Numeric] = ValidationRule[V]("be negative") { _ < 0 }
   def less_than[V : Numeric](v: V) = ValidationRule[V](s"be less than $v") { _ < v }
@@ -81,10 +81,10 @@ object Validations {
     val lst = v.split(",").map(_.trim).toList
     lst.contains(m.toString)
   }
-
-  //Strings
-  def non_empty = ValidationRule[String]("be non-empty") { _.size > 0 }
+    //Strings
+  def non_empty_string = ValidationRule[String]("be non-empty") { _.size > 0 }
   def is_empty = ValidationRule[String]("be empty") { _.size == 0 }
+
   def longer_than(v: Int) = ValidationRule[String](s"be longer than $v") { _.size > v }
   def shorter_than(v: Int) = ValidationRule[String](s"be shorter than $v") { _.size < v }
 
@@ -176,7 +176,7 @@ object Validations {
 
   //a list with a minimum number of elements
   def list_min(min_elems: Int) =
-    ValidationRule[String](s"should be a list with at least $min_elems elements") { m=>
+    ValidationRule[String](s"should be a list with at least $min_elems elements") { m =>
       try {
         m.split(",").size >= min_elems
       } catch {
@@ -185,7 +185,7 @@ object Validations {
   }
 
   def list_max(max_elems: Int) =
-    ValidationRule[String](s"should be a list with at most $max_elems elements") { m=>
+    ValidationRule[String](s"should be a list with at most $max_elems elements") { m =>
       try {
         m.split(",").size <= max_elems
       } catch {

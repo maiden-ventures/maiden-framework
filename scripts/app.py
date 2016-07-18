@@ -106,6 +106,7 @@ class Column:
 
         self.index = col_info.get("index", False)
         self.unique_index = col_info.get("unique_index", False)
+        self.nullable = col_info.get("nullable", False)
 
         if 'validations' in db_map: self.validations.extend(db_map["validations"])
         #if 'formatters' in db_map: self.formatters.extend(db_map["formatters"])

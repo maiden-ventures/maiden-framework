@@ -13,7 +13,7 @@ class ApiBuilder:
         self.build()
 
 
-    def add_validations(self,  scala_type, validations, name = None):
+    def add_validations(self, c, name=None): # scala_type, validations, name = None):
 
         def handle_escape(v):
             try:
@@ -22,21 +22,35 @@ class ApiBuilder:
             except:
                 return '"%s"' % (v)
 
-        if len(validations) > 0:
+        vstr = ""
+
+        #verify not null if specified
+        if not c.nullable:
+            if c.scala_type == "String":
+                if "non_empty_string" not in c.validations:
+                    c.validations.insert(0, "non_empty_string")
+
+            elif c.scala_type != "LocalDateTime":
+                if "non_empty_numeric" not in c.validations:
+                    c.validations.insert(0, "non_empty_numeric")
+
+        if len(c.validations) > 0:
             if name:
-              vstr = '.should("' + name + '")(%s)'
+              vstr += '.should("' + name + '")(%s)'
             else:
-                vstr = ".should(%s)"
+              vstr += '.should("' + c.name + '")(%s)'
 
             vals = []
-            for v in validations:
-                if type(v) == type("") and scala_type != "String":
-                    vals.append("%s[%s]" % (v, scala_type))
+            for v in c.validations:
+                if type(v) == type("") and c.scala_type != "String":
+                    vals.append("%s[%s]" % (v, c.scala_type))
+                elif type(v) == type("") and c.scala_type == "String":
+                    vals.append("%s" % (v))
                 elif type(v) == type({}):
                     for (key, value) in v.items():
                       value = str(value).split(" ")
-                      if scala_type != "String":
-                        vals.append("%s[%s](%s)" % (key, scala_type, ",".join([handle_escape(x) for x in value])))
+                      if c.scala_type != "String":
+                        vals.append("%s[%s](%s)" % (key, c.scala_type, ",".join([handle_escape(x) for x in value])))
                       else:
                         vals.append("%s(%s)" % (key, ",".join([handle_escape(x) for x in value])))
 
@@ -44,7 +58,7 @@ class ApiBuilder:
             return vstr % (vals)
 
         else:
-            return ""
+            return vstr
 
     def build(self):
         for model in self.app.models:
@@ -62,24 +76,28 @@ class ApiBuilder:
 
 
             cfields = []
+
+            #don't do validations at parsing time
             for cf in cols:
-                if len(cf.formatters) > 0:
+                #if len(cf.formatters) > 0:
                     #add the formatters
-                    cfields.append("%s.%s" % (cf.name, ".".join(cf.formatters)))
-                else:
-                    cfields.append(cf.name)
+                #    cfields.append("%s.%s" % (cf.name, ".".join(cf.formatters)))
+                #else:
+                cfields.append(cf.name)
 
             core_field_mappings = ",".join(cfields)
 
 
-            create_param_args = " :: ".join(['param("%s").as[%s]%s' % (c.name, c.scala_type, self.add_validations(c.scala_type, c.validations)) for c in model.columns])
+            create_param_args = " :: ".join(['param("%s").as[%s]%s' % (c.name, c.scala_type, self.add_validations(c)) for c in model.columns])
             create_params = ", ".join(["%s: %s" % (c.name, c.scala_type) for c in cols])
             model_creation_args = ", ".join([c.name for c in cols])
 
             param_list = ", ".join(["%s: Option[%s]" % (c.name, c.scala_type) for c in cols])
             update_params = ", ".join([c.name for c in cols])
 
-            validations = ",\n".join(["%s.%s%s" % (model.name_lower, c.name, self.add_validations(c.scala_type, c.validations)) for c in cols if c.validations != []])
+            #user.username.should("username")(max_length(50)),
+
+            validations = ",\n".join(["%s.%s%s" % (model.name_lower, c.name, self.add_validations(c)) for c in cols if c.validations != [] or c.nullable == False])
 
 
             out = self.template.replace("@@model@@", model.name)\
