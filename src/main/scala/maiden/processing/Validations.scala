@@ -30,15 +30,15 @@ object Validations {
   abstract class EndpointOptionLikeOps[T](value: Option[T]) {
     def should(name: String)(rule: ValidationRule[T]) =
       value match {
-        case Some(value) => {
-          if (rule.apply(value)) Future.value(value)
+        case Some(v) => {
+          if (rule.apply(v)) Future.value(value)
           else Future.exception(Error(s" ${name} should ${rule.description}"))
         }
         case _ =>
-          Future.exception(Error(s" ${name} should not be empty"))
+          Future.value(None)
       }
 
-    def should(rule: ValidationRule[T]): Future[T] = should(s""""${value.toString}"""")(rule)
+    def should(rule: ValidationRule[T]): Future[Option[T]] = should(s""""${value.toString}"""")(rule)
   }
 
   implicit class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)

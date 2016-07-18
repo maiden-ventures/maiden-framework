@@ -10,6 +10,7 @@ trait ResponseOps extends JsonCodecOps {
     val response = request.response
     response.status = status
     response.setContentTypeJson()
+    println(a)
     response.contentString = jsonString(a)
     response
   }

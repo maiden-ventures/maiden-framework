@@ -6,6 +6,7 @@ import io.finch.EncodeResponse
 
 trait JsonCodecOps {
   def jsonString[A: EncodeResponse](a: A)(implicit encoder: EncodeResponse[A]): String = {
+    println(a)
     val buff = encoder.apply(a)
     val output = new Array[Byte](buff.length)
     buff.write(output, 0)

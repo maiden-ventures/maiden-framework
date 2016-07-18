@@ -32,21 +32,21 @@ trait MaidenBaseDB {
 }
 
 object DB extends MaidenBaseDB {
-  val db = PostgresDB.db
+  val db =
+    if (MaidenConfig.get[String]("migrations.database_type") == "postgresql")
+      PostgresDB.db
+    else
+      MySqlDB.db
+
 }
 object PostgresDB extends MaidenBaseDB {
 
-  lazy val db = new JdbcContext[PostgresDialect, SnakeCase]("db") {
-    def dataContext = createDataSource
-  }
-
+  lazy val db = new JdbcContext[PostgresDialect, SnakeCase](createDataSource)
 
 }
 
 object MySqlDB extends MaidenBaseDB {
 
-  lazy val db = new JdbcContext[MySQLDialect, SnakeCase]("db") {
-    def dataContext = createDataSource
-  }
+  lazy val db = new JdbcContext[MySQLDialect, SnakeCase](createDataSource)
 
 }

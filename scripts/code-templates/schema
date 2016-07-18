@@ -1,6 +1,7 @@
 package @@package@@.models
 
-import io.getquill.{quote, query}
+import maiden.models.@@dbDriverName@@._
+import db._
 
 object @@appName@@Schema {
 

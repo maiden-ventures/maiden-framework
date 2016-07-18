@@ -26,9 +26,11 @@ class DbAccessBuilder:
             datasource_driver = "org.postgresql.ds.PGSimpleDataSource"
             database_driver = "org.postgresql.Driver"
             database_jdbc_name = "postgresql"
+            db_driver_name = "PostgresDB"
 
-        elif ddatabase_type == "mysql":
+        elif database_type == "mysql":
             default_port = "3336"
+            db_driver_name = "MySqlDB"
 
         else:
             raise(Exception("UNKNOWN DATABASE TYPE"))
@@ -69,6 +71,7 @@ class DbAccessBuilder:
         out = schema\
               .replace("@@package@@", self.app.package)\
                        .replace("@@schemaList@@", schema_list_str)\
-                       .replace("@@appName@@", self.app.name)
+                       .replace("@@appName@@", self.app.name) \
+                       .replace("@@dbDriverName@@", db_driver_name)
 
         write(os.path.join(self.app.base_path, "models/Schema.scala"), out)

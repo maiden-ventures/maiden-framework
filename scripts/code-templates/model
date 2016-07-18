@@ -1,8 +1,8 @@
 package @@package@@.models
 
 import java.time._
-import io.getquill.{lift, quote, query}
-import io.getquill.sources.sql.ops._
+//import io.getquill.{lift, quote, query}
+import java.util.Date
 import shapeless.syntax.std.tuple._
 import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._

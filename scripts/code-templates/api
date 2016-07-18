@@ -1,6 +1,7 @@
 package @@package@@.api
 
 import java.time._
+import java.util.Date
 import com.twitter.util.Future
 import spire.implicits._
 import io.finch.{Endpoint, _}
@@ -15,6 +16,7 @@ import maiden.http.Render._
 import maiden.processing.Validations._
 import maiden.processing.Formatters._
 import maiden.implicits.DateImplicits._
+import maiden.implicits.JsonImplicits._
 import @@package@@.models.{@@model@@, @@model@@FullResponse}
 import maiden.auth.MaidenAuthUser
 @@securityImport@@
