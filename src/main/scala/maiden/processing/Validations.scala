@@ -24,18 +24,16 @@ object Validations {
       if (rule.apply(value)) Future.value(value)
       else Future.exception(Error(s" ${name} should ${rule.description}"))
 
-    def should(rule: ValidationRule[T]): Future[T] = should(s""""${value.toString}"""")(rule)
+    def should(rule: ValidationRule[T]): Future[T] = should(s""""${value}"""")(rule)
   }
 
   abstract class EndpointOptionLikeOps[T](value: Option[T]) {
 
     def should(name: String)(rule: ValidationRule[T]) =
-      value.map(v =>
-          if (rule.apply(v)) Future.value(v)
-          else Future.exception(Error(s" ${name} should ${rule.description}"))
-     )
+      if (rule.apply(value)) Future.value(value)
+      else Future.exception(Error(s" ${name} should ${rule.description}"))
 
-    def should(rule: ValidationRule[T]): Option[Future[T]] = should(s""""${value.toString}"""")(rule)
+    //def should(rule: ValidationRule[T]): Future[T] = should(s""""${value.toString}"""")(rule)
   }
 
   implicit class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)
@@ -65,10 +63,10 @@ object Validations {
       extends EndpointOptionLikeOps[LocalDateTime](o)
 
 
+  //date time
+  def non_empty_datetime[LocalDateTime] = ValidationRule[LocalDateTime]("be non-empty")  { v: LocalDateTime => v != null}
   //Numerics
-
-  //Numerics
-  def non_empty_numeric[V: Numeric] = ValidationRule[V]("be non-empty") { _ != null}
+  def non_empty_numeric[V: Numeric] = ValidationRule[V]("be non-empty") { v: V => v != null}
   def positive[V : Numeric] = ValidationRule[V]("be positive") { _ > 0 }
   def negative[V : Numeric] = ValidationRule[V]("be negative") { _ < 0 }
   def less_than[V : Numeric](v: V) = ValidationRule[V](s"be less than $v") { _ < v }
@@ -82,7 +80,7 @@ object Validations {
     lst.contains(m.toString)
   }
     //Strings
-  def non_empty_string = ValidationRule[String]("be non-empty") { _.size > 0 }
+  def non_empty_string = ValidationRule[String]("be non-empty") { s: String =>  s != null && s.size > 0 }
   def is_empty = ValidationRule[String]("be empty") { _.size == 0 }
 
   def longer_than(v: Int) = ValidationRule[String](s"be longer than $v") { _.size > v }

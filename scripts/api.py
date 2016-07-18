@@ -30,6 +30,9 @@ class ApiBuilder:
                 if "non_empty_string" not in c.validations:
                     c.validations.insert(0, "non_empty_string")
 
+            elif c.scala_type == "LocalDateTime":
+                if "non_empty_datetime" not in c.validations:
+                    c.validations.insert(0, "non_empty_datetime")
             elif c.scala_type != "LocalDateTime":
                 if "non_empty_numeric" not in c.validations:
                     c.validations.insert(0, "non_empty_numeric")

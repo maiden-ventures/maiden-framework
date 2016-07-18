@@ -68,7 +68,7 @@ object DateImplicits {
     decoder[Option[LocalDateTime]] {
       row => index =>
       row.getObject(index) match {
-        case c: String if c != null => Option(LocalDateTime.parse(c.replace(" ", "T")))
+        case c: Date if c != null => Option(LocalDateTime.parse(c.toString.replace(" ", "T")))
         case _ => None
       }
     }
@@ -86,12 +86,15 @@ object DateImplicits {
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
     encoder[LocalDateTime] {
       row => (idx, ldt) =>
-      row.setObject(idx, ldt, java.sql.Types.OTHER) // database-specific implementation
+      row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)          //          //.OTHER) // database-specific implementation
     }
 
 
   private[this] def dateToLocalDate(date: Date) =
     Instant.ofEpochMilli(date.getTime).atZone(ZoneId.systemDefault).toLocalDate
+
+  private[this] def localDateToDate(ld: LocalDateTime) =
+    Date.from(ld.atZone(ZoneId.systemDefault).toInstant)
 
   //conversions between LocalDateTime and java Date
   implicit val decodeLocalDateTime = mappedEncoding[Date, LocalDateTime](date =>
