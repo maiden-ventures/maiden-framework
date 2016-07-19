@@ -23,7 +23,7 @@ trait ErrorHandler extends ResponseOps {
   def topLevelErrorHandler[REQUEST <: Request](request: REQUEST, encoder: EncodeResponse[Throwable]): PartialFunction[Throwable, Future[Response]] = {
     case e: AuthenticationFailedError => respond(request, Status.Unauthorized, e, encoder)
     case e: CancelledRequestException => respond(request, Status.ClientClosedRequest, e, encoder)
-    case t: Throwable => throw(t)//unhandledException(request, t, encoder)
+    case t: Throwable => unhandledException(request, t, encoder)
   }
 
   private def unhandledException[REQUEST <: Request](request: REQUEST, t: Throwable, encoder: EncodeResponse[Throwable]): Future[Response] = {

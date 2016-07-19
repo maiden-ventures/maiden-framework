@@ -105,6 +105,8 @@ if __name__ == "__main__":
 
     app = App(app_data, model_data)
 
+    print(app)
+    sys.exit()
     scala_dirs = [app.base_path]
 
     for d in ('api', 'encoders', 'models', 'migrations'):

@@ -43,27 +43,6 @@ object JsonImplicits {
 object DateImplicits {
   import db._
 
-  /*
-  private val rangePattern = """([0-9\-\+\. :]+)""".r
-
-  def decode[T](fnFromString: (String => T)) =
-    new Decoder[T] {
-      def apply(index: Int, row: ResultSet) = {
-        fnFromString(row.getString(index + 1))
-      }
-    }
-
-  private def decoder[T](map: String => T) = decode(s => {
-    println(s)
-    val dates = rangePattern.findAllIn(s).toList
-    (map(dates.head), map(dates.last))
-  })
-
-  implicit val dateTupleDecoder: Decoder[(Date, Date)] = decoder(parseDate)
-  implicit val localDateTimeTupleDecoder: Decoder[(LocalDateTime, LocalDateTime)] = decoder(parseLocalDateTime)
-  implicit val zonedDateTimeTupleDecoder: Decoder[(ZonedDateTime, ZonedDateTime)] = decoder(parseZonedDateTime)
-  implicit val localDateTupleDecoder: Decoder[(LocalDate, LocalDate)] = decoder(parseLocalDate)
-   */
   implicit val optionLocalDateTimeDecoder: Decoder[Option[LocalDateTime]] =
     decoder[Option[LocalDateTime]] {
       row => index =>
