@@ -105,8 +105,6 @@ if __name__ == "__main__":
 
     app = App(app_data, model_data)
 
-    print(app)
-    sys.exit()
     scala_dirs = [app.base_path]
 
     for d in ('api', 'encoders', 'models', 'migrations'):
@@ -144,7 +142,6 @@ if __name__ == "__main__":
 
     if key_with_default(gen_options, "format_source", True):
       print("Formatting Scala sources...")
-      print scala_dirs
       format_scala(scala_dirs)
 
     message = """Your project is now available in %s. To run, simply
