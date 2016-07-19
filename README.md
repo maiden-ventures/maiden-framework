@@ -6,7 +6,7 @@
  [Quick Start](https://github.com/maiden-ventures/maiden-framework/wiki/Quick-Start)
 
 
- ##Highlights
+ ## Highlights
    - Full model and migration generation
    - Automatic generation of model relations
    - API Endpoint generation for get, list, create, update, and delete
