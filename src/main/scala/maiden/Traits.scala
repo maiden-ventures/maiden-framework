@@ -17,8 +17,9 @@ trait MaidenModelObject[M <: MaidenModel, MF <: MaidenFullResponse] {
 
   def exists(id: Long): Boolean
   def get(id: Long): MF
-  def findById(id: Long): List[MF]
-  def deleteById(id: Long): Long
+  def findBy[T](col: String, value: T) : List[MF]
+  def deleteBy[T](col: String, value: T): Long
+  def getRangeBy(col: String, start: Int = 0, count: Int = 20): List[MF]
   def create(data: M): Long
   def update(data: M): MF
 }

@@ -123,17 +123,20 @@ class ModelBuilder:
 
         find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
-        find_by_like_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s like  lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns])
+        find_by_like_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s like  lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == "String"])
 
-        delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value).delete) }""" % (c.name, model.query_name, c.name) for c in model.columns])
+        if len(find_by_like_case) == 0: likeTemplate = ""
 
-        range_by_case = "\n".join(["""case "%s" => quote { %s.sortBy(c => c.%s).drop(lift(start)).take(lift(count))) }""" % (c.name, model.query_name, c.name) for c in model.columns])
+        delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)).delete }""" % (c.name, model.query_name, c.name) for c in model.columns])
+
+        range_by_case = "\n".join(["""case "%s" => quote { %s.sortBy(c => c.%s).drop(lift(start)).take(lift(count)) }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
 
 
         magic_methods_str = "%s\n%s\n%s%s\n" % (
           findByTemplate.replace("@@findByCase@@", find_by_case),
-          likeTemplate.replace("@@findByLikeCase@@", find_by_like_case),
+          "",
+          #likeTemplate.replace("@@findByLikeCase@@", find_by_like_case),
           deleteByTemplate.replace("@@deleteByCase@@", delete_by_case),
           rangeByTemplate.replace("@@rangeByCase@@", range_by_case)
         )

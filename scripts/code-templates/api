@@ -4,7 +4,7 @@ import java.time._
 import com.twitter.util.Future
 import io.finch.{Endpoint, _}
 import io.finch.circe._
-import io.circe._
+import io.circe.Decoder
 import io.circe.java8.time._
 import io.circe.generic.auto._
 import maiden.exceptions._
@@ -72,7 +72,7 @@ object @@model@@Api extends MaidenApi {
   private[this] def delete@@model@@: Endpoint[Long] =
     delete(prefix::long("id").should(positive[Long]) :: authorize) {
     (id: Long, u: MaidenAuthUser) =>
-      render(@@model@@.deleteById(id))
+      render(@@model@@.deleteBy("id", id))
     }
 
   private[this] def create@@model@@: Endpoint[@@model@@FullResponse] =
@@ -80,7 +80,7 @@ object @@model@@Api extends MaidenApi {
     (@@lowerCaseModel@@: @@model@@, u: MaidenAuthUser) => render {
       validate@@model@@(@@lowerCaseModel@@)
       val id = @@model@@.create(@@lowerCaseModel@@.format)
-      val instance = @@model@@.findById(id)
+      val instance = @@model@@.findBy("id", id)
       instance.head
     }}
 

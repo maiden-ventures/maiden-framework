@@ -46,7 +46,7 @@ case class @@model@@ (
   }
 
   def delete() = id match {
-    case Some(i) => @@model@@.deleteById(i)
+    case Some(i) => @@model@@.deleteBy("id", i)
     case _ => -1l
   }
 
