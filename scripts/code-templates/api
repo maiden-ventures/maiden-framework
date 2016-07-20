@@ -64,17 +64,20 @@ object @@model@@Api extends MaidenApi {
     }}
 
   private[this] def get@@model@@: Endpoint[@@model@@FullResponse] =
-    get(prefix :: long("id").should(positive[Long]) :: authorize) { (id: Long, u: MaidenAuthUser) =>
+    get(prefix :: long("id").should(positive[Long]) :: authorize) {
+    (id: Long, u: MaidenAuthUser) =>
       render(@@model@@.get(id))
     }
 
   private[this] def delete@@model@@: Endpoint[Long] =
-    delete(prefix::long("id").should(positive[Long]) :: authorize) { (id: Long, u: MaidenAuthUser) =>
+    delete(prefix::long("id").should(positive[Long]) :: authorize) {
+    (id: Long, u: MaidenAuthUser) =>
       render(@@model@@.deleteById(id))
     }
 
   private[this] def create@@model@@: Endpoint[@@model@@FullResponse] =
-    put(prefix :: put@@model@@ ::  authorize) { (@@lowerCaseModel@@: @@model@@, u: MaidenAuthUser) => render {
+    put(prefix :: put@@model@@ ::  authorize) {
+    (@@lowerCaseModel@@: @@model@@, u: MaidenAuthUser) => render {
       validate@@model@@(@@lowerCaseModel@@)
       val id = @@model@@.create(@@lowerCaseModel@@.format)
       val instance = @@model@@.findById(id)
@@ -82,7 +85,8 @@ object @@model@@Api extends MaidenApi {
     }}
 
   private[this] def update@@model@@: Endpoint[@@model@@FullResponse] =
-    post(prefix :: long("id").should(positive[Long]) :: post@@model@@ :: authorize) { (id: Long, @@lowerCaseModel@@: @@model@@ => @@model@@, u: MaidenAuthUser) =>
+    post(prefix :: long("id").should(positive[Long]) :: post@@model@@ :: authorize) {
+    (id: Long, @@lowerCaseModel@@: @@model@@ => @@model@@, u: MaidenAuthUser) =>
       render {
         val old@@model@@ = @@model@@FullResponse.extract(@@model@@.get(id))
         val new@@model@@ = @@lowerCaseModel@@(old@@model@@).format
@@ -93,8 +97,9 @@ object @@model@@Api extends MaidenApi {
 
 
   private[this] def list@@model@@: Endpoint[List[@@model@@FullResponse]] =
-    get(prefix :: int("start").should(positive[Int]) :: int("count").should(positive[Int]) :: authorize) { (start: Int, count: Int, u: MaidenAuthUser) => {
-      val results = @@model@@.getRangeById(start, count)
+    get(prefix :: string("col") :: int("start").should(positive[Int]) :: int("count").should(positive[Int]) :: authorize) {
+    (col: String, start: Int, count: Int, u: MaidenAuthUser) => {
+      val results = @@model@@.getRangeBy(col, start, count)
       render(results)
     }}
 

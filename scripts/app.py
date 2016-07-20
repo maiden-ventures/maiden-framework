@@ -66,6 +66,7 @@ class Model:
         self.name = camelize(self.info["name"])
         self.name_lower = camelize(self.info["name"], False)
         self.db_name = self.info.get("db_name", underscore(self.name).lower())
+        self.query_name = "%sQuery" % (self.name_lower)
         self.build_columns()
 
     def build_columns(self):

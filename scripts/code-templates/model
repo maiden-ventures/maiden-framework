@@ -7,7 +7,7 @@ import shapeless.syntax.std.tuple._
 import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
 import io.circe.java8._
-import maiden.traits.{MaidenFullResponse, MaidenModel, WithApi}
+import maiden.traits.{MaidenFullResponse, MaidenModel, MaidenModelObject}
 import maiden.models.@@dbDriverName@@._
 import db._
 import maiden.exceptions._
@@ -17,6 +17,7 @@ import @@appNameUpper@@Schema._
 
 case class @@model@@FullResponse (
   @@baseFields@@
+
   @@refFields@@
 ) extends MaidenFullResponse
 
@@ -24,13 +25,14 @@ object @@model@@FullResponse {
   @@fullResponseBuild@@
 
   def extract(t: @@model@@FullResponse) =
-    (@@model@@.apply _) tupled (@@model@@FullResponse.unapply(t).get.take(@@baseModelFieldCount@@))
+    (@@model@@.apply _) tupled (@@model@@FullResponse.unapply(t).get
+    .take(@@baseModelFieldCount@@))
 
 }
 
 case class @@model@@ (
   @@baseFields@@
-) extends MaidenModel with WithApi {
+) extends MaidenModel {
 
   def save() = id match {
     case Some(i) if i != -1l => {
@@ -52,7 +54,7 @@ case class @@model@@ (
 
 }
 
-object @@model@@ {
+object @@model@@ extends MaidenModelObject[@@model@@, @@model@@FullResponse] {
 
   def exists(id: Long) = {
     val q = quote {
@@ -66,7 +68,7 @@ object @@model@@ {
   }
 
   def get(id: Long) =
-    findById(id).headOption match {
+    findBy("id", id).headOption match {
       case Some(x) => x
       case _ => throw new EntityNotFoundException
     }

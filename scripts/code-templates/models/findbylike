@@ -1,4 +1,9 @@
-def findByLike@@columnUpper@@(value: String) = {
+def findByLike(col: String, value: String) = {
   val likeQuery = s"%${value}%"
-  db.run(@@queryName@@.filter(c => c.@@columnLower@@ like lift(likeQuery))).map(x => @@model@@FullResponse.build(x))
+  val q =
+    col match {
+      @@findByLikeCase@@
+    }
+
+    db.run(q).map(x => @@model@@FullResponse.build(x))
 }

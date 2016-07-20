@@ -121,28 +121,22 @@ class ModelBuilder:
         updateTemplate = read_template("models/update")
         createTemplate = read_template("models/create")
 
-        magic_methods_str = ""
+        find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
-        for c in raw_columns:
-            colUpper = camelize(c[0])
-            colLower = camelize(c[0], False)
-            colType = c[1]
-            if c[0] == "String":
-                full_template = "%s\n\n%s\n\n%s" % (findByTemplate, likeTemplate, deleteByTemplate)
-            else:
-                full_template = "%s\n\n%s" % (findByTemplate, deleteByTemplate)
+        find_by_like_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s like  lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
-            if colLower == "id":
-              full_template = "%s\n%s" % (full_template, rangeByTemplate)
+        delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value).delete) }""" % (c.name, model.query_name, c.name) for c in model.columns])
+
+        range_by_case = "\n".join(["""case "%s" => quote { %s.sortBy(c => c.%s).drop(lift(start)).take(lift(count))) }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
 
-            magic_methods_str += full_template.replace("@@columnUpper@@", colUpper)\
-                                              .replace("@@columnLower@@", colLower)\
-                                              .replace("@@columnType@@", colType)\
-                                              .replace("@@queryName@@", self.query_name)
 
-        #for r in ref_columns:
-        #    reference_methods += "\n\n" + self.build_references(r["references"]["table"], r["references"]["column"], self.model_name, r["name"])
+        magic_methods_str = "%s\n%s\n%s%s\n" % (
+          findByTemplate.replace("@@findByCase@@", find_by_case),
+          likeTemplate.replace("@@findByLikeCase@@", find_by_like_case),
+          deleteByTemplate.replace("@@deleteByCase@@", delete_by_case),
+          rangeByTemplate.replace("@@rangeByCase@@", range_by_case)
+        )
 
         #now do create and update
         update_params = ", ".join(["%s: Option[%s] = None" % (c[0], c[1]) for c in create_columns])
