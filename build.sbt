@@ -32,7 +32,6 @@ lazy val `maiden-framework` = (project in file("."))
       "com.github.finagle" %% "finch-oauth2" % finchVersion,
       "com.twitter" %% "finagle-stats" % finagleVersion,
       "com.twitter" %% "finagle-zipkin" % finagleVersion,
-      "io.github.benwhitehead.finch" %% "finch-server" % "0.9.1",
       "com.github.rlazoti" %% "finagle-metrics" % "0.0.3",
       "com.netaporter" %% "scala-uri" % "0.4.14",
 
