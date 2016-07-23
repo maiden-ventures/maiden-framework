@@ -1,6 +1,6 @@
 package maiden.exceptions
 
-import io.netty.handler.codec.http.{HttpResponseStatus => H}
+import org.jboss.netty.handler.codec.http.{HttpResponseStatus => H}
 
 class MaidenException(
     message: String,

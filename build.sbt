@@ -2,9 +2,8 @@ import NativePackagerHelper._
 
 organization := "com.maiden"
 
-//name := "maiden-framework"
 
-version := "0.1.1"
+version := "0.1.2"
 
 scalaVersion := "2.11.8"
 
@@ -12,7 +11,7 @@ val finagleVersion = "6.35.0"
 
 val finchVersion = "0.10.0"
 
-val quillVersion = "0.8.1-SNAPSHOT"
+val quillVersion = "0.8.0"
 
 val circeVersion = "0.5.0-M2"
 
@@ -29,10 +28,10 @@ lazy val `maiden-framework` = (project in file("."))
       "org.spire-math" % "spire_2.11" % "0.11.0",
       "commons-io" % "commons-io" % "2.4",
       "com.github.finagle" %% "finch-core" % finchVersion,
-      "com.twitter" %% "finagle-stats" % finagleVersion,
-      "com.twitter" %% "finagle-zipkin" % finagleVersion,
       "com.github.finagle" %% "finch-circe" % finchVersion,
       "com.github.finagle" %% "finch-oauth2" % finchVersion,
+      "com.twitter" %% "finagle-stats" % finagleVersion,
+      "com.twitter" %% "finagle-zipkin" % finagleVersion,
       "io.github.benwhitehead.finch" %% "finch-server" % "0.9.1",
       "com.github.rlazoti" %% "finagle-metrics" % "0.0.3",
       "com.netaporter" %% "scala-uri" % "0.4.14",
@@ -48,10 +47,9 @@ lazy val `maiden-framework` = (project in file("."))
       "com.imageworks.scala-migrations" %% "scala-migrations" % "1.1.1",
 
       //quill
-      "io.getquill" %% "quill" % quillVersion,
+      "io.getquill" %% "quill-core" % quillVersion,
       "io.getquill" %% "quill-sql" % quillVersion,
-      "io.getquill" %% "quill-async" % quillVersion,
-      "io.getquill" %% "quill-cassandra" % quillVersion,
+      "io.getquill" %% "quill-jdbc" % quillVersion,
 
       //data drivers
       "mysql" % "mysql-connector-java" % "5.1.36",
@@ -62,7 +60,7 @@ lazy val `maiden-framework` = (project in file("."))
 
       //for working with Facebook
       "com.restfb" % "restfb" % "1.14.0",
-      "joda-time" % "joda-time" % "2.8.1",
+      //"joda-time" % "joda-time" % "2.8.1",
 
       //for HTTP client
       "org.http4s" %% "http4s-client" % http4sVersion,

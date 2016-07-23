@@ -1,8 +1,15 @@
-app.port=@@appPort@@
+app.port="@@appPort@@"
 app.environment=@@environment@@
 app.id=@@appId@@
 app.source_path=@@sourceDir@@
 @@securityConfig@@
+
+app.server.http_interface="@@httpInterface@@"
+app.server.https_interface="@@httpsInterface@@"
+app.server.key_path="@@keyPath@@"
+app.server.certificate_path="@@certificatePath@@"
+app.server.max_request_size=@@maxRequestSize@@
+
 
 db.dataSourceClassName=@@datasourceClassName@@
 db.dataSource.user=@@user@@

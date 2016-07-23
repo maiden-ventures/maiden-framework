@@ -21,6 +21,11 @@ object MaidenConfig {
     case e: Throwable => None
   }
 
+  def getOption[T](key: String, default: T): T = getOption[T](key) match {
+    case Some(v) => v
+    case _ => default
+  }
+
   //get all key-value pairs where key starts with (or is) group
   def getGroup(group: String): Map[String, Any] = {
     conf

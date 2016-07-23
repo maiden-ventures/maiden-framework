@@ -52,7 +52,12 @@ class DbAccessBuilder:
                         .replace("@@datasourceClassName@@", datasource_driver)\
                         .replace("@@environment@@", self.app.environment)\
                         .replace("@@appId@@", self.app.name) \
-                        .replace("@@securityConfig@@", sec["security_config"])
+                        .replace("@@securityConfig@@", sec["security_config"]) \
+                        .replace("@@httpInterface@@", str(self.app.port))\
+                        .replace("@@httpsInterface@@", str(self.app.https_port))\
+                        .replace("@@keyPath@@", self.app.key_path)\
+                        .replace("@@certificatePath@@", self.app.certificate_path) \
+                        .replace("@@maxRequestSize@@", str(self.app.max_request_size))
 
         #now write out the application.properties
         write(os.path.join(self.app.config_path, "maiden-%s.conf" % (self.app.environment)), props)

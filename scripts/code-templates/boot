@@ -11,10 +11,11 @@ import maiden.util.async.AsyncOps
 import maiden.util.error.ErrorReporter._
 import maiden.util.log.Logger._
 import maiden.config.MaidenConfig
+import maiden.MaidenServer
 import @@appNameUpper@@Api._
 
 
-object @@appNameUpper@@Boot extends FinchServer {
+object @@appNameUpper@@Boot extends MaidenServer {
 
   lazy val systemId = MaidenConfig.get[String]("app.id")
   lazy val port = MaidenConfig.get[Int]("app.port")

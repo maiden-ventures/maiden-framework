@@ -6,7 +6,7 @@ import java.io.{StringWriter, PrintWriter}
 import scala.util.{Try, Success, Failure}
 import scala.collection.JavaConverters._
 import com.twitter.util.FuturePool
-import io.netty.handler.codec.http.{HttpResponseStatus => H}
+import org.jboss.netty.handler.codec.http.{HttpResponseStatus => H}
 import io.finch._
 import maiden.exceptions._
 import maiden.implicits.ExecutionImplicits._
