@@ -1,7 +1,6 @@
 
-def findBy[T](col: String, value: T) = {
+def findBy[T](col: String, value: T) ={
   val q = col match {
-
       @@findByCase@@
   }
   db.run(q).map(x => @@model@@FullResponse.build(x))

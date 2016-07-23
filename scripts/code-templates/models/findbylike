@@ -1,3 +1,4 @@
+
 def findByLike(col: String, value: String) = {
   val likeQuery = s"%${value}%"
   val q =

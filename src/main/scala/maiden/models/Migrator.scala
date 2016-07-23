@@ -1,7 +1,6 @@
 package maiden.models
 
 import java.io.{File, FilenameFilter}
-import scala.util.Properties
 import org.apache.commons.io.filefilter.WildcardFileFilter
 import org.joda.time.format.ISODateTimeFormat
 import com.imageworks.migration._

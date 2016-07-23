@@ -1,6 +1,7 @@
 package maiden.models
 
 import java.util.Properties
+import java.io.PrintWriter
 import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
 import io.getquill._
 //import io.getquill.SnakeCase
@@ -25,7 +26,7 @@ trait MaidenBaseDB {
                       MaidenConfig.get[String]("db.dataSource.serverName"))
     props.setProperty("connectionTimeout",
                       MaidenConfig.get[String]("db.connectionTimeout"))
-    //props.put("dataSource.logWriter", new PrintWriter(System.out));
+    props.put("dataSource.logWriter", new PrintWriter(System.out));
     val config = new HikariConfig(props);
     new HikariDataSource(config);
   }
@@ -40,8 +41,9 @@ object DB extends MaidenBaseDB {
 
 }
 object PostgresDB extends MaidenBaseDB {
+  //val db = new PostgresAsyncContext[SnakeCase]("db")
 
-  lazy val db = new JdbcContext[PostgresDialect, SnakeCase](createDataSource)
+  final val db = new JdbcContext[PostgresDialect, SnakeCase](createDataSource)
 
 }
 

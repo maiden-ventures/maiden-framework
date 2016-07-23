@@ -1,8 +1,8 @@
 package @@package@@.models
 
 import java.time._
-//import io.getquill.{lift, quote, query}
 import java.util.Date
+import com.twitter.util.Future
 import shapeless.syntax.std.tuple._
 import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
@@ -13,6 +13,7 @@ import db._
 import maiden.exceptions._
 import maiden.processing.Formatters._
 import @@appNameUpper@@Schema._
+import maiden.implicits.ExecutionImplicits._
 
 
 case class @@model@@FullResponse (

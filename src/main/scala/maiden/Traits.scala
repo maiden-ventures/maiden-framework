@@ -1,6 +1,7 @@
 package maiden.traits
 
 import java.time.LocalDateTime
+import com.twitter.util.Future
 
 trait MaidenEncoder extends Product
 

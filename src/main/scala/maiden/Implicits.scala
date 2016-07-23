@@ -1,7 +1,7 @@
 package maiden.implicits
 
 import java.sql.ResultSet
-import java.time.{Instant, LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{Instant, LocalDate, LocalDateTime, ZoneId, ZonedDateTime, ZoneOffset}
 import java.util.Date
 import java.util.concurrent.Executors
 import io.getquill.context._
@@ -43,6 +43,10 @@ object JsonImplicits {
 object DateImplicits {
   import db._
 
+
+  implicit val decodeLocalTime = mappedEncoding[Date, LocalDateTime](date => LocalDateTime.ofInstant(date.toInstant, ZoneId.systemDefault()))
+  implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => new Date(time.toEpochSecond(ZoneOffset.of(ZoneId.systemDefault().getId))))
+
   implicit val optionLocalDateTimeDecoder: Decoder[Option[LocalDateTime]] =
     decoder[Option[LocalDateTime]] {
       row => index =>
@@ -68,7 +72,6 @@ object DateImplicits {
       row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)          //          //.OTHER) // database-specific implementation
     }
 
-
   private[this] def dateToLocalDate(date: Date) =
     Instant.ofEpochMilli(date.getTime).atZone(ZoneId.systemDefault).toLocalDate
 
@@ -88,15 +91,15 @@ object DateImplicits {
     Date.from(localDate.atStartOfDay(ZoneId.systemDefault).toInstant))
 
 
-  implicit val encodeOptionDateTime = mappedEncoding[Option[LocalDate], Option[Date]](localDate =>
+  implicit val encodeOptionDateTime = mappedEncoding[Option[LocalDate], Date](localDate =>
     localDate match {
-      case Some(s) => Option(Date.from(s.atStartOfDay(ZoneId.systemDefault).toInstant))
-      case _ => Option(new Date(0))
+      case Some(s) => Date.from(s.atStartOfDay(ZoneId.systemDefault).toInstant)
+      case _ => new Date(0)
     })
 
-  implicit val decodeOptionLocalDate = mappedEncoding[Option[Date], Option[LocalDate]](d =>
+  implicit val decodeOptionLocalDate = mappedEncoding[Date, Option[LocalDate]](d =>
     d match {
-      case Some(x) => Option(dateToLocalDate(x))
+      case x: Date => Option(dateToLocalDate(x))
       case _ => {
         val d = new Date(0)
         Option(Instant.ofEpochMilli(d.getTime()).atZone(ZoneId.systemDefault).toLocalDate())

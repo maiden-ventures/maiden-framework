@@ -4,7 +4,7 @@ organization := "com.maiden"
 
 //name := "maiden-framework"
 
-version := "0.1.0"
+version := "0.1.1"
 
 scalaVersion := "2.11.8"
 
@@ -12,7 +12,7 @@ val finagleVersion = "6.35.0"
 
 val finchVersion = "0.10.0"
 
-val quillVersion = "0.8.0"
+val quillVersion = "0.8.1-SNAPSHOT"
 
 val circeVersion = "0.5.0-M2"
 
@@ -50,6 +50,7 @@ lazy val `maiden-framework` = (project in file("."))
       //quill
       "io.getquill" %% "quill" % quillVersion,
       "io.getquill" %% "quill-sql" % quillVersion,
+      "io.getquill" %% "quill-async" % quillVersion,
       "io.getquill" %% "quill-cassandra" % quillVersion,
 
       //data drivers
