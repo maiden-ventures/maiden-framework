@@ -5,14 +5,14 @@ import com.twitter.util.Future
 
 trait MaidenEncoder extends Product
 
-trait MaidenModel extends MaidenEncoder {
+sealed trait MaidenModel extends MaidenEncoder {
   val id: Option[Long]
   val createdAt: LocalDateTime
   val updatedAt: LocalDateTime
 
 }
 
-trait MaidenFullResponse extends MaidenModel
+sealed trait MaidenFullResponse extends MaidenModel
 
 trait MaidenModelObject[M <: MaidenModel, MF <: MaidenFullResponse] {
 

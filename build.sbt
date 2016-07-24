@@ -9,7 +9,7 @@ scalaVersion := "2.11.8"
 
 val finagleVersion = "6.35.0"
 
-val finchVersion = "0.10.0"
+val finchVersion = "0.11.0-M2"
 
 val quillVersion = "0.8.0"
 
