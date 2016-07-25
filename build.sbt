@@ -9,7 +9,7 @@ scalaVersion := "2.11.8"
 
 val finagleVersion = "6.35.0"
 
-val finchVersion = "0.11.0-M2"
+val finchVersion = "0.10.0"
 
 val quillVersion = "0.8.0"
 
@@ -32,6 +32,7 @@ lazy val `maiden-framework` = (project in file("."))
       "com.github.finagle" %% "finch-oauth2" % finchVersion,
       "com.twitter" %% "finagle-stats" % finagleVersion,
       "com.twitter" %% "finagle-zipkin" % finagleVersion,
+      "com.twitter" % "twitter-server_2.11" % "1.21.0",
       "com.github.rlazoti" %% "finagle-metrics" % "0.0.3",
       "com.netaporter" %% "scala-uri" % "0.4.14",
 

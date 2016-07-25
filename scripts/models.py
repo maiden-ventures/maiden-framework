@@ -25,14 +25,16 @@ class ModelBuilder:
 
       return s
 
-  def build_references(self, model_name, field_name, model2_name, field2_name):
+  def build_references(self, ref_name, model_name, field_name, model2_name, field2_name):
       #grab a foreign key reference
       s = """def get%s(id: Long) = {
       val q = quote {
-        %sQuery.join(%sQuery).on((q1,q2) => q1.%s == q2.%s && q2.id == lift(id))
+        %sQuery.filter(_.%s == lift(id))
       }
-      db.run(q).map(x => x._1)
-    }""" % (model2_name, camelize(model2_name, False), camelize(model_name, False), field2_name, field_name)
+      db.run(q)
+    }""" % (camelize(ref_name), camelize(model2_name, False), field2_name)
+     #%sQuery.join(%sQuery).on((q1,q2) => q1.%s == q2.%s && q2.id == lift(id))
+    #}""" % (camelize(ref_name), camelize(model2_name, False), camelize(model_name, False), field2_name, field_name)
       return s
 
   def build(self):
@@ -86,10 +88,11 @@ class ModelBuilder:
                             _ref = c.references
                             (ref_model, ref_field) = get_scala_names(_ref.table, _ref.column)
                             (tb,co) = get_scala_names(_ref.ref_table, _ref.ref_column)
-                            reference_methods += "\n\n" + self.build_references(tb, co,  ref_model, ref_field)
+                            reference_methods += "\n\n" + self.build_references(_ref.scala_name, tb, co,  ref_model, ref_field)
 
                             #(name, type, local_model, local_field, ref_model, ref_field)
-                            ref_fields.append((m.name_lower,
+                            ref_fields.append((_ref.scala_name,
+                                               m.name_lower,
                                                c.scala_type,
                                                ref_model, ref_field,
                                                tb, co))
@@ -105,7 +108,7 @@ class ModelBuilder:
           else:
               col_str = "  %s: Option[%s]" % (col_name, col.scala_type)
 
-          columns.append("\n%s" % (col_str))
+          columns.append("\n%s\n" % (col_str))
 
           like_columns = [c for c in raw_columns if c[1] == "String"]
           ref_columns = [c for c in model.columns if c.references]
@@ -146,10 +149,10 @@ class ModelBuilder:
         create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in create_columns])
         model_create_params = ", ".join(["%s = %s" % (c[0],c[0]) for c in create_columns])
 
-        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[2]) \
+        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[3]) \
                                      for r in ref_fields])
         ref_constructor_fields = ", ".join(["%s = %s" % (r[0], r[0]) for r in ref_fields])
-        ref_from_db = ", ".join(["%s = %s.get%s(t.id)" % (r[0], model.name, r[4]) \
+        ref_from_db = ", ".join(["%s = %s.get%s(t.id)" % (r[0], model.name, r[5]) \
                                  for r in ref_fields])
 
         ref_yields = ", ".join([x[0] for x in ref_fields])
@@ -159,10 +162,10 @@ class ModelBuilder:
           ref_comprehensions = []
           #(name, type local_model, local_field, ref_model, ref_field)
           for r in ref_fields:
-              ref_comprehensions.append("get%s(%s.%s.get)" %(r[2], model.name_lower, r[5]))
+              ref_comprehensions.append("get%s(%s.%s.get)" %(camelize(r[0]), model.name_lower, r[6]))
               #ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], model.name_lower, r[3]))
 
-          ref_comprehensions = "(" + ",".join(ref_comprehensions) + ")"
+          ref_comprehensions = ("Tuple%s(" + ",".join(ref_comprehensions) + ")") % (str(len(ref_comprehensions)))
           getallrefs = read_template("models/getallrefs")\
                       .replace("@@refComprehensions@@", ref_comprehensions) \
                       .replace("@@refYields@@", ref_yields) \

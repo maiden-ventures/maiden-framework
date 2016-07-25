@@ -81,6 +81,14 @@ class ForeignKey:
         self.table = col.table
         self.field_name = col.name
 
+        if 'name' in col.info['references']:
+            self.scala_name =col.info['references']['name']
+        else:
+            self.scala_name = self.table
+
+        self.scala_name = inflection.camelize(self.scala_name, False)
+
+
         self.on_delete = camelize(col.info["references"].get("on_delete", "SetDefault"))
         self.name = "fk_%s_%s" % (self.ref_table, self.ref_column)
 

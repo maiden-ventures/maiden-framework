@@ -1,5 +1,6 @@
 package maiden.processing
 
+import scala.math.BigDecimal.RoundingMode
 import scala.language.implicitConversions
 import com.google.i18n.phonenumbers._
 import io.circe._
@@ -33,6 +34,8 @@ object Formatters {
         s"${value}-0000"
       }
     }
+
+    def money(bd: BigDecimal) = bd.setScale(2,RoundingMode.HALF_UP)
 
     def postal_code: String = postal_code("US")
 

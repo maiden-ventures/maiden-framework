@@ -40,6 +40,9 @@ class MigrationBuilder:
 
       modifiers = ', '.join(col.migration_modifiers)
 
+      if col.db_type.startswith("decimal"):
+        col.db_type = "decimal"
+
       if len(col.migration_modifiers) > 0:
         self.columns.append("""t.%s("%s", %s)""" % (col.db_type, col.db_name, col.migration_modifiers))
       else:

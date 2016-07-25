@@ -1,5 +1,6 @@
 package maiden.processing
 
+import java.math.RoundingMode
 import java.time.LocalDateTime
 import java.net.URL
 import scala.util.matching._
@@ -42,6 +43,7 @@ object Validations {
   implicit class EndpointLikeDouble(d: Double) extends EndpointLikeOps[Double](d)
   implicit class EndpointLikeFloat(f: Float) extends EndpointLikeOps[Float](f)
   implicit class EndpointLikeLocalDateTime(d: LocalDateTime) extends EndpointLikeOps[LocalDateTime](d)
+  implicit class EndpointLikeBigDecimal(bd: BigDecimal) extends EndpointLikeOps[BigDecimal](bd)
 
 
   implicit class EndpointLikeOptionString(o: Option[String])
@@ -62,6 +64,7 @@ object Validations {
   implicit class EndpointLikeOLocalDateTime(o: Option[LocalDateTime])
       extends EndpointOptionLikeOps[LocalDateTime](o)
 
+  implicit class EndpointLikeOBigDecimal(bd: Option[BigDecimal]) extends EndpointOptionLikeOps[BigDecimal](bd)
 
   //date time
   def non_empty_datetime[LocalDateTime] = ValidationRule[LocalDateTime]("be non-empty")  { v: LocalDateTime => v != null}
@@ -75,10 +78,14 @@ object Validations {
     x =>  x >= start && x <= end
   }
 
+  def money[V : Numeric] = ValidationRule[V](s"should be of type 'money'") { m => true}
+
   def one_of[V: Numeric](v: String) = ValidationRule[V](s"be one of $v") { m =>
     val lst = v.split(",").map(_.trim).toList
     lst.contains(m.toString)
   }
+
+
     //Strings
   def non_empty_string = ValidationRule[String]("be non-empty") { s: String =>  s != null && s.size > 0 }
   def is_empty = ValidationRule[String]("be empty") { _.size == 0 }
@@ -148,9 +155,7 @@ object Validations {
   }
 
   def country_code = ValidationRule[String](s"be a valid country code") { m: String =>
-
     Countries.countries.contains(m)
-
   }
 
   //TODO: date related
