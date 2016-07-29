@@ -23,7 +23,7 @@ object @@model@@Api extends MaidenApi {
       @@coreFieldComprehensionMappings@@
       createdAt <- c.downField("createdAt").as[Option[LocalDateTime]]
       updatedAt <- c.downField("updatedAt").as[Option[LocalDateTime]]
-    } yield @@model@@(id, @@coreFieldMappings@@, createdAt.getOrElse(LocalDateTime.now), updatedAt.getOrElse(LocalDateTime.now))
+    } yield @@model@@(id, @@coreFieldMappings@@)
   })
 
   private[this] val post@@model@@: Endpoint[@@model@@ => @@model@@] = body.as[@@model@@ => @@model@@]

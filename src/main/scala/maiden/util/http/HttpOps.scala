@@ -7,7 +7,6 @@ import com.twitter.finagle.http.Cookie
 import com.twitter.io.Buf
 import com.twitter.io.Buf.ByteArray.Owned
 import com.twitter.util.Duration
-import maiden.config.MaidenConfig
 
 trait HttpOps {
   val defaultCookieDuration = Duration(10 * 365, TimeUnit.DAYS)

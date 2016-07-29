@@ -3,7 +3,7 @@ from misc_builders import *
 
 class App:
 
-    def __init__(self, info, model_info):
+    def __init__(self, info, model_info, casing):
 
         self.info = info
         self.app_info = self.info["app"]
@@ -12,7 +12,7 @@ class App:
 
         self.model_info = model_info
         #build out our models
-        self.models = [Model(model) for model in model_info]
+        self.models = [Model(model, casing) for model in model_info]
 
         #build out meta info
         self.name = camelize(self.app_info["name"])
@@ -60,17 +60,26 @@ class App:
         pass
 
 class Model:
-    def __init__(self, model_info):
+    def __init__(self, model_info, casing):
         self.info = model_info
+
+        self.casing = casing
 
         self.name = camelize(self.info["name"])
         self.name_lower = camelize(self.info["name"], False)
-        self.db_name = self.info.get("db_name", underscore(self.name).lower())
+        if "db_name" in model_info:
+            self.db_name = model_info["db_name"]
+        elif casing == "snake_case":
+            self.db_name = underscore(self.name).lower()
+        elif casing == "camel_case":
+            self.db_name = camelize(self.name, False)
+        else:
+            self.db_name = self.name
         self.query_name = "%sQuery" % (self.name_lower)
-        self.build_columns()
+        self.build_columns(casing)
 
-    def build_columns(self):
-        self.columns = [Column(self, column) for column in self.info["columns"]]
+    def build_columns(self, casing):
+        self.columns = [Column(self, column, casing) for column in self.info["columns"]]
 
 class ForeignKey:
 
@@ -96,7 +105,7 @@ class ForeignKey:
         return "ref_table: %s, ref_column: %s, table: %s, column: %s" % (self.ref_table, self.ref_column, self.table, self.field_name)
 
 class Column:
-    def __init__(self, model, col_info):
+    def __init__(self, model, col_info, casing):
 
         self.info = col_info
         self.table = model.db_name
@@ -108,7 +117,18 @@ class Column:
         self.db_type = DB_MAP[self.named_type]["db"]
         self.index = self.info.get("index", False)
         self.limit = self.info.get("limit", None)
-        self.db_name = self.info.get("db_name", col_info["name"])
+
+        if "db_name" in self.info:
+            self.db_name = self.info["db_name"]
+        else:
+            if casing == "snake_case":
+                self.db_name = underscore(col_info["name"]).lower()
+            elif casing == "camel_case":
+                self.db_name = camelize(self.name, False)
+            else:
+                self.db_name = col_info["name"]
+
+        #self.db_name = self.info.get("db_name", col_info["name"])
         self.scala_type = db_map["scala"]
         self.validations = col_info.get("validations", [])
         self.formatters = col_info.get("formatters", [])

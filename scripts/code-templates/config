@@ -22,3 +22,4 @@ db.connectionTimeout="30000"
 migrations.namespace=@@package@@.migrations
 migrations.database_type=@@databaseJdbcName@@
 migrations.database_driver=@@databaseDriver@@
+migrations.database_casing=@@dbCasing@@

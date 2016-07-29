@@ -18,33 +18,23 @@ object JsonImplicits {
   import io.circe.syntax._
 
 
-  implicit val dateTimeEncoder: Encoder[Date] = {
-    Encoder.instance(a => {
-                       println("encoder")
-                       println(a)
-                       a.getTime.asJson
-                     })
-    }
+  implicit val dateTimeEncoder: Encoder[Date] =
+    Encoder.instance(a => a.getTime.asJson)
 
-  implicit val optionDateTimeEncoder: Encoder[Option[Date]] = {
+  implicit val optionDateTimeEncoder: Encoder[Option[Date]] =
     Encoder.instance(a => (new Date().asJson))
-   }
 
-    implicit val dateTimeDecoder: Decoder[Date] = {
-      Decoder.instance(a => {
-                         println("decoder")
-                         println(a)
-                         a.as[Long].map(new Date(_))
-                      })
-      }
-
+    implicit val dateTimeDecoder: Decoder[Date] =
+      Decoder.instance(a => a.as[Long].map(new Date(_)))
 
 }
+
 object DateImplicits {
   import db._
 
 
   implicit val decodeLocalTime = mappedEncoding[Date, LocalDateTime](date => LocalDateTime.ofInstant(date.toInstant, ZoneId.systemDefault()))
+
   implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => new Date(time.toEpochSecond(ZoneOffset.of(ZoneId.systemDefault().getId))))
 
   implicit val optionLocalDateTimeDecoder: Decoder[Option[LocalDateTime]] =
@@ -69,7 +59,7 @@ object DateImplicits {
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
     encoder[LocalDateTime] {
       row => (idx, ldt) =>
-      row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)          //          //.OTHER) // database-specific implementation
+      row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)
     }
 
   private[this] def dateToLocalDate(date: Date) =
@@ -156,9 +146,6 @@ object DateImplicits {
     def <(b: LocalDate) = quote(infix"$a < $b".as[Boolean])
     def <=(b: LocalDate) = quote(infix"$a <= $b".as[Boolean])
   }
-
-
-
 }
 
 object DBImplicits {

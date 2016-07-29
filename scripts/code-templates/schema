@@ -1,7 +1,6 @@
 package @@package@@.models
 
-import maiden.models.@@dbDriverName@@._
-import db._
+import maiden.models.DB.db._
 
 object @@appName@@Schema {
 

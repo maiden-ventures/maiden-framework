@@ -12,7 +12,12 @@ trait MaidenModel extends MaidenEncoder {
 
 }
 
+trait MaidenModelWithoutTimestamps {
+  val id: Option[Long]
+}
+
 trait MaidenFullResponse extends MaidenModel
+trait MaidenWithoutTimestampsFullResponse extends MaidenModelWithoutTimestamps
 
 trait MaidenModelObject[M <: MaidenModel, MF <: MaidenFullResponse] {
 

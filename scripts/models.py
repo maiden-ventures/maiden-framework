@@ -216,7 +216,6 @@ class ModelBuilder:
                    .replace("@@formattedCols@@", formatted_columns)\
                    .replace("@@appNameUpper@@", self.app.name) \
                    .replace("@@refFields@@", ref_fields_str) \
-                   .replace("@@dbDriverName@@", db_driver_name)\
                    .replace("@@refConstructorFields@@", ref_constructor_fields) \
                    .replace("@@refFromDBFields@@", ref_from_db) \
                    .replace("@@baseConstructorFields@@", base_constructor_fields) \

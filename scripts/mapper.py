@@ -4,7 +4,7 @@ DB_MAP= {
     "bigint": {"db": "bigint", "scala": "Long", "validations": []},
     "int": {"db": "int", "scala": "Int", "validations": []},
     "datetime": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
-    "date": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
+    "date": {"db": "timestamp", "scala": "LocalDate", "validations": []},
     "timestamp": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
     "boolean": {"db": "boolean", "scala": "Boolean", "validations": []},
 

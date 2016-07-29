@@ -29,11 +29,17 @@ class DbAccessBuilder:
             db_driver_name = "PostgresDB"
 
         elif database_type == "mysql":
-            default_port = "3336"
+            default_port = "3306"
+            datasource_driver = "com.mysql.jdbc.jdbc2.optional.MysqlDataSource"
+            database_driver = "com.mysql.Driver"
+            database_jdbc_name = "mysql"
             db_driver_name = "MySqlDB"
 
         else:
             raise(Exception("UNKNOWN DATABASE TYPE"))
+
+        db_casing = db["casing"]
+
         db_port = db.get("port", default_port)
 
         template = read_template("config")
@@ -41,6 +47,7 @@ class DbAccessBuilder:
 
         props = template.replace("@@host@@", db_host)\
                         .replace("@@dbPort@@", db_port)\
+                        .replace("@@dbCasing", db_casing)\
                         .replace("@@appPort@@", str(self.app.port))\
                         .replace("@@db@@", db_name)\
                         .replace("@@databaseJdbcName@@", database_jdbc_name)\
@@ -68,10 +75,11 @@ class DbAccessBuilder:
             lname = m.name_lower
             uname = m.name
 
-            s = 'lazy val %sQuery = quote(query[%s].schema(_.entity("%s").generated(_.id)))' % (lname, uname, m.db_name)
+            cols = ",".join(['_.%s -> "%s"' % (c.name, c.db_name) for c in m.columns])
+            s = 'lazy val %sQuery = quote(query[%s].schema(_.entity("%s").columns(%s).generated(_.id)))' % (lname, uname, m.db_name, cols)
             schema_list.append(s)
 
-        schema_list_str = "\n".join(schema_list)
+        schema_list_str = "\n\n".join(schema_list)
 
         out = schema\
               .replace("@@package@@", self.app.package)\

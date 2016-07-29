@@ -54,11 +54,23 @@ if __name__ == "__main__":
     #make sure that all models have an id and timestamps
     for index in range(len(model_data)):
         model = model_data[index]
-        Model(model)
+        casing = "snake_case"
+        if "casing" in app_data["db"]:
+            casing = app_data["db"]["casing"]
+        Model(model, casing)
         cols = model["columns"]
 
+        timestamps = True
+        if 'timestamps' in model:
+            timestamps = model['timestamps']
+
         if 'db_name' not in model:
-            model_data[index]["db_name"] = underscore(model["name"])
+            if casing == "snake_case":
+                model_data[index]["db_name"] = underscore(model["name"])
+            elif casing == "camel_case":
+                model_data[index]["db_name"] = camelize(model["name"], False)
+            else:
+                model_data[index]["db_name"] = model["name"]
 
         if "id" not in cols:
             model_data[index]["columns"].insert(0, {
@@ -69,14 +81,14 @@ if __name__ == "__main__":
                 "validations": ["positive"]
             })
 
-        if 'created_at' not in cols:
+        if 'created_at' not in cols and timestamps:
             model_data[index]["columns"].append({
                 "name": "created_at",
                 "type" : "timestamp",
                 "default": "NOW()"
             })
 
-        if 'updated_at' not in cols:
+        if 'updated_at' not in cols and timestamps:
             model_data[index]["columns"].append({
                 "name": "updated_at",
                 "type" : "timestamp",
@@ -103,7 +115,7 @@ if __name__ == "__main__":
 
             model_data[index]["columns"][i] = col
 
-    app = App(app_data, model_data)
+    app = App(app_data, model_data, casing)
 
     scala_dirs = [app.base_path]
 

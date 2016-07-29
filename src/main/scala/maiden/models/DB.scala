@@ -4,8 +4,6 @@ import java.util.Properties
 import java.io.PrintWriter
 import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
 import io.getquill._
-//import io.getquill.SnakeCase
-//import io.getquill.{MySQLDialect, PostgresDialect}
 import maiden.config.MaidenConfig
 
 trait MaidenBaseDB {
@@ -33,22 +31,31 @@ trait MaidenBaseDB {
 }
 
 object DB extends MaidenBaseDB {
-  val db =
-    if (MaidenConfig.get[String]("migrations.database_type") == "postgresql")
-      PostgresDB.db
-    else
-      MySqlDB.db
 
-}
-object PostgresDB extends MaidenBaseDB {
-  //val db = new PostgresAsyncContext[SnakeCase]("db")
+  type PG = PostgresDialect
+  type MY = MySQLDialect
 
-  final val db = new JdbcContext[PostgresDialect, SnakeCase](createDataSource)
+  type PGSC = JdbcContext[PG, SnakeCase]
+  type MYSC = JdbcContext[MY, SnakeCase]
+  type PGL = JdbcContext[PG, Literal]
+  type MYL = JdbcContext[MY, Literal]
+  type PGE = JdbcContext[PG, Escape]
+  type MYE = JdbcContext[MY, Escape]
 
-}
+  val db = {
+    val dbType = MaidenConfig.get[String]("migrations.database_type")
+    val dbCasing = MaidenConfig.getOption[String]("migrations.database_casing") match {
+      case Some(x) => x
+      case _ => "snake_case"
+    }
 
-object MySqlDB extends MaidenBaseDB {
-
-  lazy val db = new JdbcContext[MySQLDialect, SnakeCase](createDataSource)
-
+    (dbType, dbCasing) match {
+      case ("postgres", "snake_case") => new PGSC(createDataSource)
+      case ("mysql", "snake_case") => new MYSC(createDataSource)
+      case ("postgres", "literal") => new PGL(createDataSource)
+      case ("mysql", "literal") => new MYL(createDataSource)
+      case ("postgres", "escape") => new PGE(createDataSource)
+      case ("mysql", "escape") => new MYE(createDataSource)
+    }
+  }
 }
