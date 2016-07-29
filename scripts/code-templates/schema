@@ -1,6 +1,6 @@
 package @@package@@.models
 
-import maiden.models.DB.db._
+import maiden.models.@@dbType@@.db._
 
 object @@appName@@Schema {
 

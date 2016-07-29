@@ -116,7 +116,10 @@ class ModelBuilder:
 
         base_fields = ",".join(columns)
 
-        template = template.replace("@@baseFields@@", base_fields)
+        template = template\
+                   .replace("@@dbType@@", db_driver_name)\
+                   .replace("@@baseFields@@", base_fields)
+
         findByTemplate = read_template("models/findby")
         rangeByTemplate = read_template("models/rangeby")
         deleteByTemplate = read_template("models/deleteby")

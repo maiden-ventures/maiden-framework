@@ -8,7 +8,8 @@ import maiden.implicits.DateImplicits._
 import maiden.implicits.DBImplicits._
 import io.circe.java8._
 import maiden.traits._
-import maiden.models.DB.db._
+import maiden.models.@@dbType@@._
+import db._
 import maiden.exceptions._
 import maiden.processing.Formatters._
 import @@appNameUpper@@Schema._

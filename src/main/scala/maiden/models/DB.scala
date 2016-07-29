@@ -3,6 +3,9 @@ package maiden.models
 import java.util.Properties
 import java.io.PrintWriter
 import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
+import io.getquill.context.sql.idiom.SqlIdiom
+import io.getquill.NamingStrategy
+import io.getquill.JdbcContext
 import io.getquill._
 import maiden.config.MaidenConfig
 
@@ -31,16 +34,41 @@ trait MaidenBaseDB {
 }
 
 object DB extends MaidenBaseDB {
+  val dbType = MaidenConfig.get[String]("migrations.database_type")
 
-  type PG = PostgresDialect
-  type MY = MySQLDialect
+  lazy val db = if (dbType == "postgres") {
+    PostgresDB.db
+  } else {
+    MySqlDB.db
+  }
 
-  type PGSC = JdbcContext[PG, SnakeCase]
-  type MYSC = JdbcContext[MY, SnakeCase]
-  type PGL = JdbcContext[PG, Literal]
-  type MYL = JdbcContext[MY, Literal]
-  type PGE = JdbcContext[PG, Escape]
-  type MYE = JdbcContext[MY, Escape]
+}
+
+object MySqlDB extends MaidenBaseDB {
+
+  val db = {
+    val dbCasing = MaidenConfig.getOption[String]("migrations.database_casing") match {
+      case Some(x) => x
+      case _ => "snake_case"
+    }
+
+    dbCasing match {
+      case ("snake_case") =>
+        new JdbcContext[MySQLDialect, SnakeCase](createDataSource)
+      case ("literal") =>
+        new JdbcContext[MySQLDialect, Literal](createDataSource)
+      case ("escape") =>
+        new JdbcContext[MySQLDialect, Escape](createDataSource)
+      case _ =>
+        new JdbcContext[MySQLDialect, Escape](createDataSource)
+    }
+  }
+
+
+
+}
+
+object PostgresDB extends MaidenBaseDB {
 
   val db = {
     val dbType = MaidenConfig.get[String]("migrations.database_type")
@@ -49,13 +77,18 @@ object DB extends MaidenBaseDB {
       case _ => "snake_case"
     }
 
-    (dbType, dbCasing) match {
-      case ("postgres", "snake_case") => new PGSC(createDataSource)
-      case ("mysql", "snake_case") => new MYSC(createDataSource)
-      case ("postgres", "literal") => new PGL(createDataSource)
-      case ("mysql", "literal") => new MYL(createDataSource)
-      case ("postgres", "escape") => new PGE(createDataSource)
-      case ("mysql", "escape") => new MYE(createDataSource)
+    dbCasing match {
+      case ("snake_case") =>
+        new JdbcContext[PostgresDialect, SnakeCase](createDataSource)
+      case ("literal") =>
+        new JdbcContext[PostgresDialect, Literal](createDataSource)
+      case ("escape") =>
+        new JdbcContext[PostgresDialect, Escape](createDataSource)
+      case _ =>
+        new JdbcContext[PostgresDialect, Escape](createDataSource)
     }
   }
+
+
+
 }

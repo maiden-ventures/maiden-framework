@@ -41,11 +41,25 @@ object DateImplicits {
     decoder[Option[LocalDateTime]] {
       row => index =>
       row.getObject(index) match {
-        case c: Date if c != null => Option(LocalDateTime.parse(c.toString.replace(" ", "T")))
+        case c: Date if c != null => {
+          try {
+            Option(LocalDateTime.parse(c.toString.replace(" ", "T")))
+          } catch {
+            case e: Exception => Option(LocalDateTime.parse(s"${c.toString}T00:00:00.000"))
+          }
+        }
         case _ => None
       }
     }
 
+  /*
+  implicit val localDateEncoder: Encoder[LocalDate] =
+    encoder[LocalDate] {
+      row => (idx, ldt) =>
+      row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)
+    }
+
+   */
 
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
     decoder[LocalDateTime] {

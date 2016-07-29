@@ -48,6 +48,7 @@ class DbAccessBuilder:
         props = template.replace("@@host@@", db_host)\
                         .replace("@@dbPort@@", db_port)\
                         .replace("@@dbCasing", db_casing)\
+                        .replace("@@dbType@@", db_driver_name)\
                         .replace("@@appPort@@", str(self.app.port))\
                         .replace("@@db@@", db_name)\
                         .replace("@@databaseJdbcName@@", database_jdbc_name)\
@@ -85,6 +86,6 @@ class DbAccessBuilder:
               .replace("@@package@@", self.app.package)\
                        .replace("@@schemaList@@", schema_list_str)\
                        .replace("@@appName@@", self.app.name) \
-                       .replace("@@dbDriverName@@", db_driver_name)
+                       .replace("@@dbType@@", db_driver_name)
 
         write(os.path.join(self.app.base_path, "models/Schema.scala"), out)
