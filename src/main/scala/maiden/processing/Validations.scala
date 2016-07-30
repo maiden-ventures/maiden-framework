@@ -67,7 +67,7 @@ object Validations {
   implicit class EndpointLikeOBigDecimal(bd: Option[BigDecimal]) extends EndpointOptionLikeOps[BigDecimal](bd)
 
   //date time
-  def non_empty_datetime[LocalDateTime] = ValidationRule[LocalDateTime]("be non-empty")  { v: LocalDateTime => v != null}
+  def non_empty_datetime = ValidationRule[LocalDateTime]("be non-empty")  { v: LocalDateTime => v != null}
   //Numerics
   def non_empty_numeric[V: Numeric] = ValidationRule[V]("be non-empty") { v: V => v != null}
   def positive[V : Numeric] = ValidationRule[V]("be positive") { _ > 0 }

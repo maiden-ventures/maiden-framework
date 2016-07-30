@@ -41,10 +41,6 @@ class App:
         make_dir(self.config_path)
         make_dir(os.path.join(self.source_directory, "project"))
         make_dir(self.base_path)
-        for d in ('api', 'encoders', "migrations", "models"):
-            make_dir(os.path.join(self.base_path, d))
-
-
         #build out our data structures
         self.security = security_info(self.app_info)
         #self.database  = build_database(self.app_info)

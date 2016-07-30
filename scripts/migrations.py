@@ -69,7 +69,7 @@ class MigrationBuilder:
 
   def build(self):
 
-    migration_dir = os.path.abspath(os.path.join(self.app.base_path,  "migrations"))
+    migration_dir = os.path.abspath(os.path.join(self.app.base_path,  "components/migrations"))
 
     for model in self.app.models:
         self.columns = []
