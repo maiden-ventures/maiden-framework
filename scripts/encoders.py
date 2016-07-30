@@ -33,7 +33,7 @@ class EncoderBuilder:
                       .replace("@@jsonFields@@", json_fields_str)\
                       .replace("@@payloadKey@@", payload_key)
 
-            file_name = os.path.join(self.encoder_dir, "%s.scala" % (model_name))
+            file_name = os.path.join(self.app.base_path, "components/%s/%sEncoder.scala" % (underscore(model.name), model_name))
 
             write(file_name, out)
             self.encoders.append("%sResponseEncoders" % (model_name))

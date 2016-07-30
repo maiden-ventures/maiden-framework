@@ -1,8 +1,9 @@
 
 DB_MAP= {
     "varchar": {"db": "varchar", "scala":"String", "validations": []},
+    "text": {"db": "text", "scala":"String", "validations": []},
     "bigint": {"db": "bigint", "scala": "Long", "validations": []},
-    "int": {"db": "int", "scala": "Int", "validations": []},
+    "int": {"db": "integer", "scala": "Int", "validations": []},
     "datetime": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
     "date": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
     "timestamp": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},

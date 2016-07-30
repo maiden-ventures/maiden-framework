@@ -38,7 +38,7 @@ class DbAccessBuilder:
         else:
             raise(Exception("UNKNOWN DATABASE TYPE"))
 
-        db_casing = db["casing"]
+        db_casing = db.get("casing", "literal")
 
         db_port = db.get("port", default_port)
 
@@ -47,7 +47,7 @@ class DbAccessBuilder:
 
         props = template.replace("@@host@@", db_host)\
                         .replace("@@dbPort@@", db_port)\
-                        .replace("@@dbCasing", db_casing)\
+                        .replace("@@dbCasing@@", db_casing)\
                         .replace("@@dbType@@", db_driver_name)\
                         .replace("@@appPort@@", str(self.app.port))\
                         .replace("@@db@@", db_name)\
@@ -88,4 +88,4 @@ class DbAccessBuilder:
                        .replace("@@appName@@", self.app.name) \
                        .replace("@@dbType@@", db_driver_name)
 
-        write(os.path.join(self.app.base_path, "models/Schema.scala"), out)
+        write(os.path.join(self.app.base_path, "Schema.scala"), out)

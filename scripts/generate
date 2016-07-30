@@ -72,6 +72,9 @@ if __name__ == "__main__":
             else:
                 model_data[index]["db_name"] = model["name"]
 
+        else:
+            model_data[index]["db_name"] = model["db_name"]
+
         if "id" not in cols:
             model_data[index]["columns"].insert(0, {
                 "name": "id",
@@ -128,7 +131,7 @@ if __name__ == "__main__":
 
     if key_with_default(gen_options, "models", True):
         print("Generating models...")
-        model_builder = ModelBuilder(app)
+        model_builder = ModelBuilder(app, )
         access_builder =  DbAccessBuilder(app)
 
     if key_with_default(gen_options, "migrations", True):

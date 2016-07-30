@@ -45,8 +45,6 @@ class ModelBuilder:
     if database_type == "postgres": db_driver_name = "PostgresDB"
     if database_type == "mysql": db_driver_name = "MySqlDB"
 
-    models_dir = os.path.abspath(os.path.join(self.app.base_path, "models"))
-
     #make sure the models directory exists
 
     for model in self.app.models:
@@ -56,7 +54,7 @@ class ModelBuilder:
         template = read_template("model")
 
         self.query_name = "%sQuery" % (model.name_lower)
-        model_path= os.path.join(models_dir, "%s.scala" % (model.name))
+        model_path= os.path.join(self.app.base_path, "components/%s/%sModel.scala" % (underscore(model.name), model.name))
 
         raw_columns = [(c.name, c.scala_type, c.formatters) for c in model.columns]
         create_columns = filter(lambda x: x[0] not in ("createdAt", "updatedAt", "id"), raw_columns)
@@ -81,13 +79,13 @@ class ModelBuilder:
         ref_fields = []
         reference_methods = ""
         for m in self.app.models:
-            if m.name != model.name:
+            if m.db_name != model.db_name:
                 for c in m.columns:
                     if c.references:
-                        if c.references.ref_table == model.db_name:
-                            _ref = c.references
+                        _ref = c.references
+                        (tb,co) = get_scala_names(_ref.ref_table, _ref.ref_column)
+                        if tb == model.name:
                             (ref_model, ref_field) = get_scala_names(_ref.table, _ref.column)
-                            (tb,co) = get_scala_names(_ref.ref_table, _ref.ref_column)
                             reference_methods += "\n\n" + self.build_references(_ref.scala_name, tb, co,  ref_model, ref_field)
 
                             #(name, type, local_model, local_field, ref_model, ref_field)

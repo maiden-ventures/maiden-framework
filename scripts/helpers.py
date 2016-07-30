@@ -44,6 +44,10 @@ def format_scala(files):
         #subprocess.call(["java", "-jar", os.path.join(BASE_PATH, "../tools/scalariform.jar"), "+preserveDanglingCloseParenthesis", "--recurse", d], stdout=subprocess.PIPE)
 
 def write(name, content):
+    #verify that the base path exists
+    base = os.path.dirname(name)
+    if not os.path.exists(base):
+        os.makedirs(base)
     fd = open(name, "w+")
     fd.write(content)
     fd.close()

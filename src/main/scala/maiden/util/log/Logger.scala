@@ -13,23 +13,15 @@ final class Logger(name: String) {
 
   lazy val log = LoggerFactory.getLogger(name)
 
-  def info(s: String) {
-    log.info(s)
-  }
+  def info(s: String) = log.info(s)
 
-  def warn(s: String) {
-    log.warn(s)
-  }
+  def debug(s:  String) = log.debug(s)
 
-  def warnST(s: String, t: Throwable) {
-    log.warn(s, t)
-  }
+  def warn(s: String) =  log.warn(s)
 
-  def error(s: String) {
-    log.error(s)
-  }
+  def warn(s: String, t: Throwable) = log.warn(s,t)
 
-  def errorST(s: String, t: Throwable) {
-    log.error(s, t)
-  }
+  def error(s: String) =  log.error(s)
+
+  def error(s: String, t: Throwable) = log.error(s,t)
 }

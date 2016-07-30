@@ -75,6 +75,7 @@ class Model:
             self.db_name = camelize(self.name, False)
         else:
             self.db_name = self.name
+        print self.name, self.db_name
         self.query_name = "%sQuery" % (self.name_lower)
         self.build_columns(casing)
 

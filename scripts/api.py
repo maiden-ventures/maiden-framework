@@ -5,7 +5,6 @@ class ApiBuilder:
 
     def __init__(self, app):
         self.template = read_template("api")
-        self.api_dir = os.path.join(app.base_path, "api")
         self.app = app
 
 
@@ -20,7 +19,11 @@ class ApiBuilder:
                 int(v)
                 return v
             except:
-                return '"%s"' % (v)
+                try:
+                    float(v)
+                    return v
+                except:
+                  return '"%s"' % (v)
 
         vstr = ""
 
@@ -33,7 +36,7 @@ class ApiBuilder:
             elif c.scala_type == "LocalDateTime":
                 if "non_empty_datetime" not in c.validations:
                     c.validations.insert(0, "non_empty_datetime")
-            elif c.scala_type != "LocalDateTime":
+            elif c.scala_type != "LocalDateTime" and c.scala_type != "Boolean":
                 if "non_empty_numeric" not in c.validations:
                     c.validations.insert(0, "non_empty_numeric")
 
@@ -100,7 +103,8 @@ class ApiBuilder:
 
             #user.username.should("username")(max_length(50)),
 
-            validations = ",\n".join(["%s.%s%s" % (model.name_lower, c.name, self.add_validations(c)) for c in cols if c.validations != [] or c.nullable == False])
+            validations = ",\n".join(["%s.%s%s" % (model.name_lower, c.name, self.add_validations(c)) for c in cols if c.validations != []])
+                                     # or c.nullable == False])
 
 
             out = self.template.replace("@@model@@", model.name)\
@@ -116,4 +120,4 @@ class ApiBuilder:
                                .replace("@@validations@@", validations) \
                                .replace("@@paramList@@", param_list).replace("@@updateParams@@", update_params)
 
-            write(os.path.join(self.api_dir, "%s.scala" % (model.name)), out)
+            write(os.path.join(self.app.base_path, "components/%s/%sApi.scala" % (underscore(model.name), model.name)), out)

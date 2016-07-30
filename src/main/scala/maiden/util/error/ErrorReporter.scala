@@ -21,15 +21,15 @@ class ConsoleErrorReporter extends ErrorReporter {
   def registerForUnhandledExceptions() = {
     Thread.currentThread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
       def uncaughtException(t:Thread, e: Throwable) {
-        log.errorST(e.getMessage, e)
+        log.error(e.getMessage, e)
       }
     });
   }
   def info(t: Throwable) = log.info(t.getMessage)
 
-  def warning(t: Throwable) = log.warnST(t.getMessage, t)
+  def warning(t: Throwable) = log.warn(t.getMessage, t)
 
-  def error(t: Throwable) = log.errorST(t.getMessage, t)
+  def error(t: Throwable) = log.error(t.getMessage, t)
 
 }
 
