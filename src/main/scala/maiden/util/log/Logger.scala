@@ -4,7 +4,7 @@ import maiden.config.MaidenConfig
 import org.slf4j.LoggerFactory
 
 trait Logging {
-  lazy val log = new Logger(MaidenConfig.get[String]("app.name"))
+  lazy val log = new Logger(MaidenConfig.get[String]("app.id"))
 }
 
 object Logger extends Logging

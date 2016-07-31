@@ -33,7 +33,7 @@ class ApiBuilder:
                 if "non_empty_string" not in c.validations:
                     c.validations.insert(0, "non_empty_string")
 
-            elif c.scala_type == "LocalDateTime":
+            elif c.scala_type in ("LocalDateTime", "LocalDate"):
                 if "non_empty_datetime" not in c.validations:
                     c.validations.insert(0, "non_empty_datetime")
             elif c.scala_type != "LocalDateTime" and c.scala_type != "Boolean":
@@ -50,6 +50,9 @@ class ApiBuilder:
             for v in c.validations:
                 if type(v) == type("") and c.scala_type not in ("LocalDateTime", "DateTime", "String"):
                     vals.append("%s[%s]" % (v, c.scala_type))
+
+                elif type(v) == type("") and c.scala_type in ("LocalDateTime", "DateTime"):
+                    vals.append("%s" % (v))
                 elif type(v) == type("") and c.scala_type == "String":
                     vals.append("%s" % (v))
                 elif type(v) == type({}):

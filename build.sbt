@@ -7,7 +7,7 @@ version := "0.1.2"
 
 scalaVersion := "2.11.8"
 
-val finagleVersion = "6.35.0"
+val finagleVersion = "6.36.0"
 
 val finchVersion = "0.10.0"
 
