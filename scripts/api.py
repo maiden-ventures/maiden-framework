@@ -48,7 +48,7 @@ class ApiBuilder:
 
             vals = []
             for v in c.validations:
-                if type(v) == type("") and c.scala_type != "String":
+                if type(v) == type("") and c.scala_type not in ("LocalDateTime", "DateTime", "String"):
                     vals.append("%s[%s]" % (v, c.scala_type))
                 elif type(v) == type("") and c.scala_type == "String":
                     vals.append("%s" % (v))
