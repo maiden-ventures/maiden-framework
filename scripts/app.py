@@ -83,6 +83,7 @@ class ForeignKey:
     def __init__(self, col):
         self.ref_table = col.info["references"]["table"]
         self.ref_column = col.info["references"]["column"]
+        self.ref_type = col.info["references"].get("type", "ONE_TO_MANY")
         self.column = col.db_name
         self.table = col.table
         self.field_name = col.name

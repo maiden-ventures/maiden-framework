@@ -76,6 +76,7 @@ object DateImplicits {
       row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)
     }
 
+  implicit def dateToLocalDateImplicit(date: Date) = dateToLocalDate(date)
   private[this] def dateToLocalDate(date: Date) =
     Instant.ofEpochMilli(date.getTime).atZone(ZoneId.systemDefault).toLocalDate
 

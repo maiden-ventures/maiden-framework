@@ -25,16 +25,18 @@ class ModelBuilder:
 
       return s
 
-  def build_references(self, ref_name, model_name, field_name, model2_name, field2_name):
+  def build_references(self, ref_name, model_name, field_name, model2_name, field2_name, ref_type):
       #grab a foreign key reference
       s = """def get%s(id: Long) = {
       val q = quote {
         %sQuery.filter(_.%s == lift(id))
-      }
-      db.run(q)
-    }""" % (camelize(ref_name), camelize(model2_name, False), field2_name)
-     #%sQuery.join(%sQuery).on((q1,q2) => q1.%s == q2.%s && q2.id == lift(id))
-    #}""" % (camelize(ref_name), camelize(model2_name, False), camelize(model_name, False), field2_name, field_name)
+      }""" % (camelize(ref_name), camelize(model2_name, False), field2_name)
+
+      if ref_type == "ONE_TO_MANY":
+        s += "\n\n  db.run(q)"
+      else:
+        s += "\n\n db.run(q).headOption"
+      s += "\n}"
       return s
 
   def build(self):
@@ -75,7 +77,7 @@ class ModelBuilder:
                         if c.db_name == col_name:
                             return (m.name, c.name)
 
-        #get all possible references to this model
+        #get all possible reverse references to this model
         ref_fields = []
         reference_methods = ""
         for m in self.app.models:
@@ -86,14 +88,16 @@ class ModelBuilder:
                         (tb,co) = get_scala_names(_ref.ref_table, _ref.ref_column)
                         if tb == model.name:
                             (ref_model, ref_field) = get_scala_names(_ref.table, _ref.column)
-                            reference_methods += "\n\n" + self.build_references(_ref.scala_name, tb, co,  ref_model, ref_field)
+                            reference_methods += "\n\n" + self.build_references(_ref.scala_name, tb, co,  ref_model, ref_field, _ref.ref_type)
 
                             #(name, type, local_model, local_field, ref_model, ref_field)
                             ref_fields.append((_ref.scala_name,
                                                m.name_lower,
                                                c.scala_type,
                                                ref_model, ref_field,
-                                               tb, co))
+                                               tb, co,
+                                               _ref.ref_type
+                            ))
 
         for col in model.columns:
           col_name = col.name
@@ -150,8 +154,16 @@ class ModelBuilder:
         create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in create_columns])
         model_create_params = ", ".join(["%s = %s" % (c[0],c[0]) for c in create_columns])
 
-        ref_fields_str = ",\n".join(["%s: List[%s] = List.empty" % (r[0], r[3]) \
-                                     for r in ref_fields])
+        ref_fields_list = []
+        for r in ref_fields:
+            if r[7] == "ONE_TO_MANY":
+                ref_fields_list.append("%s: List[%s] = List.empty" % (r[0], r[3]))
+            else:
+                ref_fields_list.append("%s: Option[%s] = None" % (r[0], r[3]))
+
+        ref_fields_str = ",\n".join(ref_fields_list)
+
+
         ref_constructor_fields = ", ".join(["%s = %s" % (r[0], r[0]) for r in ref_fields])
         ref_from_db = ", ".join(["%s = %s.get%s(t.id)" % (r[0], model.name, r[5]) \
                                  for r in ref_fields])
