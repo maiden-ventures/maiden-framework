@@ -50,6 +50,7 @@ lazy val `maiden-framework` = (project in file("."))
       "io.getquill" %% "quill-core" % quillVersion,
       "io.getquill" %% "quill-sql" % quillVersion,
       "io.getquill" %% "quill-jdbc" % quillVersion,
+      "io.getquill" %% "quill-async" % quillVersion,
 
       //data drivers
       "mysql" % "mysql-connector-java" % "5.1.36",

@@ -26,6 +26,7 @@ def build_api_service(app):
 
     write(file_name, out)
 
+
 def build_logback(app):
     template = read_template("logback")
     file_name = os.path.join(app.source_directory, "config/logback.xml")

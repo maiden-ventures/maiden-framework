@@ -7,8 +7,20 @@ import java.util.concurrent.Executors
 import io.getquill.context._
 import io.circe.java8._
 import scala.concurrent.ExecutionContext
-import maiden.models.DB._
 import maiden.date_formatters.DateFormatters._
+import io.getquill.JdbcContext
+
+//can go away when we no longer have to override Quill's Option Encoder
+import java.sql
+import java.sql.PreparedStatement
+import java.sql.Types
+import java.util
+import java.util.Calendar
+import java.util.TimeZone
+
+import io.getquill.context.BindedStatementBuilder
+import io.getquill.JdbcContext
+
 
 
 object JsonImplicits {
@@ -29,136 +41,31 @@ object JsonImplicits {
 
 }
 
-object DateImplicits {
-  import db._
+trait  DateImplicits {
 
+  this: JdbcContext[_,_] =>
 
-  implicit val decodeLocalTime = mappedEncoding[Date, LocalDateTime](date => LocalDateTime.ofInstant(date.toInstant, ZoneId.systemDefault()))
+  private[this] def date2ldt(d: Date) =
+    LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
 
-  implicit val encodeLocalTime = mappedEncoding[LocalDateTime, Date](time => new Date(time.toEpochSecond(ZoneOffset.of(ZoneId.systemDefault().getId))))
+  private[this] def ldt2date(ldt: LocalDateTime) =
+    Date.from(ldt.atZone(ZoneId.systemDefault).toInstant)
 
-  implicit val optionLocalDateTimeDecoder: Decoder[Option[LocalDateTime]] =
-    decoder[Option[LocalDateTime]] {
-      row => index =>
-      row.getObject(index) match {
-        case c: Date if c != null => {
-          try {
-            Option(LocalDateTime.parse(c.toString.replace(" ", "T")))
-          } catch {
-            case e: Exception => Option(LocalDateTime.parse(s"${c.toString}T00:00:00.000"))
-          }
-        }
-        case _ => None
-      }
-    }
+  implicit val decodeLocalDateTime = mappedEncoding[Date, LocalDateTime](date => date2ldt(date))
 
-  /*
-  implicit val localDateEncoder: Encoder[LocalDate] =
-    encoder[LocalDate] {
-      row => (idx, ldt) =>
-      row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)
-    }
-
-   */
-
-  implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
-    decoder[LocalDateTime] {
-      row => index =>
-      row.getObject(index) match {
-        case c: String if c != null => LocalDateTime.parse(c.replace(" ", "T"))
-        case _ => LocalDateTime.now
-      }
-    }
-
-  implicit val localDateTimeEncoder: Encoder[LocalDateTime] =
-    encoder[LocalDateTime] {
-      row => (idx, ldt) =>
-      row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)
-    }
-
-
-  implicit def dateToLocalDateImplicit(date: Date) = dateToLocalDate(date)
-
-  private[this] def dateToLocalDate(date: Date) =
-    Instant.ofEpochMilli(date.getTime).atZone(ZoneId.systemDefault).toLocalDate
-
-  private[this] def localDateToDate(ld: LocalDateTime) =
-    Date.from(ld.atZone(ZoneId.systemDefault).toInstant)
-
-  //conversions between LocalDateTime and java Date
-  implicit val decodeLocalDateTime = mappedEncoding[Date, LocalDateTime](date =>
-    LocalDateTime.ofInstant(date.toInstant, ZoneId.systemDefault()))
-
-  implicit val encodeLocalDateTime = mappedEncoding[LocalDateTime, Date](time =>
-    Date.from(time.atZone(ZoneId.systemDefault).toInstant))
-
-  implicit val decodeLocalDate = mappedEncoding[Date, LocalDate](d =>  dateToLocalDate(d))
-
-  implicit val encodeDateTime = mappedEncoding[LocalDate, Date](localDate =>
-    Date.from(localDate.atStartOfDay(ZoneId.systemDefault).toInstant))
-
-
-  implicit val encodeOptionDateTime = mappedEncoding[Option[LocalDate], Date](localDate =>
-    localDate match {
-      case Some(s) => Date.from(s.atStartOfDay(ZoneId.systemDefault).toInstant)
-      case _ => new Date(0)
-    })
-
-  implicit val decodeOptionLocalDate = mappedEncoding[Date, Option[LocalDate]](d =>
-    d match {
-      case x: Date => Option(dateToLocalDate(x))
-      case _ => {
-        val d = new Date(0)
-        Option(Instant.ofEpochMilli(d.getTime()).atZone(ZoneId.systemDefault).toLocalDate())
-
-      }
-    })
-
-  implicit val encodeOptionLocalDateTime = mappedEncoding[Option[LocalDateTime], Option[Date]](localDate =>
-    localDate match {
-      case Some(s) =>
-        Option(Date.from(s.atZone(ZoneId.systemDefault).toInstant))
-      case _ => {
-        val d = new Date(0)
-        Option(d)
-
-      }
-    })
-
-  implicit val encodeOptionLocalDateTimeToDate = mappedEncoding[Option[LocalDateTime], Date](localDate =>
-    localDate match {
-      case Some(s) =>
-        Date.from(s.atZone(ZoneId.systemDefault).toInstant)
-      case _ => {
-        val d = new Date(0)
-        d
-      }
-    })
-  implicit val decodeOptionLocalDateTime = mappedEncoding[Option[Date], Option[LocalDateTime]](date =>
-    date match {
-      case Some(x) =>
-        Option(LocalDateTime.ofInstant(x.toInstant, ZoneId.systemDefault()))
-      case _ => {
-        val d = new Date(0)
-        Option(LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault()))
-      }
-    })
-
+  implicit val encodeLocalDateTime = mappedEncoding[LocalDateTime, Date](ldt => ldt2date(ldt))
 
   //handle ordering of datetimes
   implicit val localDateTimeOrder: Ordering[LocalDateTime] = null
   implicit val localDateOrder: Ordering[LocalDate] = null
 
   //for date queries
-
-
   implicit class RichLocalDateTime(a: LocalDateTime) {
     def >(b: LocalDateTime) = quote(infix"$a > $b".as[Boolean])
     def >=(b: LocalDateTime) = quote(infix"$a >= $b".as[Boolean])
     def <(b: LocalDateTime) = quote(infix"$a < $b".as[Boolean])
     def <=(b: LocalDateTime) = quote(infix"$a <= $b".as[Boolean])
   }
-
 
   implicit class RichLocalDateTimeOption(a: Option[LocalDateTime]) extends RichLocalDateTime(a.getOrElse(null))
 
@@ -170,21 +77,48 @@ object DateImplicits {
     def < (b: LocalDate) = quote(infix"$a < $b".as[Boolean])
     def <=(b: LocalDate) = quote(infix"$a <= $b".as[Boolean])
   }
+
+  implicit class RichLocalDateOption(a: Option[LocalDate]) extends RichLocalDate(a.getOrElse(null))
 }
 
-object DBImplicits {
+trait DBImplicits {
+  this: JdbcContext[_,_] =>
 
-  import db._
   val SqlNull = quote(infix"null")
 
   implicit class ForUpdate[T](q: Query[T]) {
     def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
   }
 
-  //implicit class ReturningId[T](a: Action[T]) {
-  //  def returningId = quote(infix"$a RETURNING ID".as[Query[T]])
- // }
+  //this is an override for quill until it supports inserting Option[LocalDateTime]
 
+  private[this] val nullEncoder = encoder[Int](_.setNull)
+
+  override implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
+    new Encoder[Option[T]] {
+      override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) =
+        value match {
+          case Some(value) => d(idx, value, row)
+          case None => {println(d);
+            import Types._
+            val sqlType =
+              d match {
+                case `stringEncoder`     => VARCHAR
+                case `bigDecimalEncoder` => NUMERIC
+                case `booleanEncoder`    => BOOLEAN
+                case `byteEncoder`       => TINYINT
+                case `shortEncoder`      => SMALLINT
+                case `intEncoder`        => INTEGER
+                case `longEncoder`       => BIGINT
+                case `floatEncoder`      => REAL
+                case `doubleEncoder`     => DOUBLE
+                case `byteArrayEncoder`  => VARBINARY
+                case `dateEncoder`       => TIMESTAMP
+                case _                   => TIMESTAMP
+              }
+            nullEncoder(idx, sqlType, row)
+        }}
+    }
 }
 
 object ExecutionImplicits {

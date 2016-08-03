@@ -4,8 +4,6 @@ import java.time._
 import java.util.Date
 import com.twitter.util.Future
 import shapeless.syntax.std.tuple._
-import maiden.implicits.DateImplicits._
-import maiden.implicits.DBImplicits._
 import io.circe.java8._
 import maiden.traits._
 import maiden.models.@@dbType@@._

@@ -9,6 +9,7 @@ import io.getquill.NamingStrategy
 import io.getquill.JdbcContext
 import io.getquill._
 import maiden.config.MaidenConfig
+import maiden.implicits._
 
 trait MaidenBaseDB {
 
@@ -55,13 +56,13 @@ object MySqlDB extends MaidenBaseDB {
 
     dbCasing match {
       case ("snake_case") =>
-        new JdbcContext[MySQLDialect, SnakeCase](createDataSource)
+        new JdbcContext[MySQLDialect, SnakeCase](createDataSource) with DBImplicits with DateImplicits
       case ("literal") =>
-        new JdbcContext[MySQLDialect, Literal](createDataSource)
+        new JdbcContext[MySQLDialect, Literal](createDataSource) with DBImplicits with DateImplicits
       case ("escape") =>
-        new JdbcContext[MySQLDialect, Escape](createDataSource)
+        new JdbcContext[MySQLDialect, Escape](createDataSource) with DBImplicits with DateImplicits
       case _ =>
-        new JdbcContext[MySQLDialect, Escape](createDataSource)
+        new JdbcContext[MySQLDialect, Escape](createDataSource) with DBImplicits with DateImplicits
     }
   }
 }
@@ -78,13 +79,13 @@ object PostgresDB extends MaidenBaseDB {
 
     dbCasing match {
       case ("snake_case") =>
-        new JdbcContext[PostgresDialect, SnakeCase](createDataSource)
+        new JdbcContext[PostgresDialect, SnakeCase](createDataSource) with DBImplicits with DateImplicits
       case ("literal") =>
-        new JdbcContext[PostgresDialect, Literal](createDataSource)
+        new JdbcContext[PostgresDialect, Literal](createDataSource) with DBImplicits with DateImplicits
       case ("escape") =>
-        new JdbcContext[PostgresDialect, Escape](createDataSource)
+        new JdbcContext[PostgresDialect, Escape](createDataSource) with DBImplicits with DateImplicits
       case _ =>
-        new JdbcContext[PostgresDialect, Escape](createDataSource)
+        new JdbcContext[PostgresDialect, Escape](createDataSource) with DBImplicits with DateImplicits
     }
   }
 
