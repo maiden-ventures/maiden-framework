@@ -2,6 +2,7 @@ package maiden.models
 
 import java.util.Properties
 import java.io.PrintWriter
+import scala.language.existentials
 import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.NamingStrategy
@@ -45,7 +46,7 @@ object DB extends MaidenBaseDB {
 }
 
 object MySqlDB extends MaidenBaseDB {
-
+  self =>
   val db = {
     val dbCasing = MaidenConfig.getOption[String]("migrations.database_casing") match {
       case Some(x) => x
@@ -63,12 +64,10 @@ object MySqlDB extends MaidenBaseDB {
         new JdbcContext[MySQLDialect, Escape](createDataSource)
     }
   }
-
-
-
 }
 
 object PostgresDB extends MaidenBaseDB {
+  self =>
 
   val db = {
     val dbType = MaidenConfig.get[String]("migrations.database_type")

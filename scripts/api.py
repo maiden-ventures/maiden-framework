@@ -47,14 +47,16 @@ class ApiBuilder:
               vstr += '.should("' + c.name + '")(%s)'
 
             vals = []
+
             for v in c.validations:
                 if type(v) == type("") and c.scala_type not in ("LocalDateTime", "DateTime", "String"):
-                    vals.append("%s[%s]" % (v, c.scala_type))
+                    t = "%s[%s]" % (v, c.scala_type)
+                    if t not in vals: vals.append(t)
 
                 elif type(v) == type("") and c.scala_type in ("LocalDateTime", "DateTime"):
-                    vals.append("%s" % (v))
+                    if v not in vals: vals.append(v)
                 elif type(v) == type("") and c.scala_type == "String":
-                    vals.append("%s" % (v))
+                    if v not in vals: vals.append(v)
                 elif type(v) == type({}):
                     for (key, value) in v.items():
                       value = str(value).split(" ")

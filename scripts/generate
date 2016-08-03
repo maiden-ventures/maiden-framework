@@ -122,8 +122,8 @@ if __name__ == "__main__":
 
     scala_dirs = [app.base_path]
 
-    for d in ('api', 'encoders', 'models', 'migrations'):
-        scala_dirs.append(os.path.join(app.base_path, d))
+    #for d in ('api', 'encoders', 'models', 'migrations'):
+    #    scala_dirs.append(os.path.join(app.base_path, d))
 
     if key_with_default(gen_options, "sbt", True):
         print("Generating project build files...")

@@ -39,9 +39,11 @@ def read_template(name):
     return contents
 
 def format_scala(files):
+    print files
     for d in files:
-        subprocess.call(["java", "-jar", os.path.join(BASE_PATH, "../tools/scalafmt.jar"), "-i", "-s", "default", "--alignByArrowEnumeratorGenerator", "true", "--continuationIndentDefnSite","2", "--continuationIndentCallSite", "2", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
         #subprocess.call(["java", "-jar", os.path.join(BASE_PATH, "../tools/scalariform.jar"), "+preserveDanglingCloseParenthesis", "--recurse", d], stdout=subprocess.PIPE)
+        subprocess.call(["java", "-jar", os.path.join(BASE_PATH, "../tools/scalafmt.jar"), "-i", "-s", "defaultWithAlign", "--alignByArrowEnumeratorGenerator", "true", "--continuationIndentDefnSite","2", "--continuationIndentCallSite", "2", "--bestEffortInDeeplyNestedCode", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
+        #subprocess.call(["java", "-jar", os.path.join(BASE_PATH, "../tools/scalafmt.jar"), "-i", "-s", "default", "--maxColumn", "80", "-f", d], stdout=subprocess.PIPE)
 
 def write(name, content):
     #verify that the base path exists

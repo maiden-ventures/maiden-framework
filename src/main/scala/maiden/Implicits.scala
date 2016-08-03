@@ -76,7 +76,9 @@ object DateImplicits {
       row.setObject(idx, localDateToDate(ldt), java.sql.Types.DATE)
     }
 
+
   implicit def dateToLocalDateImplicit(date: Date) = dateToLocalDate(date)
+
   private[this] def dateToLocalDate(date: Date) =
     Instant.ofEpochMilli(date.getTime).atZone(ZoneId.systemDefault).toLocalDate
 
@@ -148,6 +150,8 @@ object DateImplicits {
   implicit val localDateOrder: Ordering[LocalDate] = null
 
   //for date queries
+
+
   implicit class RichLocalDateTime(a: LocalDateTime) {
     def >(b: LocalDateTime) = quote(infix"$a > $b".as[Boolean])
     def >=(b: LocalDateTime) = quote(infix"$a >= $b".as[Boolean])
@@ -155,10 +159,15 @@ object DateImplicits {
     def <=(b: LocalDateTime) = quote(infix"$a <= $b".as[Boolean])
   }
 
+
+  implicit class RichLocalDateTimeOption(a: Option[LocalDateTime]) extends RichLocalDateTime(a.getOrElse(null))
+
+
+
   implicit class RichLocalDate(a: LocalDate) {
     def >(b: LocalDate) = quote(infix"$a > $b".as[Boolean])
     def >=(b: LocalDate) = quote(infix"$a >= $b".as[Boolean])
-    def <(b: LocalDate) = quote(infix"$a < $b".as[Boolean])
+    def < (b: LocalDate) = quote(infix"$a < $b".as[Boolean])
     def <=(b: LocalDate) = quote(infix"$a <= $b".as[Boolean])
   }
 }
@@ -172,9 +181,9 @@ object DBImplicits {
     def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
   }
 
-  implicit class ReturningId[T](a: Action[T]) {
-    def returningId = quote(infix"$a RETURNING ID".as[Query[T]])
-  }
+  //implicit class ReturningId[T](a: Action[T]) {
+  //  def returningId = quote(infix"$a RETURNING ID".as[Query[T]])
+ // }
 
 }
 
