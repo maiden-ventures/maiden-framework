@@ -2,6 +2,7 @@
 def deleteBy[T](col: String, value: T) = {
   val q = col match {
       @@deleteByCase@@
+      case _ => throw(new Exception(s"Unknown column ${col}"))
   }
 
   db.run(q)

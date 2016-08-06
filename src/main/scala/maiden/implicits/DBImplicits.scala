@@ -2,6 +2,7 @@ package maiden.implicits
 
 
 import java.sql.{PreparedStatement, Types}
+import java.time._
 import io.getquill.context.BindedStatementBuilder
 import io.getquill.JdbcContext
 
@@ -43,4 +44,31 @@ trait DBImplicits {
             nullEncoder(idx, sqlType, row)
         }}
     }
+
+  implicit class OptionOps[T](f: Option[T]) {
+    def < (right: T) = quote(infix"$f < $right".as[Boolean])
+    def > (right: T) = quote(infix"$f > $right".as[Boolean])
+    def <= (right: T) = quote(infix"$f <= $right".as[Boolean])
+    def >= (right: T) = quote(infix"$f >= $right".as[Boolean])
+  }
+
+  implicit class DateTimeOps(f: LocalDateTime) {
+    def < (right: LocalDateTime) = quote(infix"$f < $right".as[Boolean])
+    def > (right: LocalDateTime) = quote(infix"$f > $right".as[Boolean])
+    def <= (right: LocalDateTime) = quote(infix"$f <= $right".as[Boolean])
+    def >= (right: LocalDateTime) = quote(infix"$f >= $right".as[Boolean])
+  }
+
+
+  implicit class IsNull(f: Option[_])  {
+    def isNull = quote(infix"$f is null".as[Boolean])
+    def notNull = quote(infix"$f is not null".as[Boolean])
+  }
+
+  implicit class Limit[T](q: Query[T]) {
+    def limit = quote { (offset: Int, size: Int) =>
+      infix"$q limit $offset, $size".as[Query[T]]
+    }
+  }
+
 }

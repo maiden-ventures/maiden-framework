@@ -4,6 +4,7 @@ def findByLike(col: String, value: String) = {
   val q =
     col match {
       @@findByLikeCase@@
+      case _ => throw(new Exception(s"Unknown column ${col}"))
     }
 
     db.run(q).map(x => @@model@@FullResponse.build(x))

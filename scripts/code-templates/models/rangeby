@@ -2,6 +2,7 @@
 def getRangeBy(col: String, start: Int = 0, count: Int = 20) = {
   val q = col match {
       @@rangeByCase@@
+      case _ => throw(new Exception(s"Unknwon column ${col}"))
   }
   db.run(q).map(x => @@model@@FullResponse.build(x))
 }
