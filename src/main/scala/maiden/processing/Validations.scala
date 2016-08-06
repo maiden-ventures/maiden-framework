@@ -34,10 +34,9 @@ object Validations {
       if (rule.apply(value)) Future.value(value)
       else Future.exception(Error(s" ${name} should ${rule.description}"))
 
-    //def should(rule: ValidationRule[T]): Future[T] = should(s""""${value.toString}"""")(rule)
   }
 
-  implicit class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)
+  //class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)
   implicit class EndpointLikeInt(i: Int) extends EndpointLikeOps[Int](i)
   implicit class EndpointLikeLong(l: Long) extends EndpointLikeOps[Long](l)
   implicit class EndpointLikeDouble(d: Double) extends EndpointLikeOps[Double](d)

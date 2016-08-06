@@ -17,6 +17,8 @@ final class Logger(name: String) {
 
   def debug(s:  String) = log.debug(s)
 
+  def debug(s:  String, e: Throwable) = log.debug(s, e)
+
   def warn(s: String) =  log.warn(s)
 
   def warn(s: String, t: Throwable) = log.warn(s,t)
