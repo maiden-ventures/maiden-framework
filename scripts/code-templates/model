@@ -3,6 +3,7 @@ package @@package@@.models
 import java.time._
 import java.util.Date
 import com.twitter.util.Future
+import shapeless._
 import shapeless.syntax.std.tuple._
 import io.circe.java8._
 import maiden.traits._
@@ -21,11 +22,15 @@ case class @@model@@FullResponse (
 ) extends MaidenFullResponse
 
 object @@model@@FullResponse {
+
+  implicit val @@lowerCaseModel@@Gen = Generic[@@model@@]
+  implicit val @@lowerCaseModel@@FullResponseGen = Generic[@@model@@FullResponse]
+
   @@fullResponseBuild@@
 
   def extract(t: @@model@@FullResponse) =
-    (@@model@@.apply _) tupled (@@model@@FullResponse.unapply(t).get
-    .take(@@baseModelFieldCount@@))
+    val values = @@lowerCaseModel@@.to(t).slice(0, @@baseModelFieldCount@@)
+    @@lowerCaseModel@@Gen.from(values)
 
 }
 

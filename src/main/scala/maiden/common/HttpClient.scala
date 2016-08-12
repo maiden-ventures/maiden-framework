@@ -84,7 +84,7 @@ class HttpClient(url: String, timeout: Duration = 30 second, method: String = "G
     } catch {
       case e: TimeoutException  => throw(new ExternalResponseTimeoutException(message = url))
       case e: Exception =>
-        throw(new ExternalResponseException(message = url, exc=Option(e)))
+        throw(new ExternalResponseException(message = e.getMessage, exc=Option(e)))
     }
   }
 

@@ -36,7 +36,7 @@ object Validations {
 
   }
 
-  //class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)
+  class EndpointLikeString(s: String) extends EndpointLikeOps[String](s)
   implicit class EndpointLikeInt(i: Int) extends EndpointLikeOps[Int](i)
   implicit class EndpointLikeLong(l: Long) extends EndpointLikeOps[Long](l)
   implicit class EndpointLikeDouble(d: Double) extends EndpointLikeOps[Double](d)
@@ -64,7 +64,6 @@ object Validations {
       extends EndpointOptionLikeOps[LocalDateTime](o)
 
   implicit class EndpointLikeOBigDecimal(bd: Option[BigDecimal]) extends EndpointOptionLikeOps[BigDecimal](bd)
-
   //date time
   def non_empty_datetime = ValidationRule[LocalDateTime]("be non-empty")  { v: LocalDateTime => v != null}
   //Numerics

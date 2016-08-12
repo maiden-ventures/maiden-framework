@@ -188,15 +188,21 @@ class ModelBuilder:
           magic_methods_str += "\n%s\n" % (getallrefs)
           full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
             val refs = @@model@@.getAllRefs(t)
-            (@@model@@FullResponse.apply _) tupled (@@model@@.unapply(t).get ++  refs)
+            val @@lowerCaseModel@@Vals = @@lowerCaseModel@@Gen.to(t)
+            val refVals = refs.productElements
+            val allVals = @@lowerCaseModel@@Vals ++ refVals
+            @@lowerCaseModel@@FullResponseGen.from(allVals)
           }"""
         else:
           magic_methods_str += "\ndef getAllRefs(%s: %s) = None" % (m.name_lower,m.name)
           full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
-            (@@model@@FullResponse.apply _) tupled (@@model@@.unapply(t).get)
+            val @@lowerCaseModel@@Vals = @@lowerCaseModel@@Gen.to(t)
+            @@lowerCaseModel@@FullResponseGen.from(@@lowerCaseModelVals)
           }"""
 
-        full_response_build = full_response_build.replace("@@model@@", model.name)
+        full_response_build = full_response_build\
+                              .replace("@@model@@", model.name)\
+                              .replace("@@lowerCaseModel", model.name_lower)
 
         matches = []
         for c in create_columns:
