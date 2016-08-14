@@ -108,7 +108,10 @@ class ModelBuilder:
           elif col_name  == "updatedAt":
               col_str = "  updatedAt: Option[LocalDateTime] = Option(LocalDateTime.now)"
           else:
-              col_str = "  %s: Option[%s]" % (col_name, col.scala_type)
+              if col.nullable:
+                  col_str = "  %s: Option[%s] = None" % (col_name, col.scala_type)
+              else:
+                  col_str = "  %s: Option[%s]" % (col_name, col.scala_type)
 
           columns.append("\n%s\n" % (col_str))
 
@@ -147,10 +150,11 @@ class ModelBuilder:
 
         range_by = ""
         for scala_type, columns in columns_by_type.items():
-          range_by_case = "\n".join(["""case "%s" => quote {(s: %s, e: %s) => %s.filter(_.%s >= s).filter(_.%s <= e) }"""  % (c.name, c.scala_type, c.scala_type, model.query_name, c.name, c.name) for c in columns])
-          range_by += "\n\n" + rangeByTemplate\
-                      .replace("@@rangeByCase@@", range_by_case)\
-                      .replace("@@colType@@", scala_type)
+          if scala_type not in ("Boolean",):
+            range_by_case = "\n".join(["""case "%s" => quote {(s: %s, e: %s) => %s.filter(_.%s >= s).filter(_.%s <= e) }"""  % (c.name, c.scala_type, c.scala_type, model.query_name, c.name, c.name) for c in columns])
+            range_by += "\n\n" + rangeByTemplate\
+                        .replace("@@rangeByCase@@", range_by_case)\
+                        .replace("@@colType@@", scala_type)
 
 
         magic_methods_str = "%s\n%s\n%s%s\n" % (
