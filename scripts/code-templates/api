@@ -41,7 +41,7 @@ object @@model@@Api extends MaidenApi {
 
   private[this] val prefix = "api" :: "@@lowerCaseModel@@"
 
-  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ :+: list@@model@@ :+: create@@model@@ :+: update@@model@@ :+: doc@@model@@
+  def @@lowerCaseModel@@Api() = get@@model@@ :+: delete@@model@@ /*:+: list@@model@@ */ :+: create@@model@@ :+: update@@model@@ :+: doc@@model@@
 
   private[this] def doc@@model@@ =
     get(prefix :: "doc" :: authorize) { (u: MaidenAuthUser) => {
@@ -99,6 +99,7 @@ object @@model@@Api extends MaidenApi {
     }
 
 
+/*
   private[this] def list@@model@@ =
     get(prefix :: string("col") :: int("start").should(positive[Int]) :: int("count").should(positive[Int]) :: authorize) {
     (col: String, start: Int, count: Int, u: MaidenAuthUser) =>
@@ -106,4 +107,5 @@ object @@model@@Api extends MaidenApi {
         @@model@@.getRangeBy(col, start, count)
       }
     }
+    */
 }

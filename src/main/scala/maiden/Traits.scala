@@ -7,8 +7,8 @@ trait MaidenEncoder extends Product
 
 trait MaidenModel extends MaidenEncoder {
   val id: Option[Long]
-  val createdAt: LocalDateTime
-  val updatedAt: LocalDateTime
+  val createdAt: Option[LocalDateTime]
+  val updatedAt: Option[LocalDateTime]
 
 }
 
@@ -17,6 +17,7 @@ trait MaidenModelWithoutTimestamps {
 }
 
 trait MaidenFullResponse extends MaidenModel
+
 trait MaidenWithoutTimestampsFullResponse extends MaidenModelWithoutTimestamps
 
 trait MaidenModelObject[M <: MaidenModel, MF <: MaidenFullResponse] {
@@ -25,7 +26,7 @@ trait MaidenModelObject[M <: MaidenModel, MF <: MaidenFullResponse] {
   def get(id: Long): MF
   def findBy[T](col: String, value: T) : List[MF]
   def deleteBy[T](col: String, value: T): Long
-  def getRangeBy(col: String, start: Int = 0, count: Int = 20): List[MF]
+  //def getRangeBy[T](col: String, start: T, end: T): List[MF]
   def create(data: M): Long
   def update(data: M): MF
 }

@@ -104,9 +104,9 @@ class ModelBuilder:
           if col_name == "id":
               col_str = "  id: Option[Long] = Some(-1l)"
           elif col_name  == "createdAt":
-              col_str = "  createdAt: LocalDateTime = LocalDateTime.now"
+              col_str = "  createdAt: Option[LocalDateTime] = Option(LocalDateTime.now)"
           elif col_name  == "updatedAt":
-              col_str = "  updatedAt: LocalDateTime = LocalDateTime.now"
+              col_str = "  updatedAt: Option[LocalDateTime] = Option(LocalDateTime.now)"
           else:
               col_str = "  %s: Option[%s]" % (col_name, col.scala_type)
 
@@ -129,16 +129,28 @@ class ModelBuilder:
         updateTemplate = read_template("models/update")
         createTemplate = read_template("models/create")
 
-        find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
+        types = set([x.scala_type for x in model.columns])
+        columns_by_type = {}
+        for t in types:
+          columns_by_type[t] = [x for x in model.columns if x.scala_type == t]
+
+        #all columns that are not dates
+        find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type != "LocalDateTime"])
+        #like queries can only use string columns
         find_by_like_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s like  lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == "String"])
 
         if len(find_by_like_case) == 0: likeTemplate = ""
 
         delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)).delete }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
-        range_by_case = "\n".join(["""case "%s" => quote { %s.sortBy(c => c.%s).drop(lift(start)).take(lift(count)) }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
+        range_by = ""
+        for scala_type, columns in columns_by_type.items():
+          range_by_case = "\n".join(["""case "%s" => quote {(s: %s, e: %s) => %s.filter(_.%s >= s).filter(_.%s <= e) }"""  % (c.name, c.scala_type, c.scala_type, model.query_name, c.name, c.name) for c in columns])
+          range_by += "\n\n" + rangeByTemplate\
+                      .replace("@@rangeByCase@@", range_by_case)\
+                      .replace("@@colType@@", scala_type)
 
 
         magic_methods_str = "%s\n%s\n%s%s\n" % (
@@ -146,7 +158,7 @@ class ModelBuilder:
           "",
           #likeTemplate.replace("@@findByLikeCase@@", find_by_like_case),
           deleteByTemplate.replace("@@deleteByCase@@", delete_by_case),
-          rangeByTemplate.replace("@@rangeByCase@@", range_by_case)
+          range_by
         )
 
         #now do create and update
@@ -197,12 +209,12 @@ class ModelBuilder:
           magic_methods_str += "\ndef getAllRefs(%s: %s) = None" % (m.name_lower,m.name)
           full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
             val @@lowerCaseModel@@Vals = @@lowerCaseModel@@Gen.to(t)
-            @@lowerCaseModel@@FullResponseGen.from(@@lowerCaseModelVals)
+            @@lowerCaseModel@@FullResponseGen.from(@@lowerCaseModel@@Vals)
           }"""
 
         full_response_build = full_response_build\
                               .replace("@@model@@", model.name)\
-                              .replace("@@lowerCaseModel", model.name_lower)
+                              .replace("@@lowerCaseModel@@", model.name_lower)
 
         matches = []
         for c in create_columns:
@@ -232,6 +244,7 @@ class ModelBuilder:
         #TODO: Missing setReferencedColumn, removeReferencedColumn
 
         template = template.replace("@@model@@", model.name) \
+                   .replace("@@lowerCaseModel@@", model.name_lower)\
                    .replace("@@formattedCols@@", formatted_columns)\
                    .replace("@@appNameUpper@@", self.app.name) \
                    .replace("@@refFields@@", ref_fields_str) \

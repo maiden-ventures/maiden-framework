@@ -1,6 +1,6 @@
 
 def update(data: @@model@@) = {
-  val d = data.copy(updatedAt = LocalDateTime.now)
+  val d = data.copy(updatedAt = Option(LocalDateTime.now))
   val q = quote {
     @@queryName@@.filter(_.id == lift(d.id)).update
   }

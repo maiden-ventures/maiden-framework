@@ -3,6 +3,7 @@ package maiden.implicits
 
 import java.sql.{PreparedStatement, Types}
 import java.time._
+import scala.reflect.ClassTag
 import io.getquill.context.BindedStatementBuilder
 import io.getquill.JdbcContext
 
@@ -70,5 +71,36 @@ trait DBImplicits {
       infix"$q limit $offset, $size".as[Query[T]]
     }
   }
+
+  implicit class OptionBetween[T](f: Option[T]) {
+    def between(start: T, end: T) =
+      quote {
+        (start: T, end: T) =>
+          f >= start && f <= end
+          //infix"$f between $start and $end".as[Boolean]
+      }
+  }
+
+  implicit class Between[T: ClassTag](f: T) extends OptionBetween(Option(f))
+  implicit class DateBetween(f: LocalDateTime)
+      extends OptionBetween[LocalDateTime](Option(f))
+
+
+  /*
+  def between[T] = quote {
+    new {
+      def apply[T](start: T, end: T, value: T) =
+        if (start > value && end < value) true
+        else false
+    }
+  }
+
+  val between = quote {
+    new {
+      def apply[T](xs: Query[T])(p: T => Boolean) =
+        xs.filter(p(_)).nonEmpty
+    }
+}
+   */
 
 }
