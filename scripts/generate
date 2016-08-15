@@ -4,7 +4,7 @@
 #  This script needs a ton of refactoring... it's pretty much brute force now  #
 ################################################################################
 try:
-    from yaml import load, dumpCDumper as Dumper
+    from yaml import load, Loader, dumpCDumper as Dumper
 except ImportError:
     from yaml import Loader, Dumper
 
@@ -15,6 +15,11 @@ import shutil
 from datetime import datetime
 import subprocess
 import argparse
+from collections import OrderedDict
+
+#for diffing models
+from deepdiff import DeepDiff
+from pprint import pprint
 
 from helpers import *
 from migrations import MigrationBuilder
@@ -28,24 +33,10 @@ from default_models import *
 from app import *
 
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser("generate")
-    parser.add_argument("-p", "--project-file", help="location of project.yml", required=True)
-    parser.add_argument("-m", "--model-file", help="location of model.yml", required=True)
-    parser.add_argument("-d", "--source-directory", help="location generated sources", default=".")
-    args = parser.parse_args()
-
-    model_stream = open(os.path.abspath(args.model_file))
-    app_stream = open(args.project_file)
-    app_data = load(app_stream, Loader=Loader)
-
-    app_data["app"]["source_directory"] = os.path.abspath(args.source_directory)
-
-    gen_options = app_data['generator']
-
+#read in a yaml file for models and do some  cleanup
+def read_models(model_stream, casing):
     model_data = load(model_stream, Loader=Loader)
-
     #automatically add user tables if selected
     if 'users' in app_data['app']:
         model_data.append(DEFAULT_USER_MODEL)
@@ -54,9 +45,6 @@ if __name__ == "__main__":
     #make sure that all models have an id and timestamps
     for index in range(len(model_data)):
         model = model_data[index]
-        casing = "snake_case"
-        if "casing" in app_data["db"]:
-            casing = app_data["db"]["casing"]
         Model(model, casing)
         cols = model["columns"]
 
@@ -117,6 +105,99 @@ if __name__ == "__main__":
                 col['formatters'].extend(get_formatters(col['type']))
 
             model_data[index]["columns"][i] = col
+    return model_data
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser("generate")
+    parser.add_argument("-p", "--project-file", help="location of project.yml", required=True)
+    parser.add_argument("-m", "--model-file", help="location of model.yml", required=True)
+    parser.add_argument("-d", "--source-directory", help="location generated sources", default=".")
+    args = parser.parse_args()
+
+    model_stream_file = os.path.abspath(args.model_file)
+    model_stream = open(model_stream_file)
+    app_stream = open(args.project_file)
+
+    #make copies so we can do diffs on the models
+    app_data = load(app_stream, Loader=Loader)
+
+    app_data["app"]["source_directory"] = os.path.abspath(args.source_directory)
+
+
+    gen_options = app_data.get('generator', {})
+    casing = "snake_case"
+    if "casing" in app_data["db"]:
+        casing = app_data["db"]["casing"]
+
+    model_data = read_models(model_stream, casing)
+    try:
+        old_model_stream = open(
+            os.path.abspath(args.model_file)\
+                                .replace(".yml", "-backup.yml")
+        )
+        old_model_data = read_models(old_model_stream, casing)
+    except Exception, e:
+        old_model_data = {}
+
+
+    #copy the new models.yml to models-backup.yml
+    shutil.copyfile(model_stream_file, model_stream_file.replace(".yml", "-backup.yml"))
+
+
+    def get(data, key):
+        for k in data:
+            if k['name'] == key:
+                return k
+        return {}
+
+    def to_list(dct):
+        lst = []
+        for k,v in dct.items():
+            lst.append(v)
+        return lst
+
+    #models in old that are not in new... eg, drop
+    migrations = OrderedDict()
+    for meta in old_model_data:
+        m = get(model_data, meta['name'])
+        if m == {}:
+            migrations[meta['name']] = {"drop_table": meta['name'] }
+
+    for meta in model_data:
+        old_meta = get(old_model_data, meta['name'])
+
+        #if it exsists in new but not in old
+        if old_meta == {}:
+            diff = {'create_table': meta}
+        else:
+            diff = DeepDiff(old_meta, meta,  ignore_order = True)
+
+        if diff != {}:
+            migrations[meta['name']] = {
+                "create_table": diff.get("create_table", {}),
+                "added": to_list(diff.get('iterable_item_added', {})),
+                "removed": to_list(diff.get('iterable_item_removed', {})),
+                "altered": []
+        }
+
+        #cleanup up cases where a column is in both added and removed
+        #this indicates an 'alter'
+        if meta['name'] in migrations:
+            added = migrations[meta['name']]['added']
+            removed = migrations[meta['name']]['removed']
+
+            for c in added:
+                for c2 in removed:
+                    if c['name'] == c2['name']:
+                        migrations[meta['name']]['altered'].append(c)
+                        migrations[meta['name']]['added'] =  [x for x in migrations[meta['name']]['added'] if x['name'] !=c['name']]
+                        migrations[meta['name']]['removed'] =  [x for x in migrations[meta['name']]['removed'] if x['name'] !=c['name']]
+        #pprint(diff, indent=2)
+    pprint(migrations, indent=2)
+
+    app_data['migrations'] = migrations
 
     app = App(app_data, model_data, casing)
 

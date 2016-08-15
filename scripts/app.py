@@ -10,9 +10,13 @@ class App:
         self.db_info = self.info["db"]
         self.social_info = self.info["social"]
 
+        self.casing = casing
+
         self.model_info = model_info
         #build out our models
         self.models = [Model(model, casing) for model in model_info]
+
+        self.migrations = self.info['migrations']
 
         #build out meta info
         self.name = camelize(self.app_info["name"])
@@ -35,8 +39,13 @@ class App:
         self.certificate_path = self.app_info.get("certificate_path", "")
         self.key_path = self.app_info.get("key_path", "")
 
-        #make sure our paths exist
+        if 'generator' in info and "prompt_overwrite" in info['generator']:
+            self.prompt_overwrite = info['generator']['prompt_overwrite']
+        else:
+            self.prompt_overwrite = True
 
+
+        #make sure our paths exist
         print("Creating directories under %s" % (self.source_directory))
         make_dir(self.config_path)
         make_dir(os.path.join(self.source_directory, "project"))
@@ -59,9 +68,14 @@ class Model:
     def __init__(self, model_info, casing):
         self.info = model_info
 
+
         self.casing = casing
 
-        self.name = camelize(self.info["name"])
+        try:
+            self.name = camelize(self.info["name"])
+        except:
+            print self.info
+            raise("DONE")
         self.name_lower = camelize(self.info["name"], False)
         if "db_name" in model_info:
             self.db_name = model_info["db_name"]

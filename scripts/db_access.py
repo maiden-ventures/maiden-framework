@@ -68,7 +68,10 @@ class DbAccessBuilder:
                         .replace("@@maxRequestSize@@", str(self.app.max_request_size))
 
         #now write out the application.properties
-        write(os.path.join(self.app.config_path, "maiden-%s.conf" % (self.app.environment)), props)
+        print(self.app)
+        write(os.path.join(self.app.config_path,
+                           "maiden-%s.conf" % (self.app.environment)),
+              props, self.app.prompt_overwrite)
 
         schema = read_template("schema")
         schema_list = []
@@ -77,7 +80,7 @@ class DbAccessBuilder:
             uname = m.name
 
             cols = ",".join(['_.%s -> "%s"' % (c.name, c.db_name) for c in m.columns])
-            s = 'lazy val %sQuery = quote(query[%s].schema(_.entity("%s").columns(%s).generated(_.id)))' % (lname, uname, m.db_name, cols)
+            s = 'lazy val %sQuery = quote(query[%s].schema(_.entity("%s").columns(%s)/*.generated(_.id)*/))' % (lname, uname, m.db_name, cols)
             schema_list.append(s)
 
         schema_list_str = "\n\n".join(schema_list)

@@ -16,8 +16,9 @@ class SbtBuilder:
         self.sbt_template = self.sbt_template\
                                 .replace("@@namespace@@", self.app.namespace)\
                                 .replace("@@appName@@", self.app.name_lower)
-        write(os.path.join(self.app.source_directory, "build.sbt"), self.sbt_template)
+        write(os.path.join(self.app.source_directory, "build.sbt"),
+              self.sbt_template, self.app.prompt_overwrite)
 
     def build_plugins(self):
         write(os.path.join(self.app.source_directory, "project", "plugins.sbt"),
-              self.plugins_template)
+              self.plugins_template, self.app.prompt_overwrite)

@@ -1,6 +1,6 @@
 def create(data: @@model@@) = {
   val q = quote {
-    @@queryName@@.insert
+    @@queryName@@.insert.returning(_.id)
   }
   db.run(q)(data)
 }

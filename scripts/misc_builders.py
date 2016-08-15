@@ -49,7 +49,7 @@ def build_app_ini(app):
     else:
         out = out.replace("@@httpsInterface@@", "")
 
-    write(file_name, out)
+    write(file_name, out, app.prompt_overwrite)
 
 def copy_tools(app):
     base = os.path.join(app.source_directory, "tools")

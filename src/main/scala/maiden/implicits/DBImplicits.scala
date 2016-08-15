@@ -18,6 +18,8 @@ trait DBImplicits {
 
   //this is an override for quill until it supports inserting Option[LocalDateTime]
 
+  /*
+
   private[this] val nullEncoder = encoder[Int](_.setNull)
 
   override implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
@@ -45,6 +47,7 @@ trait DBImplicits {
             nullEncoder(idx, sqlType, row)
         }}
     }
+   */
 
   implicit class OptionOps[T](f: Option[T]) {
     def < (right: T) = quote(infix"$f < $right".as[Boolean])
