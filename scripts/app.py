@@ -110,7 +110,7 @@ class ForeignKey:
 
 
         self.on_delete = camelize(col.info["references"].get("on_delete", "SetDefault"))
-        self.name = "fk_%s_%s" % (self.ref_table, self.ref_column)
+        self.name = "fk_%s_%s_%s_%s" % (self.table, self.field_name, self.ref_table, self.ref_column)
 
     def __str__(self):
         return "ref_table: %s, ref_column: %s, table: %s, column: %s" % (self.ref_table, self.ref_column, self.table, self.field_name)
@@ -128,6 +128,7 @@ class Column:
         self.db_type = DB_MAP[self.named_type]["db"]
         self.index = self.info.get("index", False)
         self.limit = self.info.get("limit", None)
+        self.precision = self.info.get("precision", "10,2")
 
         if "db_name" in self.info:
             self.db_name = self.info["db_name"]
@@ -167,5 +168,20 @@ class Column:
         if exists_and_true(self.info, 'nullable'): modifiers.remove("NotNull")
         if 'default' in self.info: modifiers.append("""Default("%s")""" % (self.info['default']))
         if 'limit' in self.info: modifiers.append("""Limit(%s)""" % (self.info['limit']))
+
+        if 'limit' not in self.info and self.scala_type in ('String'):
+            modifiers.append("Limit(255)")
+
+        #handle precision for decimals
+        if self.scala_type in ('BigDecimal',):
+            if 'precision' not in self.info:
+                modifiers.append("Precision(10)")
+                modifiers.append("Scale(2)")
+            else:
+                p = self.info['precision'].split(",")
+                precision = p[0]
+                scale = p[1]
+                modifiers.append("Precision(%s)" % (precision))
+                modifiers.append("Scale(%s)" % (scale))
 
         self.migration_modifiers = ', '.join(modifiers)

@@ -2,5 +2,5 @@ def create(data: @@model@@) = {
   val q = quote {
     @@queryName@@.insert.returning(_.id)
   }
-  db.run(q)(data)
+  db.run(q)(List(data)).head.get
 }

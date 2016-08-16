@@ -8,8 +8,7 @@ DB_MAP= {
     "date": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
     "timestamp": {"db": "timestamp", "scala": "LocalDateTime", "validations": []},
     "boolean": {"db": "boolean", "scala": "Boolean", "validations": []},
-
-    "money": {"db": "decimal(10,2)", "scala": "BigDecimal", "validations" :["money"]},
+    "money": {"db": "decimal", "scala": "BigDecimal", "validations" :["money"]},
     "email": {"db": "varchar", "scala":"String", "validations": ['email']},
     "phone": {"db": "varchar", "scala":"String", "validations": [{'phone': "US"}],
               "formatters": ["phone"]},
