@@ -12,7 +12,7 @@ import maiden.exceptions._
 import maiden.types.MaidenApi
 import maiden.http.Render._
 import maiden.processing.Validations._
-import @@package@@.models.{@@model@@, @@model@@FullResponse}
+import @@package@@.models.@@model@@
 import maiden.auth.MaidenAuthUser
 @@securityImport@@
 
@@ -66,7 +66,7 @@ object @@model@@Api extends MaidenApi {
     get(prefix :: long("id").should(positive[Long]) :: authorize) {
     (id: Long, u: MaidenAuthUser) =>
       render {
-        @@model@@.get(id)
+        @@model@@.get(id).full
       }
     }
 
@@ -85,7 +85,7 @@ object @@model@@Api extends MaidenApi {
         validate@@model@@(@@lowerCaseModel@@)
         val id = @@model@@.create(@@lowerCaseModel@@.format)
         val instance = @@model@@.findBy("id", id)
-        instance.head
+        instance.headOption.map(_.full)
       }
     }
 
@@ -93,10 +93,10 @@ object @@model@@Api extends MaidenApi {
     post(prefix :: long("id").should(positive[Long]) :: post@@model@@ :: authorize) {
     (id: Long, @@lowerCaseModel@@: @@model@@ => @@model@@, u: MaidenAuthUser) =>
       render {
-          val old@@model@@ = @@model@@FullResponse.extract(@@model@@.get(id))
+          val old@@model@@ = @@model@@.get(id)
           val new@@model@@ = @@lowerCaseModel@@(old@@model@@).format
           validate@@model@@(new@@model@@)
-          @@model@@.update(new@@model@@)
+          @@model@@.update(new@@model@@).full
       }
     }
 
@@ -106,7 +106,7 @@ object @@model@@Api extends MaidenApi {
     get(prefix :: string("col") :: int("start").should(positive[Int]) :: int("count").should(positive[Int]) :: authorize) {
     (col: String, start: Int, count: Int, u: MaidenAuthUser) =>
       render {
-        @@model@@.getRangeBy(col, start, count)
+        @@model@@.getRangeBy(col, start, count).map(_.full)
       }
     }
     */

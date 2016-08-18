@@ -2,8 +2,10 @@ package @@package@@.models
 
 import java.time._
 import java.util.Date
-import com.twitter.util.Future
+import com.twitter.util.{Await, Future }
+import com.twitter.conversions.time._
 import shapeless._
+import shapeless.ops.hlist._
 import shapeless.syntax.std.tuple._
 import io.circe.java8._
 import maiden.traits._
@@ -14,9 +16,27 @@ import maiden.processing.Formatters._
 import @@appNameUpper@@Schema._
 import maiden.implicits.ExecutionImplicits._
 
+object  @@model@@Implicits {
+  //implicit val @@lowerCaseModel@@Gen = Generic[@@model@@]
+  implicit val @@lowerCaseModel@@FullResponseGen = Generic[@@model@@FullResponse]
+}
+
+import @@model@@Implicits._
+
 case class @@model@@ (
   @@baseFields@@
 ) extends MaidenModel {
+
+  @@caseClassReferences@@
+
+  def full = {
+    val refs = @@model@@.getAllRefs(this)
+    val refVals = refs.productElements
+    val t = @@model@@FullResponse(this)
+    val @@lowerCaseModel@@Vals= @@lowerCaseModel@@FullResponseGen.to(t).slice(0, 1)
+    val allVals = @@lowerCaseModel@@Vals ++ refVals
+    @@lowerCaseModel@@FullResponseGen.from(allVals)
+  }
 
   def save() = id match {
     case Some(i) if i != -1l => {
@@ -38,7 +58,7 @@ case class @@model@@ (
 
 }
 
-object @@model@@ extends MaidenModelObject[@@model@@, @@model@@FullResponse] {
+object @@model@@ {
 
   def exists(id: Long) = {
     val q = quote {
@@ -64,21 +84,6 @@ object @@model@@ extends MaidenModelObject[@@model@@, @@model@@FullResponse] {
 }
 
 case class @@model@@FullResponse (
-  @@baseFields@@
-
+  @@lowerCaseModel@@: @@model@@
   @@refFields@@
-) extends MaidenFullResponse
-
-object @@model@@FullResponse {
-
-  implicit val @@lowerCaseModel@@Gen = Generic[@@model@@]
-  implicit val @@lowerCaseModel@@FullResponseGen = Generic[@@model@@FullResponse]
-
-  @@fullResponseBuild@@
-
-  def extract(t: @@model@@FullResponse) = {
-    val values = @@lowerCaseModel@@FullResponseGen.to(t).slice(0, @@baseModelFieldCount@@)
-    @@lowerCaseModel@@Gen.from(values)
-  }
-
-}
+)

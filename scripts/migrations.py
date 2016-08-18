@@ -99,7 +99,7 @@ class MigrationBuilder:
         self.columns.append("""alterColumn(table, "%s", %s, %s)""" % (col.db_name, TYPE_MAPPINGS[col.db_type], col.migration_modifiers))
       else:
         self.columns.append("""alterColumn(table, "%s", "%s", %s)""" % (col.db_name, TYPE_MAPPIMGS[col.db_type]))
-
+      self.create_index(table, col)
 
   def create_index(self, table, col):
       if col.index:

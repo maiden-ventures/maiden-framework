@@ -1,4 +1,4 @@
 
 def getAllRefs(@@lowerCaseModel@@: @@model@@) = {
-  @@refComprehensions@@
+  @@refs@@
 }
