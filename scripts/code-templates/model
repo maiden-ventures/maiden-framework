@@ -17,7 +17,6 @@ import @@appNameUpper@@Schema._
 import maiden.implicits.ExecutionImplicits._
 
 object  @@model@@Implicits {
-  //implicit val @@lowerCaseModel@@Gen = Generic[@@model@@]
   implicit val @@lowerCaseModel@@FullResponseGen = Generic[@@model@@FullResponse]
 }
 

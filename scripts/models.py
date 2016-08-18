@@ -226,7 +226,7 @@ class ModelBuilder:
             @@lowerCaseModel@@FullResponseGen.from(allVals)
           }"""
         else:
-          magic_methods_str += "\ndef getAllRefs(%s: %s) = None" % (model.name_lower,model.name)
+          magic_methods_str += "\ndef getAllRefs(%s: %s) = ()" % (model.name_lower,model.name)
           full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
             val @@lowerCaseModel@@Vals = @@lowerCaseModel@@Gen.to(t)
             @@lowerCaseModel@@FullResponseGen.from(@@lowerCaseModel@@Vals)
