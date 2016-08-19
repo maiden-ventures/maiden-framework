@@ -14,7 +14,7 @@ def build_boot(app):
     write(file_name, out)
 
 def build_api_service(app):
-    apis = ["%sApi.%sApi" % (m.name, m.name_lower) for m in app.models]
+    apis = ["%sApi.%sApi" % (m.name, m.name_lower) for m in app.models if m.generate_api]
     apis = " :+: ".join(apis)
 
     service = read_template("api-service")

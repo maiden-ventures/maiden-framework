@@ -16,7 +16,7 @@ class EncoderBuilder:
 
         package_name = self.app.package
 
-        for model in self.app.models:
+        for model in [m for m in self.app.models if m.generate_model]:
             model_name = model.name
             lower_model_name = model.name_lower
             fields = [x.name for x in model.columns]

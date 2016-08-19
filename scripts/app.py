@@ -72,8 +72,10 @@ class Model:
         self.casing = casing
         #whether to generate an API for this model
         self.generate_api = self.info.get("generate_api", True)
-        print(self.generate_api)
+        #whether to generate model classes for this model
+        self.generate_model = self.info.get("generate_model", True)
 
+        self.generate_migration = self.info.get("generate_migration", True)
 
         try:
             self.name = camelize(self.info["name"])

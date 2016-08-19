@@ -58,7 +58,7 @@ class ModelBuilder:
 
     #make sure the models directory exists
 
-    for model in self.app.models:
+    for model in [m for m in self.app.models if m.generate_model]:
 
         columns = []
 

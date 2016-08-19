@@ -160,12 +160,12 @@ if __name__ == "__main__":
 
     #models in old that are not in new... eg, drop
     migrations = OrderedDict()
-    for meta in old_model_data:
+    for meta in [m for m in old_model_data if m.get('generate_migration', True)]:
         m = get(model_data, meta['name'])
         if m == {}:
             migrations[meta['name']] = {"drop_table": meta['name'] }
 
-    for meta in model_data:
+    for meta in [m for m in model_data if m.get('generate_migration', True)]:
         old_meta = get(old_model_data, meta['name'])
 
         #if it exsists in new but not in old
