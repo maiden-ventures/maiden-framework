@@ -3,7 +3,7 @@ import NativePackagerHelper._
 organization := "com.maiden"
 
 
-version := "0.1.2"
+version := "0.1.5"
 
 scalaVersion := "2.11.8"
 
@@ -57,7 +57,7 @@ lazy val `maiden-framework` = (project in file("."))
       "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
 
       //for hashing functions
-      "com.roundeights" %% "hasher" % "1.0.0",
+      "com.roundeights" %% "hasher" % "1.2.0",
 
       //for working with Facebook
       "com.restfb" % "restfb" % "1.14.0",
@@ -102,6 +102,9 @@ lazy val `maiden-framework` = (project in file("."))
     resolvers += "Twitter" at "http://maven.twttr.com",
 
     resolvers += Resolver.sonatypeRepo("snapshots"),
+
+    resolvers += "RoundEights" at "http://maven.spikemark.net/roundeights",
+
 
     scalacOptions ++= Seq("-Xlint", "-unchecked", "-deprecation"),
 

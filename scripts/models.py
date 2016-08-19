@@ -25,19 +25,28 @@ class ModelBuilder:
 
       return s
 
-  def build_references(self, ref_name, model_name, field_name, model2_name, field2_name, ref_type):
-      #grab a foreign key reference
-      s = """def get%s(id: Long) = {
+  def build_references(self, ref_name, model_name, field_name,
+                       model2_name, field2_name, ref_type,
+                       column_type):
+      #the method in the companion object
+      s = """def get%s(%s: %s) = {
       val q = quote {
-        %sQuery.filter(_.%s == lift(id))
-      }""" % (camelize(ref_name), camelize(model2_name, False), field2_name)
+        %sQuery.filter(_.%s == lift(%s))
+      }""" % (camelize(ref_name), camelize(field_name, False), column_type,
+              camelize(model2_name, False), field2_name,
+              camelize(field_name, False))
 
       if ref_type == "ONE_TO_MANY":
         s += "\n\n  db.run(q)"
       else:
         s += "\n\n db.run(q).headOption"
       s += "\n}"
-      return s
+
+      #the reference in the case class
+      case_access = """
+      lazy val %s = %s.map(v => %s.get%s(v))
+      """ % (ref_name, camelize(field_name, False), camelize(model_name), camelize(ref_name))
+      return (s, case_access)
 
   def build(self):
 
@@ -80,6 +89,7 @@ class ModelBuilder:
         #get all possible reverse references to this model
         ref_fields = []
         reference_methods = ""
+        case_class_references = ""
         for m in self.app.models:
             if m.db_name != model.db_name:
                 for c in m.columns:
@@ -88,7 +98,9 @@ class ModelBuilder:
                         (tb,co) = get_scala_names(_ref.ref_table, _ref.ref_column)
                         if tb == model.name:
                             (ref_model, ref_field) = get_scala_names(_ref.table, _ref.column)
-                            reference_methods += "\n\n" + self.build_references(_ref.scala_name, tb, co,  ref_model, ref_field, _ref.ref_type)
+                            ref_methods = self.build_references(_ref.scala_name, tb, co,  ref_model, ref_field, _ref.ref_type, c.scala_type)
+                            reference_methods += "\n\n" + ref_methods[0]
+                            case_class_references += "\n\n" + ref_methods[1]
 
                             #(name, type, local_model, local_field, ref_model, ref_field)
                             ref_fields.append((_ref.scala_name,
@@ -191,18 +203,22 @@ class ModelBuilder:
           ref_comprehensions = []
           #(name, type local_model, local_field, ref_model, ref_field)
           for r in ref_fields:
-              ref_comprehensions.append("get%s(%s.%s.get)" %(camelize(r[0]), model.name_lower, r[6]))
-              #ref_comprehensions.append("%s <-query[%s].filter(x => x.%s == lift(%s.%s))" % (r[0], r[4], r[5], model.name_lower, r[3]))
+              ref_comprehensions.append("Future { get%s(%s.%s.get) }" %(camelize(r[0]), model.name_lower, r[6]))
 
-          ref_comprehensions = ("Tuple%s(" + ",".join(ref_comprehensions) + ")") % (str(len(ref_comprehensions)))
+          ref_futures = ",\n\n".join(ref_comprehensions)
+
+
+          if len(ref_comprehensions) == 1:
+            refs = "Tuple1(Await.result(%s, 1 second))" % (ref_futures)
+          else:
+            refs = "Await.result(\nFuture.join(\n%s\n), 1 second)" % (ref_futures)
+
           getallrefs = read_template("models/getallrefs")\
-                      .replace("@@refComprehensions@@", ref_comprehensions) \
-                      .replace("@@refYields@@", ref_yields) \
-                      .replace("@@refCount@@", str(ref_count)) \
+                      .replace("@@refs@@", refs) \
                       .replace("@@lowerCaseModel@@", model.name_lower)
 
           magic_methods_str += "\n%s\n" % (getallrefs)
-          full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
+          full_response_build = """def build(t: @@model@@) = {
             val refs = @@model@@.getAllRefs(t)
             val @@lowerCaseModel@@Vals = @@lowerCaseModel@@Gen.to(t)
             val refVals = refs.productElements
@@ -210,7 +226,7 @@ class ModelBuilder:
             @@lowerCaseModel@@FullResponseGen.from(allVals)
           }"""
         else:
-          magic_methods_str += "\ndef getAllRefs(%s: %s) = None" % (m.name_lower,m.name)
+          magic_methods_str += "\ndef getAllRefs(%s: %s) = ()" % (model.name_lower,model.name)
           full_response_build = """def build(t: @@model@@): @@model@@FullResponse = {
             val @@lowerCaseModel@@Vals = @@lowerCaseModel@@Gen.to(t)
             @@lowerCaseModel@@FullResponseGen.from(@@lowerCaseModel@@Vals)
@@ -234,7 +250,8 @@ class ModelBuilder:
 
 
         template = template.replace("@@magicMethods@@", magic_methods_str) \
-          .replace("@@referenceMethods@@", reference_methods)
+          .replace("@@referenceMethods@@", reference_methods) \
+          .replace("@@caseClassReferences@@", case_class_references)
 
 
 
@@ -253,7 +270,6 @@ class ModelBuilder:
                    .replace("@@appNameUpper@@", self.app.name) \
                    .replace("@@refFields@@", ref_fields_str) \
                    .replace("@@refConstructorFields@@", ref_constructor_fields) \
-                   .replace("@@refFromDBFields@@", ref_from_db) \
                    .replace("@@baseConstructorFields@@", base_constructor_fields) \
                    .replace("@@package@@", self.app.package) \
                    .replace("@@queryName@@", self.query_name) \

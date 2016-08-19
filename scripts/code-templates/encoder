@@ -25,14 +25,17 @@ trait @@model@@ResponseEncoders {
 
   implicit val @@lowerCaseModel@@FulResponseDecoder: Decoder[@@model@@FullResponse] = deriveDecoder[@@model@@FullResponse]
 
-  implicit def @@lowerCaseModel@@ResponseFullResponseEncoder: EncodeResponse[@@model@@FullResponse] =
+  implicit def @@lowerCaseModel@@ResponseFEncoder: EncodeResponse[@@model@@] =
     EncodeResponse(ContentTypeJson)(data =>
       Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
 
-  implicit def @@lowerCaseModel@@ResponseFullListResponseEncoder: EncodeResponse[List[@@model@@FullResponse]] =
+  implicit def @@lowerCaseModel@@ResponseListResponseEncoder: EncodeResponse[List[@@model@@]] =
     EncodeResponse(ContentTypeJson)(data =>
       Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
 
+  implicit def @@lowerCaseModel@@FullResponseListResponseEncoder: EncodeResponse[List[@@model@@FullResponse]] =
+    EncodeResponse(ContentTypeJson)(data =>
+      Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
 
 }
 

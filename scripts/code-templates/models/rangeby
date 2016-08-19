@@ -4,5 +4,5 @@ def getRangeBy(col: String, start: @@colType@@, end: @@colType@@) = {
       @@rangeByCase@@
       case _ => throw(new Exception(s"Unknwon column ${col}"))
   }
-  db.run(q)(start, end).map(x => @@model@@FullResponse.build(x))
+  db.run(q)(start, end)
 }
