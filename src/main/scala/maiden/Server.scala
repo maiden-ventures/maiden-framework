@@ -14,7 +14,6 @@ import com.twitter.finagle.ssl.Ssl
 import com.twitter.server.Lifecycle.Warmup
 import com.twitter.server.{Admin, AdminHttpServer, Lifecycle, Stats}
 import com.twitter.util.{Await, CountDownLatch}
-import maiden.http.StatsFilter
 import maiden.util.log.Logger
 import maiden.config.MaidenConfig
 
