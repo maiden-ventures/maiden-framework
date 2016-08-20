@@ -1,23 +1,23 @@
 package @@package@@.models
 
 import java.time._
-import java.util.Date
+import scala.language.postfixOps
+import scala.language.implicitConversions
 import com.twitter.util.{Await, Future }
 import com.twitter.conversions.time._
-import shapeless._
-import shapeless.ops.hlist._
+import shapeless.Generic
 import shapeless.syntax.std.tuple._
-import io.circe.java8._
 import maiden.traits._
 import maiden.models.@@dbType@@._
 import db._
 import maiden.exceptions._
 import maiden.processing.Formatters._
 import @@appNameUpper@@Schema._
-import maiden.implicits.ExecutionImplicits._
 
 object  @@model@@Implicits {
   implicit val @@lowerCaseModel@@FullResponseGen = Generic[@@model@@FullResponse]
+  implicit def @@lowerCaseModel@@ToFull(@@lowerCaseModel@@: @@model@@): @@model@@FullResponse = @@lowerCaseModel@@.full
+  implicit def fullTo@@model@@(@@lowerCaseModel@@Full: @@model@@FullResponse): @@model@@ = @@lowerCaseModel@@Full.@@lowerCaseModel@@
 }
 
 import @@model@@Implicits._
