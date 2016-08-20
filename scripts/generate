@@ -148,7 +148,7 @@ if __name__ == "__main__":
 
     def get(data, key):
         for k in data:
-            if k['name'] == key:
+            if k['db_name'] == key:
                 return k
         return {}
 
@@ -161,12 +161,12 @@ if __name__ == "__main__":
     #models in old that are not in new... eg, drop
     migrations = OrderedDict()
     for meta in [m for m in old_model_data if m.get('generate_migration', True)]:
-        m = get(model_data, meta['name'])
+        m = get(model_data, meta['db_name'])
         if m == {}:
-            migrations[meta['name']] = {"drop_table": meta['name'] }
+            migrations[meta['db_name']] = {"drop_table": meta['db_name'] }
 
     for meta in [m for m in model_data if m.get('generate_migration', True)]:
-        old_meta = get(old_model_data, meta['name'])
+        old_meta = get(old_model_data, meta['db_name'])
 
         #if it exsists in new but not in old
         if old_meta == {}:
@@ -175,7 +175,7 @@ if __name__ == "__main__":
             diff = DeepDiff(old_meta, meta,  ignore_order = True)
 
         if diff != {}:
-            migrations[meta['name']] = {
+            migrations[meta['db_name']] = {
                 "create_table": diff.get("create_table", {}),
                 "added": to_list(diff.get('iterable_item_added', {})),
                 "removed": to_list(diff.get('iterable_item_removed', {})),
@@ -184,16 +184,16 @@ if __name__ == "__main__":
 
         #cleanup up cases where a column is in both added and removed
         #this indicates an 'alter'
-        if meta['name'] in migrations:
-            added = migrations[meta['name']]['added']
-            removed = migrations[meta['name']]['removed']
+        if meta['db_name'] in migrations:
+            added = migrations[meta['db_name']]['added']
+            removed = migrations[meta['db_name']]['removed']
 
             for c in added:
                 for c2 in removed:
                     if c['name'] == c2['name']:
-                        migrations[meta['name']]['altered'].append(c)
-                        migrations[meta['name']]['added'] =  [x for x in migrations[meta['name']]['added'] if x['name'] !=c['name']]
-                        migrations[meta['name']]['removed'] =  [x for x in migrations[meta['name']]['removed'] if x['name'] !=c['name']]
+                        migrations[meta['db_name']]['altered'].append(c)
+                        migrations[meta['db_name']]['added'] =  [x for x in migrations[meta['db_name']]['added'] if x['name'] !=c['name']]
+                        migrations[meta['db_name']]['removed'] =  [x for x in migrations[meta['db_name']]['removed'] if x['name'] !=c['name']]
         #pprint(diff, indent=2)
     pprint(migrations, indent=2)
 
