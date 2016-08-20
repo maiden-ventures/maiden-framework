@@ -52,7 +52,7 @@ lazy val @@appName@@ = (project in file("."))
     }.evaluated,
 
     libraryDependencies ++= Seq(
-      "com.maiden" %% "maiden-framework" % "0.1.5",
+      "com.maiden" %% "maiden-framework" % "0.2.0",
       "io.getquill" %% "quill-core" % "0.8.1-SNAPSHOT",
       "io.getquill" %% "quill-sql" % "0.8.1-SNAPSHOT",
       "io.getquill" %% "quill-jdbc" % "0.8.1-SNAPSHOT",

@@ -3,7 +3,7 @@ import NativePackagerHelper._
 organization := "com.maiden"
 
 
-version := "0.1.5"
+version := "0.2.0"
 
 scalaVersion := "2.11.8"
 
@@ -81,6 +81,7 @@ lazy val `maiden-framework` = (project in file("."))
       "joda-time" % "joda-time" % "2.9.3",
       "org.joda" % "joda-convert" % "1.8",
       "com.github.benhutchison" %% "mouse" % "0.2",
+      "commons-codec" % "commons-codec" % "1.10",
 
       // Logging
       "ch.qos.logback" % "logback-core" % logbackVersion,
