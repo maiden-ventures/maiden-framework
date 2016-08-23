@@ -3,7 +3,7 @@ import NativePackagerHelper._
 organization := "com.maiden"
 
 
-version := "0.2.0"
+version := "0.2.1"
 
 scalaVersion := "2.11.8"
 
@@ -13,7 +13,7 @@ val finchVersion = "0.10.0"
 
 val quillVersion = "0.9.1-SNAPSHOT"
 
-val circeVersion = "0.5.0-M2"
+val circeVersion = "0.5.0-M3"
 
 val http4sVersion = "0.13.2a"
 
@@ -53,8 +53,8 @@ lazy val `maiden-framework` = (project in file("."))
       "io.getquill" %% "quill-async" % quillVersion,
 
       //data drivers
-      "mysql" % "mysql-connector-java" % "5.1.36",
-      "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
+      "mysql" % "mysql-connector-java" % "6.0.3",
+      "org.postgresql" % "postgresql" % "9.4.1209",
 
       //for hashing functions
       "com.roundeights" %% "hasher" % "1.2.0",
@@ -66,7 +66,7 @@ lazy val `maiden-framework` = (project in file("."))
       //for HTTP client
       "org.http4s" %% "http4s-client" % http4sVersion,
       "org.http4s" %% "http4s-blaze-client" % http4sVersion,
-      "org.json4s" %% "json4s-native" % "3.3.0",
+      "org.json4s" %% "json4s-native" % "3.4.0",
 
       //for validations
       "com.googlecode.libphonenumber" % "libphonenumber" % "7.4.4",
