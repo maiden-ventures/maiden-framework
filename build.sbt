@@ -3,7 +3,7 @@ import NativePackagerHelper._
 organization := "com.maiden"
 
 
-version := "0.2.1"
+version := "0.2.5"
 
 scalaVersion := "2.11.8"
 
@@ -53,7 +53,7 @@ lazy val `maiden-framework` = (project in file("."))
       "io.getquill" %% "quill-async" % quillVersion,
 
       //data drivers
-      "mysql" % "mysql-connector-java" % "6.0.3",
+      "mysql" % "mysql-connector-java" % "5.1.38",
       "org.postgresql" % "postgresql" % "9.4.1209",
 
       //for hashing functions

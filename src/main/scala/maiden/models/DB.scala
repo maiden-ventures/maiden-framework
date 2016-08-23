@@ -12,6 +12,10 @@ import maiden.implicits._
 trait MaidenBaseDB {
 
   def createDataSource = {
+    //import com.mysql.cj.jdbc.MysqlDataSource
+    //val ds = new MysqlDataSource
+    //ds.setServerTimezone("America/Los_Angeles")
+
     val props = new Properties
     props.setProperty("dataSourceClassName",
                       MaidenConfig.get[String]("db.dataSourceClassName"))
@@ -29,6 +33,7 @@ trait MaidenBaseDB {
                       MaidenConfig.get[String]("db.connectionTimeout"))
     props.put("dataSource.logWriter", new PrintWriter(System.out));
     val config = new HikariConfig(props);
+    //config.setDatasource(ds)
     new HikariDataSource(config);
   }
 }

@@ -2,7 +2,7 @@ import sbt.complete.DefaultParsers._
 import NativePackagerHelper._
 
 val quillVersion = "0.9.1-SNAPSHOT"
-val maidenVersion = "0.2.1"
+val maidenVersion = "0.2.5"
 
 val commonSettings = Seq(
   organization := "@@namespace@@",
