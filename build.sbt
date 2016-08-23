@@ -13,7 +13,7 @@ val finchVersion = "0.10.0"
 
 val quillVersion = "0.9.1-SNAPSHOT"
 
-val circeVersion = "0.5.0-M3"
+val circeVersion = "0.5.0-M2"
 
 val http4sVersion = "0.13.2a"
 

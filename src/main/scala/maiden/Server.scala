@@ -86,15 +86,19 @@ trait MaidenServer extends App
   private val cdl = new CountDownLatch(1)
 
   def writePidFile() = {
-    if (!Files.exists(Paths.get(config.pidPath))) {
-      val f = new File(config.pidPath)
-      f.mkdirs()
+    //if (!Files.exists(Paths.get(config.pidPath))) {
+    //  println("creating directory")
+    //  val f = new File(new File(config.pidPath).getPath)
+    //  f.mkdirs()
 
-    }
+    //}
+
     val pidFile = new File(config.pidPath)
-    val pidFileStream = new FileOutputStream(pidFile)
-    pidFileStream.write(pid.getBytes)
-    pidFileStream.close()
+    pidFile.createNewFile
+    scala.tools.nsc.io.File(config.pidPath).writeAll(pid.toString)
+    //val pidFileStream = new FileOutputStream(pidFile)
+    //pidFileStream.write(pid.getBytes)
+    //pidFileStream.close()
   }
 
   def removePidFile() = {
@@ -106,6 +110,7 @@ trait MaidenServer extends App
     if (!config.pidPath.isEmpty) {
       writePidFile()
     }
+
     logger.info("process " + pid + " started")
 
     logger.info(s"admin http server started on: ${adminHttpServer.boundAddress}")
@@ -164,7 +169,10 @@ trait MaidenServer extends App
       Http.server
         .configured(Label(name))
         .configured(Http.param.MaxRequestSize(config.maxRequestSize.megabytes))
-        .withTls(Netty3ListenerTLSConfig(() => Ssl.server(config.certificatePath, config.keyPath, null, null, null)))
+        .withTls(Netty3ListenerTLSConfig(() =>
+                   Ssl.server(config.certificatePath, config.keyPath,
+                              null, null, null))
+         )
         .serve(iface, getService(s"srv/$name"))
     }
   }
