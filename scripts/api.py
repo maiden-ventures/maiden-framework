@@ -72,7 +72,7 @@ class ApiBuilder:
             return vstr
 
     def build(self):
-        for model in self.app.models:
+        for model in [m for m in self.app.models if m.generate_api]:
 
             #Endpoint params
             param_str = """param("%s").as[%s]%s"""

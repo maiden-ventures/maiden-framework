@@ -30,8 +30,8 @@ class DbAccessBuilder:
 
         elif database_type == "mysql":
             default_port = "3306"
-            datasource_driver = "com.mysql.jdbc.jdbc2.optional.MysqlDataSource"
-            database_driver = "com.mysql.Driver"
+            datasource_driver = "com.mysql.cj.jdbc.MysqlDataSource"
+            database_driver = "com.mysql.cj.jdbc.Driver"
             database_jdbc_name = "mysql"
             db_driver_name = "MySqlDB"
 

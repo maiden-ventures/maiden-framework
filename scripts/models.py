@@ -58,7 +58,7 @@ class ModelBuilder:
 
     #make sure the models directory exists
 
-    for model in self.app.models:
+    for model in [m for m in self.app.models if m.generate_model]:
 
         columns = []
 
@@ -161,19 +161,32 @@ class ModelBuilder:
 
 
         range_by = ""
+        find_by = ""
+        delete_by = ""
         for scala_type, columns in columns_by_type.items():
           if scala_type not in ("Boolean",):
-            range_by_case = "\n".join(["""case "%s" => quote {(s: %s, e: %s) => %s.filter(_.%s >= s).filter(_.%s <= e) }"""  % (c.name, c.scala_type, c.scala_type, model.query_name, c.name, c.name) for c in columns])
+            range_by_case = "\n".join(["""case "%s" => quote {%s.filter(_.%s >= lift(start)).filter(_.%s <= lift(end)) }"""  % (c.name, model.query_name, c.name, c.name) for c in columns])
             range_by += "\n\n" + rangeByTemplate\
                         .replace("@@rangeByCase@@", range_by_case)\
                         .replace("@@colType@@", scala_type)
 
+            find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == scala_type])
+
+            find_by += "\n\n" + findByTemplate\
+                      .replace("@@findByCase@@", find_by_case)\
+                      .replace("@@colType@@", scala_type)
+
+            delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)).delete }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == scala_type])
+
+            delete_by += deleteByTemplate\
+                         .replace("@@deleteByCase@@", delete_by_case)\
+                         .replace("@@colType@@", scala_type)
 
         magic_methods_str = "%s\n%s\n%s%s\n" % (
-          findByTemplate.replace("@@findByCase@@", find_by_case),
+          find_by,
           "",
           #likeTemplate.replace("@@findByLikeCase@@", find_by_like_case),
-          deleteByTemplate.replace("@@deleteByCase@@", delete_by_case),
+          delete_by,
           range_by
         )
 

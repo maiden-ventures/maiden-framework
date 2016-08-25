@@ -1,10 +1,9 @@
 package maiden.implicits
 
 
-import java.sql.{PreparedStatement, Types}
+import java.sql.{PreparedStatement, ResultSet, Types}
 import java.time._
 import scala.reflect.ClassTag
-import io.getquill.context.BindedStatementBuilder
 import io.getquill.JdbcContext
 
 trait DBImplicits {
@@ -16,6 +15,18 @@ trait DBImplicits {
     def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
   }
 
+  implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
+    new Decoder[LocalDateTime] {
+      def apply(index: Int, row: ResultSet) = {
+        val v = row.getTimestamp(index + 1)
+        if (v == null)
+          LocalDateTime.MIN
+        else {
+          LocalDateTime.ofInstant(v.toInstant,
+                                  ZoneId.systemDefault())
+        }
+      }
+    }
   //this is an override for quill until it supports inserting Option[LocalDateTime]
 
   /*

@@ -1,5 +1,5 @@
 
-def deleteBy[T](col: String, value: T) = {
+def deleteBy(col: String, value: @@colType@@) = {
   val q = col match {
       @@deleteByCase@@
       case _ => throw(new Exception(s"Unknown column ${col}"))

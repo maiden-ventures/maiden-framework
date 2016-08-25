@@ -2,7 +2,7 @@ package @@package@@
 
 import @@package@@.encoders._
 import maiden.util.error.ErrorResponseEncoders
-import maiden.traits._
+//import maiden.traits._
 
 trait ResponseEncoders extends ErrorResponseEncoders @@response_encoders@@
 

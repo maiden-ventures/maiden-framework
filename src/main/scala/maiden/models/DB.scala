@@ -4,8 +4,6 @@ import java.util.Properties
 import java.io.PrintWriter
 import scala.language.existentials
 import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
-import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.NamingStrategy
 import io.getquill.JdbcContext
 import io.getquill._
 import maiden.config.MaidenConfig
@@ -14,6 +12,8 @@ import maiden.implicits._
 trait MaidenBaseDB {
 
   def createDataSource = {
+    println("create datasource")
+
     val props = new Properties
     props.setProperty("dataSourceClassName",
                       MaidenConfig.get[String]("db.dataSourceClassName"))
@@ -29,8 +29,12 @@ trait MaidenBaseDB {
                       MaidenConfig.get[String]("db.dataSource.serverName"))
     props.setProperty("connectionTimeout",
                       MaidenConfig.get[String]("db.connectionTimeout"))
+
     props.put("dataSource.logWriter", new PrintWriter(System.out));
     val config = new HikariConfig(props);
+    config.addDataSourceProperty("cachePrepStmts", "true");
+    config.addDataSourceProperty("prepStmtCacheSize", "500");
+    config.addDataSourceProperty("prepStmtCacheSqlLimit", "4096");
     new HikariDataSource(config);
   }
 }

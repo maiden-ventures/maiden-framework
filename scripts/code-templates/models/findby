@@ -1,5 +1,5 @@
 
-def findBy[T](col: String, value: T) ={
+def findBy[T](col: String, value: @@colType@@) ={
   val q = col match {
       @@findByCase@@
 

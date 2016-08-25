@@ -1,9 +1,8 @@
 package @@package@@.encoders
 
 
-import com.twitter.finagle.http.Message
 import com.twitter.finagle.http.Message.ContentTypeJson
-import com.twitter.io.Buf._
+import com.twitter.io.Buf.Utf8
 import io.circe.{Encoder, Decoder}
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
@@ -26,6 +25,10 @@ trait @@model@@ResponseEncoders {
   implicit val @@lowerCaseModel@@FulResponseDecoder: Decoder[@@model@@FullResponse] = deriveDecoder[@@model@@FullResponse]
 
   implicit def @@lowerCaseModel@@ResponseFEncoder: EncodeResponse[@@model@@] =
+    EncodeResponse(ContentTypeJson)(data =>
+      Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
+
+  implicit def @@lowerCaseModel@@FullResponseFEncoder: EncodeResponse[@@model@@FullResponse] =
     EncodeResponse(ContentTypeJson)(data =>
       Utf8(Map("@@payloadKey@@" -> data).asJson.noSpaces))
 

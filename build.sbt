@@ -3,7 +3,7 @@ import NativePackagerHelper._
 organization := "com.maiden"
 
 
-version := "0.1.5"
+version := "0.2.5"
 
 scalaVersion := "2.11.8"
 
@@ -11,7 +11,7 @@ val finagleVersion = "6.36.0"
 
 val finchVersion = "0.10.0"
 
-val quillVersion = "0.8.1-SNAPSHOT"
+val quillVersion = "0.9.1-SNAPSHOT"
 
 val circeVersion = "0.5.0-M2"
 
@@ -53,8 +53,8 @@ lazy val `maiden-framework` = (project in file("."))
       "io.getquill" %% "quill-async" % quillVersion,
 
       //data drivers
-      "mysql" % "mysql-connector-java" % "5.1.36",
-      "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
+      "mysql" % "mysql-connector-java" % "5.1.38",
+      "org.postgresql" % "postgresql" % "9.4.1209",
 
       //for hashing functions
       "com.roundeights" %% "hasher" % "1.2.0",
@@ -66,7 +66,7 @@ lazy val `maiden-framework` = (project in file("."))
       //for HTTP client
       "org.http4s" %% "http4s-client" % http4sVersion,
       "org.http4s" %% "http4s-blaze-client" % http4sVersion,
-      "org.json4s" %% "json4s-native" % "3.3.0",
+      "org.json4s" %% "json4s-native" % "3.4.0",
 
       //for validations
       "com.googlecode.libphonenumber" % "libphonenumber" % "7.4.4",
@@ -81,6 +81,7 @@ lazy val `maiden-framework` = (project in file("."))
       "joda-time" % "joda-time" % "2.9.3",
       "org.joda" % "joda-convert" % "1.8",
       "com.github.benhutchison" %% "mouse" % "0.2",
+      "commons-codec" % "commons-codec" % "1.10",
 
       // Logging
       "ch.qos.logback" % "logback-core" % logbackVersion,

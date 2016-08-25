@@ -96,9 +96,16 @@ class MigrationBuilder:
         col.db_type = "decimal"
 
       if len(col.migration_modifiers) > 0:
-        self.columns.append("""alterColumn(table, "%s", %s, %s)""" % (col.db_name, TYPE_MAPPINGS[col.db_type], col.migration_modifiers))
+        if col.migration_modifiers != "":
+          self.columns.append("""alterColumn(table, "%s", %s, %s)""" % (col.db_name, TYPE_MAPPINGS[col.db_type], col.migration_modifiers))
+        else:
+          self.columns.append("""alterColumn(table, "%s", %s)""" % (col.db_name, TYPE_MAPPINGS[col.db_type]))
       else:
-        self.columns.append("""alterColumn(table, "%s", "%s", %s)""" % (col.db_name, TYPE_MAPPIMGS[col.db_type]))
+        if col.migration_modifiers != "":
+          self.columns.append("""alterColumn(table, "%s", %s, %s)""" % (col.db_name, TYPE_MAPPINGS[col.db_type]), col.migration_modifiers)
+        else:
+          self.columns.append("""alterColumn(table, "%s", %s)""" % (col.db_name, TYPE_MAPPINGS[col.db_type]))
+
       self.create_index(table, col)
 
   def create_index(self, table, col):
@@ -133,13 +140,12 @@ class MigrationBuilder:
       else:
         self.columns.append("""t.%s("%s")""" % (col.db_type, col.db_name))
 
-
       if col.index:
           index_name = "%s_%s_index"  % (table, col.db_name)
           self.indexes.append("""addIndex(table, Array("%s"), Name("%s"))""" % (col.db_name, index_name))
 
       if col.unique_index:
-          index_name = "%s_%s_index"  % (table, col.db_name)
+          index_name = "%s_%s_fk"  % (table, col.db_name)
           self.indexes.append("""addIndex(table, Array("%s"), Unique, Name("%s"))""" % (col.db_name, index_name))
 
       if col.references:
