@@ -11,7 +11,7 @@ val finagleVersion = "6.36.0"
 
 val finchVersion = "0.10.0"
 
-val quillVersion = "0.9.1-SNAPSHOT"
+val quillVersion = "0.8.0"
 
 val circeVersion = "0.5.0-M2"
 
