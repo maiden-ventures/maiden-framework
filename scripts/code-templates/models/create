@@ -2,5 +2,8 @@ def create(data: @@model@@) = {
   val q = quote {
     @@queryName@@.insert(lift(data)).returning(_.id)
   }
-  db.run(q)
+  db.run(q)(List(data)).headOption match {
+    case Some(id) => get(id)
+    case _ => throw(new Exception("unable to create model"))
+  }
 }
