@@ -57,7 +57,7 @@ case class @@model@@ (
 
 }
 
-object @@model@@ {
+object @@model@@ extends MaidenModelObject[@@model@@] {
 
   def exists(id: Long) = {
     val q = quote {
@@ -75,6 +75,7 @@ object @@model@@ {
       case Some(x) => x
       case _ => throw new EntityNotFoundException
     }
+  def delete(id: Long) = deleteBy("id", id)
 
   @@magicMethods@@
 

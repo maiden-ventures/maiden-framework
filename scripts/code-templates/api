@@ -83,11 +83,7 @@ object @@model@@Api extends MaidenApi {
     (@@lowerCaseModel@@: @@model@@, u: MaidenAuthUser) =>
       render {
         validate@@model@@(@@lowerCaseModel@@)
-        val id = @@model@@.create(@@lowerCaseModel@@.format)
-        id.map(i => {
-          val instance = @@model@@.findBy("id", i)
-          instance.headOption.map(_.full)
-        })
+        @@model@@.create(@@lowerCaseModel@@.format).full
       }
     }
 

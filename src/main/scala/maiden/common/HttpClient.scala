@@ -19,11 +19,16 @@ import org.json4s._
 import org.json4s.native.JsonMethods._
 import maiden.exceptions._
 
-class HttpClient(url: String, timeout: Duration = 30 second, method: String = "GET", data: Map[String, Seq[String]] = Map.empty, headers: Map[String, String] = Map.empty ) {
+class HttpClient(url: String,
+                 timeout: Duration = 30 second,
+                 method: String = "GET",
+                 data: Map[String, Seq[String]] = Map.empty,
+                 headers: Map[String, String] = Map.empty ) {
 
   implicit val formats = DefaultFormats
-  implicit def bv2str(bv: ByteVector): String = bv.toIterable.map(_.toChar).mkString("")
-  implicit def bv2jsoninput(bv: ByteVector): JsonInput = bv2str(bv)
+  def bv2str(bv: ByteVector) = bv.toIterable.map(_.toChar).mkString("")
+  //implicit def bv2str(bv: ByteVector): String = bv.toIterable.map(_.toChar).mkString("")
+  def bv2jsoninput(bv: ByteVector): JsonInput = bv2str(bv)
 
 
   val baseClient = middleware.FollowRedirect(1)(defaultClient)
@@ -83,16 +88,20 @@ class HttpClient(url: String, timeout: Duration = 30 second, method: String = "G
       res.timed(timeout).run
     } catch {
       case e: TimeoutException  => throw(new ExternalResponseTimeoutException(message = url))
-      case e: Exception =>
+      case e: Exception =>  {
+        println(e)
         throw(new ExternalResponseException(message = e.getMessage, exc=Option(e)))
+      }
     }
   }
 
-  private[this] def asJson(s: ByteVector) = try {
-    parse(s)
-  } catch {
-    case e: Exception => throw(new ExternalResponseException(
-                            message = url, exc = Option(e)))
+  private[this] def asJson(s: ByteVector) = {
+    try {
+      parse(bv2str(s))
+    } catch {
+      case e: Exception => throw(new ExternalResponseException(
+                              message = url, exc = Option(e)))
+    }
   }
 
   private[this] def asMap(s: ByteVector) = try {
@@ -102,7 +111,7 @@ class HttpClient(url: String, timeout: Duration = 30 second, method: String = "G
                             message = url, exc = Option(e)))
   }
   //use implicit to convert ByteVector => String
-  private[this] def fetchAsString():String = fetchRaw
+  private[this] def fetchAsString():String = bv2str(fetchRaw)
 
   def fetch() = fetchAsString
   def fetch[T](callback : (ByteVector) => T) = callback(fetchRaw)

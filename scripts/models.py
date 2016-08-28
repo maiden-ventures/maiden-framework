@@ -31,7 +31,7 @@ class ModelBuilder:
       #the method in the companion object
       s = """def get%s(%s: %s) = {
       val q = quote {
-        %sQuery.filter(_.%s == Option(%s))
+        %sQuery.filter(_.%s == lift(%s))
       }""" % (camelize(ref_name), camelize(field_name, False), column_type,
               camelize(model2_name, False), field2_name,
               camelize(field_name, False))
@@ -151,13 +151,13 @@ class ModelBuilder:
           columns_by_type[t] = [x for x in model.columns if x.scala_type == t]
 
         #all columns that are not dates
-        find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == Option(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type != "LocalDateTime"])
+        find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type != "LocalDateTime"])
         #like queries can only use string columns
-        find_by_like_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s like  Option(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == "String"])
+        find_by_like_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s like  lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == "String"])
 
         if len(find_by_like_case) == 0: likeTemplate = ""
 
-        delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == Option(value)).delete }""" % (c.name, model.query_name, c.name) for c in model.columns])
+        delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)).delete }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
 
         range_by = ""

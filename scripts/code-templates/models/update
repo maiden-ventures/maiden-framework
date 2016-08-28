@@ -2,10 +2,10 @@
 def update(data: @@model@@) = {
   val d = data.copy(updatedAt = Option(LocalDateTime.now))
   val q = quote {
-    @@queryName@@.filter(_.id == lift(d.id)).update(lift(d))
+    @@queryName@@.filter(_.id == lift(d.id)).update
   }
 
-  db.run(q)
+  db.run(q)(List(d))
   get(d.id.get)
 
 }

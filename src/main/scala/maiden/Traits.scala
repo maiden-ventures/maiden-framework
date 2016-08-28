@@ -9,7 +9,6 @@ trait MaidenModel extends MaidenEncoder {
   val id: Option[Long]
   val createdAt: Option[LocalDateTime]
   val updatedAt: Option[LocalDateTime]
-
 }
 
 trait MaidenModelWithoutTimestamps {
@@ -20,15 +19,13 @@ trait MaidenFullResponse extends MaidenModel
 
 trait MaidenWithoutTimestampsFullResponse extends MaidenModelWithoutTimestamps
 
-trait MaidenModelObject[M <: MaidenModel, MF <: MaidenFullResponse] {
+trait MaidenModelObject[M <: MaidenModel] {
 
   def exists(id: Long): Boolean
-  def get(id: Long): MF
-  def findBy[T](col: String, value: T) : List[MF]
-  def deleteBy[T](col: String, value: T): Long
-  //def getRangeBy[T](col: String, start: T, end: T): List[MF]
-  def create(data: M): Long
-  def update(data: M): MF
+  def get(id: Long): M
+  def delete(id: Long): Long
+  def create(data: M): M
+  def update(data: M): M
 }
 
 trait WithApi

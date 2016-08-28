@@ -13,7 +13,9 @@ val finchVersion = "0.10.0"
 
 val quillVersion = "0.8.0"
 
-val circeVersion = "0.5.0-M2"
+val circeVersion = "0.5.0-SNAPSHOT"
+
+val catsVersion = "0.7.0"
 
 val http4sVersion = "0.13.2a"
 
@@ -35,6 +37,7 @@ lazy val `maiden-framework` = (project in file("."))
       "com.twitter" % "twitter-server_2.11" % "1.21.0",
       "com.github.rlazoti" %% "finagle-metrics" % "0.0.3",
       "com.netaporter" %% "scala-uri" % "0.4.14",
+      "org.typelevel" %% "cats" % catsVersion,
 
       //for easier reflection
       "org.scala-lang" % "scalap" % scalaVersion.value,
