@@ -6,6 +6,7 @@ import java.io._
 import java.util.concurrent.TimeoutException
 import scala.concurrent.duration._
 import org.http4s._
+import org.http4s.util.CaseInsensitiveString
 import org.http4s.Method._
 import org.http4s.client._
 import org.http4s.util.{UrlCodingUtils, UrlFormCodec}
@@ -19,6 +20,34 @@ import org.json4s._
 import org.json4s.native.JsonMethods._
 import maiden.exceptions._
 
+
+trait MaidenHttpResponse
+
+case class StringHttpResponse(
+  headers: Map[String, String],
+  body: String
+) extends MaidenHttpResponse
+
+case class JsonHttpResponse(
+  headers: Map[String, String],
+  body: JValue
+) extends MaidenHttpResponse
+
+case class MapHttpResponse(
+  headers: Map[String, String],
+  body: Map[String, Any]
+) extends MaidenHttpResponse
+
+case class ByteVectorHttpResponse(
+  headers: Map[String, String],
+  body: ByteVector
+) extends MaidenHttpResponse
+
+case class FileHttpResponse(
+  headers: Map[String, String],
+  body: File
+) extends MaidenHttpResponse
+
 class HttpClient(url: String,
                  timeout: Duration = 30 second,
                  method: String = "GET",
@@ -27,9 +56,7 @@ class HttpClient(url: String,
 
   implicit val formats = DefaultFormats
   def bv2str(bv: ByteVector) = bv.toIterable.map(_.toChar).mkString("")
-  //implicit def bv2str(bv: ByteVector): String = bv.toIterable.map(_.toChar).mkString("")
   def bv2jsoninput(bv: ByteVector): JsonInput = bv2str(bv)
-
 
   val baseClient = middleware.FollowRedirect(1)(defaultClient)
 
@@ -77,19 +104,54 @@ class HttpClient(url: String,
     getUri(s"${s}${paramStr}")
   }
 
-  def fetchRaw() = {
-    val res = client.flatMap {
-      case Successful(resp) => resp.as[ByteVector]
+  def fetchHeadersOnly(headerList: List[String] = List.empty) = {
+    val res = client.map {
       case NotFound(resp) => throw(new UrlNotFoundException(message=url))
-      case resp => throw(new ExternalResponseException(message = resp.toString))
+      case resp => resp
+    }
+
+    val resp = res.unsafePerformSync
+
+    if (headerList == List.empty) {
+      resp.headers.map(h =>  h.name.toString -> h.value).toMap
+    } else {
+      headerList.map(hl => {
+        val  header = resp.headers.get(CaseInsensitiveString(hl))
+        header.map(h =>
+          h.name.toString -> h.value.toString
+        ).get
+      }).toMap
+    }
+  }
+
+  def buildHeaderMap(resp: Response) =
+    resp.headers.map(h =>  h.name.toString -> h.value).toMap
+
+  def fetchRaw() = {
+    val res = client.map{
+      //case Successful(resp) => resp.as[ByteVector]
+      case NotFound(resp) => throw(new UrlNotFoundException(message=url))
+      case resp => resp//.as[ByteVector]
     }
 
     try {
-      res.timed(timeout).run
+      val resp = res.unsafePerformSync //Timed(10)
+      val headers = buildHeaderMap(resp)
+      val p = resp.body
+      val p2 = p.runLog
+
+      val rawBody = resp.body.runLog.unsafePerformSync //run
+
+      //handle chunked responses
+      var body:ByteVector = ByteVector.empty
+      rawBody.foreach { x => body = body ++ x}
+
+      //r => r.runLast.runLast } //.as[ByteVector] }
+      ByteVectorHttpResponse(headers, body)
+
     } catch {
       case e: TimeoutException  => throw(new ExternalResponseTimeoutException(message = url))
       case e: Exception =>  {
-        println(e)
         throw(new ExternalResponseException(message = e.getMessage, exc=Option(e)))
       }
     }
@@ -111,18 +173,28 @@ class HttpClient(url: String,
                             message = url, exc = Option(e)))
   }
   //use implicit to convert ByteVector => String
-  private[this] def fetchAsString():String = bv2str(fetchRaw)
+  private[this] def fetchAsString() = {
+    val response =  fetchRaw
+    StringHttpResponse(response.headers, bv2str(response.body))
+  }
 
   def fetch() = fetchAsString
-  def fetch[T](callback : (ByteVector) => T) = callback(fetchRaw)
-  def fetchAsMap() = fetch(asMap)
-  def fetchAsJson() = fetch(asJson)
+  //def fetch[T](callback : (ByteVector) => T) = callback(fetchRaw)
+  def fetchAsMap() = {
+    val response = fetchRaw
+    MapHttpResponse(response.headers, asMap(response.body))
+  }
+  def fetchAsJson() = {
+    val response = fetchRaw
+    JsonHttpResponse(response.headers, asJson(response.body))
+  }
 
   /* fetch a resource from a URL and save as a file
   works with binary and text resources */
   def fetchAsFile(fileName: String) = {
-    val r = fetchRaw.toIterable.toArray
+    val response = fetchRaw
+    val r = response.body.toIterable.toArray
 		FileWriter.write(r, fileName)
-		new File(fileName)
+		FileHttpResponse(response.headers, new File(fileName))
   }
 }

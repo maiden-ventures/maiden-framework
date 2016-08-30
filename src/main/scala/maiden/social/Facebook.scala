@@ -89,7 +89,7 @@ object MaidenFacebook {
 
     val c = new HttpClient(uri, method="POST", data = data)
     val response = c.fetchAsMap
-    response("access_token").toString
+    response.body("access_token").toString
   }
 
   def createAppAccessToken() = {
@@ -104,7 +104,7 @@ object MaidenFacebook {
 
     val c = new HttpClient(uri, method="POST", data = data)
     val response = c.fetch
-    response.split('=')(1)
+    response.body.split('=')(1)
   }
 
 }
