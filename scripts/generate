@@ -142,8 +142,6 @@ if __name__ == "__main__":
         old_model_data = {}
 
 
-    #copy the new models.yml to models-backup.yml
-    shutil.copyfile(model_stream_file, model_stream_file.replace(".yml", "-backup.yml"))
 
 
     def get(data, key):
@@ -192,9 +190,12 @@ if __name__ == "__main__":
                 for c2 in removed:
                     if c['name'] == c2['name']:
                         migrations[meta['db_name']]['altered'].append(c)
-                        migrations[meta['db_name']]['added'] =  [x for x in migrations[meta['db_name']]['added'] if x['name'] !=c['name']]
-                        migrations[meta['db_name']]['removed'] =  [x for x in migrations[meta['db_name']]['removed'] if x['name'] !=c['name']]
-        #pprint(diff, indent=2)
+                        migrations[meta['db_name']]['added'] =  [x for x in migrations[meta['db_name']]['added']
+                                                                 if x['name'] !=c['name']]
+
+                        migrations[meta['db_name']]['removed'] =  [x for x in migrations[meta['db_name']]['removed']
+                                                                   if x['name'] !=c['name']]
+
     pprint(migrations, indent=2)
 
     app_data['migrations'] = migrations
@@ -217,6 +218,9 @@ if __name__ == "__main__":
     if key_with_default(gen_options, "migrations", True):
         print("Generating migrations...")
         migration_builder = MigrationBuilder(app)
+        #copy the new models.yml to models-backup.yml
+        #after successful migration generation
+        shutil.copyfile(model_stream_file, model_stream_file.replace(".yml", "-backup.yml"))
 
     if key_with_default(gen_options, "encoders", True):
         print("Generating JSON encoders/decoders...")

@@ -95,6 +95,7 @@ class Model:
         self.build_columns(casing)
 
     def build_columns(self, casing):
+        print self.info["columns"]
         self.columns = [Column(self, column, casing) for column in self.info["columns"]]
 
 class ForeignKey:
@@ -127,6 +128,7 @@ class Column:
         self.table = model.db_name
         self.model = model.name
 
+        print col_info
         self.name = camelize(self.info["name"], False)
         self.named_type = self.info["type"]
         db_map = DB_MAP[self.info["type"]]

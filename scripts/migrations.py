@@ -179,15 +179,17 @@ class MigrationBuilder:
           if key == "create_table" and payload != {}:
             template = self.create_table_template
             migration_name = "Create%s" % (camelize(model_name))
+
             model = Model(payload, self.app.casing)
             for col in model.columns:
                 self.build_column(model.db_name, col)
             self.write_migration(template, migration_name,  model)
+
           elif key == "added":
 
             for p in payload:
               migration_name = "Add%sTo%s" % (camelize(p['name']), camelize(model_name))
-              m = {"name": model_name, "columns": p}
+              m = {"name": model_name, "columns": [p,]}
               model = Model(m, self.app.casing)
               for col in model.columns:
                 self.add_column(model.db_name, col)

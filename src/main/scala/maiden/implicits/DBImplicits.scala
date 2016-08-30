@@ -1,9 +1,10 @@
 package maiden.implicits
 
 
-import java.sql.{PreparedStatement, ResultSet, Types}
 import java.time._
 import scala.reflect.ClassTag
+import java.sql.{PreparedStatement, ResultSet, Types}
+import io.getquill.context.BindedStatementBuilder
 import io.getquill.JdbcContext
 
 trait DBImplicits {
@@ -27,9 +28,6 @@ trait DBImplicits {
         }
       }
     }
-  //this is an override for quill until it supports inserting Option[LocalDateTime]
-
-  /*
 
   private[this] val nullEncoder = encoder[Int](_.setNull)
 
@@ -38,7 +36,7 @@ trait DBImplicits {
       override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) =
         value match {
           case Some(value) => d(idx, value, row)
-          case None => {
+          case None =>
             import Types._
             val sqlType =
               d match {
@@ -53,12 +51,21 @@ trait DBImplicits {
                 case `doubleEncoder`     => DOUBLE
                 case `byteArrayEncoder`  => VARBINARY
                 case `dateEncoder`       => TIMESTAMP
-                case _                   => TIMESTAMP
+                case _                   => INTEGER
               }
             nullEncoder(idx, sqlType, row)
-        }}
+        }
     }
-   */
+
+  //quill uses java.math.BigDecimal for some reason
+  implicit def scalaBigDecimalToJavaBigDecimal(bd: scala.math.BigDecimal): java.math.BigDecimal =
+    bd.bigDecimal
+
+  implicit def javaBigDecimalToScalaBigDecimal(bd: java.math.BigDecimal): scala.math.BigDecimal =
+    scala.math.BigDecimal(bd)
+
+  //private[this] val nullEncoder = encoder[Int](_.setNull)
+
 
   implicit class OptionOps[T](f: Option[T]) {
     def < (right: T) = quote(infix"$f < $right".as[Boolean])
