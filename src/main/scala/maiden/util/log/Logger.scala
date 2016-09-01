@@ -9,7 +9,7 @@ trait Logging {
 
 object Logger extends Logging
 
-final class Logger(name: String) {
+class Logger(name: String) {
 
   lazy val log = LoggerFactory.getLogger(name)
 
