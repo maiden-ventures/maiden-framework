@@ -94,8 +94,13 @@ trait MaidenServer extends App
     //}
 
     val pidFile = new File(config.pidPath)
-    pidFile.createNewFile
-    scala.tools.nsc.io.File(config.pidPath).writeAll(pid.toString)
+    try {
+      (new File(pidFile.getParent)).mkdirs()
+    } catch {
+      case e: Exception => ()
+    }
+    //pidFile.createNewFile
+    scala.tools.nsc.io.File(pidFile).writeAll(pid.toString)
     //val pidFileStream = new FileOutputStream(pidFile)
     //pidFileStream.write(pid.getBytes)
     //pidFileStream.close()
@@ -136,7 +141,7 @@ trait MaidenServer extends App
       case (Some(s), Some(ts)) => Await.all(s, ts)
       case (Some(s), None)     => Await.all(s)
       case (None, Some(ts))    => Await.all(ts)
-      case (None, None)        => throw new IllegalStateException("No server to wait for startup")
+      case (None, None)        => { println(config); throw new IllegalStateException("No server to wait for startup") }
     }
   }
 

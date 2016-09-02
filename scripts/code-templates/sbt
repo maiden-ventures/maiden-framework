@@ -1,8 +1,8 @@
 import sbt.complete.DefaultParsers._
 import NativePackagerHelper._
 
-val quillVersion = "0.9.1-SNAPSHOT"
-val maidenVersion = "0.2.5"
+val quillVersion = "0.8.0"
+val maidenVersion = "0.3.0"
 
 val commonSettings = Seq(
   organization := "@@namespace@@",
@@ -56,10 +56,6 @@ lazy val @@appName@@ = (project in file("."))
 
     libraryDependencies ++= Seq(
       "com.maiden" %% "maiden-framework" % maidenVersion,
-      "io.getquill" %% "quill-core" % quillVersion,
-      "io.getquill" %% "quill-sql" % quillVersion,
-      "io.getquill" %% "quill-jdbc" % quillVersion,
-      "io.getquill" %% "quill-async" % quillVersion,
       "com.googlecode.libphonenumber" % "libphonenumber" % "7.4.4"
     )
   )).enablePlugins(JavaAppPackaging)
