@@ -4,7 +4,6 @@ app:
   namespace: com.test
   payload_key: payload
   port: 8000
-  users: True
   security:
     method: token
     header_name: X-MAIDEN-AT
@@ -21,10 +20,6 @@ db:
   user: test
   password: test
   host: localhost
-
-social:
-  fb:
-    app_id:
 
 generator:
   models: true

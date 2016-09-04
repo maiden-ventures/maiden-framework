@@ -8,7 +8,7 @@ class App:
         self.info = info
         self.app_info = self.info["app"]
         self.db_info = self.info["db"]
-        self.social_info = self.info["social"]
+        self.social_info = self.info.get("social", [])
 
         self.casing = casing
 

@@ -3,17 +3,21 @@ package maiden.models
 import java.util.Properties
 import java.io.PrintWriter
 import scala.language.existentials
+import cats.data.Xor
 import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
-import io.getquill.JdbcContext
 import io.getquill._
+import io.getquill.context.sql.idiom.SqlIdiom
 import maiden.config.MaidenConfig
 import maiden.implicits._
+import maiden.types._
+import maiden.types.MaidenResultTypes._
+
 
 trait MaidenBaseDB {
 
-  def createDataSource = {
-    println("create datasource")
+  val dbType = MaidenConfig.get[String]("migrations.database_type")
 
+  def createDataSource: DatasourceResult[HikariDataSource] = try {
     val props = new Properties
     props.setProperty("dataSourceClassName",
                       MaidenConfig.get[String]("db.dataSourceClassName"))
@@ -32,15 +36,29 @@ trait MaidenBaseDB {
 
     props.put("dataSource.logWriter", new PrintWriter(System.out));
     val config = new HikariConfig(props);
-    config.addDataSourceProperty("cachePrepStmts", "true");
-    config.addDataSourceProperty("prepStmtCacheSize", "500");
-    config.addDataSourceProperty("prepStmtCacheSqlLimit", "4096");
-    new HikariDataSource(config);
+    if (dbType == "mysql") {
+      config.addDataSourceProperty("cachePrepStmts", "true");
+      config.addDataSourceProperty("prepStmtCacheSize", "500");
+      config.addDataSourceProperty("prepStmtCacheSqlLimit", "4096");
+    }
+    Xor.right(DatasourceValue(new HikariDataSource(config)));
+  } catch {
+    case e: Exception => Xor.left(DatasourceError("Unable to create datasource", Option(e)))
+  }
+
+  val dbCasing =
+    MaidenConfig.getOption[String]("migrations.database_casing") match {
+      case Some(x) => x
+      case _ => "snake_case"
+    }
+
+  val datasource = createDataSource match {
+    case Xor.Left(_) => throw(new Exception("unable to createDataSource"))
+    case Xor.Right(ds) => ds.unwrapped
   }
 }
 
 object DB extends MaidenBaseDB {
-  val dbType = MaidenConfig.get[String]("migrations.database_type")
 
   lazy val db = if (dbType == "postgres") {
     PostgresDB.db
@@ -50,46 +68,35 @@ object DB extends MaidenBaseDB {
 
 }
 
-object MySqlDB extends MaidenBaseDB {
-  val db = {
-    val dbCasing = MaidenConfig.getOption[String]("migrations.database_casing") match {
-      case Some(x) => x
-      case _ => "snake_case"
-    }
+class  MaidenDbContext[I <: SqlIdiom, N <: NamingStrategy](ds: HikariDataSource)
+    extends JdbcContext[I,N](ds)
+    with DBImplicits with DateImplicits
 
+object MySqlDB extends MaidenBaseDB {
+  val db =
     dbCasing match {
       case ("snake_case") =>
-        new JdbcContext[MySQLDialect, SnakeCase](createDataSource) with DBImplicits with DateImplicits
+        new MaidenDbContext[MySQLDialect, SnakeCase](datasource)
       case ("literal") =>
-        new JdbcContext[MySQLDialect, Literal](createDataSource) with DBImplicits with DateImplicits
+        new MaidenDbContext[MySQLDialect, Literal](datasource)
       case ("escape") =>
-        new JdbcContext[MySQLDialect, Escape](createDataSource) with DBImplicits with DateImplicits
+        new MaidenDbContext[MySQLDialect, Escape](datasource)
       case _ =>
-        new JdbcContext[MySQLDialect, Escape](createDataSource) with DBImplicits with DateImplicits
+        new MaidenDbContext[MySQLDialect, Escape](datasource)
     }
-  }
 }
 
-object PostgresDB extends MaidenBaseDB {
-  val db = {
-    val dbType = MaidenConfig.get[String]("migrations.database_type")
-    val dbCasing = MaidenConfig.getOption[String]("migrations.database_casing") match {
-      case Some(x) => x
-      case _ => "snake_case"
-    }
 
+object PostgresDB extends MaidenBaseDB {
+  val db =
     dbCasing match {
       case ("snake_case") =>
-        new JdbcContext[PostgresDialect, SnakeCase](createDataSource) with DBImplicits with DateImplicits
+        new MaidenDbContext[PostgresDialect, SnakeCase](datasource)
       case ("literal") =>
-        new JdbcContext[PostgresDialect, Literal](createDataSource) with DBImplicits with DateImplicits
+        new MaidenDbContext[PostgresDialect, Literal](datasource)
       case ("escape") =>
-        new JdbcContext[PostgresDialect, Escape](createDataSource) with DBImplicits with DateImplicits
+        new MaidenDbContext[PostgresDialect, Escape](datasource)
       case _ =>
-        new JdbcContext[PostgresDialect, Escape](createDataSource) with DBImplicits with DateImplicits
+        new MaidenDbContext[PostgresDialect, Escape](datasource)
     }
-  }
-
-
-
 }

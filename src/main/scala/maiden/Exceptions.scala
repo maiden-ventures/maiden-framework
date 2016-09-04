@@ -2,6 +2,7 @@ package maiden.exceptions
 
 import org.jboss.netty.handler.codec.http.{HttpResponseStatus => H}
 
+
 class MaidenException(
     message: String,
     _httpStatus: H = H.BAD_REQUEST,

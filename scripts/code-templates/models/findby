@@ -1,9 +1,11 @@
 
-def findBy[T](col: String, value: @@colType@@) ={
+def findBy[T](col: String, value: @@colType@@) = Try {
   val q = col match {
       @@findByCase@@
 
       case _ => throw(new Exception(s"Unknown column ${col}"))
   }
-  db.run(q)
+  Xor.right(DatasourceValue(db.run(q)))
+} catch {
+  case e: Exception => Xor.left(DatasourceError(e.getMessage, Option(e))
 }
