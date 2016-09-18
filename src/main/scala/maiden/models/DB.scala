@@ -4,7 +4,6 @@ import java.util.Properties
 import java.io.PrintWriter
 import scala.language.existentials
 import com.zaxxer.hikari.{HikariDataSource, HikariConfig}
-import io.getquill.JdbcContext
 import io.getquill._
 import maiden.config.MaidenConfig
 import maiden.implicits._

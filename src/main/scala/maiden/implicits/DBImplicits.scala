@@ -5,7 +5,7 @@ import java.time._
 import scala.reflect.ClassTag
 import java.sql.{PreparedStatement, ResultSet, Types}
 import io.getquill.context.BindedStatementBuilder
-import io.getquill.JdbcContext
+import io.getquill._
 
 trait DBImplicits {
   this: JdbcContext[_,_] =>
