@@ -244,7 +244,7 @@ if __name__ == "__main__":
       print("Formatting Scala sources...")
       format_scala(scala_dirs)
 
-    message = """Your project is now available in %s. To run, simply
+    message = """Your project is now aourailable in %s. To run, simply
     cd into %s and then type "sbt run". Your API will be available at http://localhost:%s/api/[model_name]""" % (app.source_directory, app.source_directory, app.port)
 
     print
