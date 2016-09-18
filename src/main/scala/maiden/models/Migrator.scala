@@ -56,7 +56,9 @@ object Migrate {
   }
 
 
-  lazy val migrationPath = s"${System.getProperty("user.dir")}/${MaidenConfig.get[String]("app.source_path")}/migrations"
+  lazy val migrationPath = s"${MaidenConfig.get[String]("app.source_path")}/components/migrations"
+
+  println(migrationPath)
 
   private def checkMigrationExists(name:String) = {
     val glob = s"*_${name}.scala"

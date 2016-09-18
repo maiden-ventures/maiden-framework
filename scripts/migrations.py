@@ -82,7 +82,7 @@ class MigrationBuilder:
       if len(col.migration_modifiers) > 0:
         self.columns.append("""addColumn(table, "%s", %s, %s)""" % (col.db_name, TYPE_MAPPINGS[col.db_type], col.migration_modifiers))
       else:
-        self.columns.append("""addColumn(table, "%s", "%s", %s)""" % (col.db_name, TYPE_MAPPIMGS[col.db_type]))
+        self.columns.append("""addColumn(table, "%s", %s)""" % (col.db_name, TYPE_MAPPINGS[col.db_type]))
 
         self.create_index(table, col)
 
