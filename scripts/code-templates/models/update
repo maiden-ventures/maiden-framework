@@ -6,6 +6,6 @@ def update(data: @@model@@) = {
   }
 
   db.run(q)(List(d))
-  get(d.id.get)
+  get(d.id)
 
 }

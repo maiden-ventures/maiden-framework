@@ -20,7 +20,7 @@ object @@model@@Api extends MaidenApi {
 
   private[this] implicit val @@lowerCaseModel@@BodyDecoder = Decoder.instance[@@model@@](c => {
     for {
-      id <- c.downField("id").as[Option[Long]]
+      id <- c.downField("id").as[Long]
       @@coreFieldComprehensionMappings@@
       createdAt <- c.downField("createdAt").as[Option[LocalDateTime]]
       updatedAt <- c.downField("updatedAt").as[Option[LocalDateTime]]

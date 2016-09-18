@@ -37,21 +37,14 @@ case class @@model@@ (
     @@lowerCaseModel@@FullResponseGen.from(allVals)
   }
 
-  def save() = id match {
-    case Some(i) if i != -1l => {
-      if (@@model@@.exists(i)) {
-        @@model@@.update(this)
-      } else {
-        @@model@@.create(this)
-      }
-    }
-    case _ => @@model@@.create(this)
+  def save() = if (@@model@@.exists(id)) {
+    @@model@@.update(this)
+  } else {
+    @@model@@.create(this)
   }
 
-  def delete() = id match {
-    case Some(i) => @@model@@.deleteBy("id", i)
-    case _ => -1l
-  }
+  def delete() =
+    @@model@@.deleteBy("id", id)
 
   def format() = @@model@@(@@formattedCols@@)
 

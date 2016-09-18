@@ -6,13 +6,13 @@ import com.twitter.util.Future
 trait MaidenEncoder extends Product
 
 trait MaidenModel extends MaidenEncoder {
-  val id: Option[Long]
+  val id: Long
   val createdAt: Option[LocalDateTime]
   val updatedAt: Option[LocalDateTime]
 }
 
 trait MaidenModelWithoutTimestamps {
-  val id: Option[Long]
+  val id: Long
 }
 
 trait MaidenFullResponse extends MaidenModel

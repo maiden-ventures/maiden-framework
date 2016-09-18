@@ -95,7 +95,6 @@ class Model:
         self.build_columns(casing)
 
     def build_columns(self, casing):
-        print self.info["columns"]
         self.columns = [Column(self, column, casing) for column in self.info["columns"]]
 
 class ForeignKey:
@@ -107,6 +106,7 @@ class ForeignKey:
         self.column = col.db_name
         self.table = col.table
         self.field_name = col.name
+        self.nullable = col.nullable
 
         if 'name' in col.info['references']:
             self.scala_name =col.info['references']['name']
@@ -122,6 +122,9 @@ class ForeignKey:
         return "ref_table: %s, ref_column: %s, table: %s, column: %s" % (self.ref_table, self.ref_column, self.table, self.field_name)
 
 class Column:
+
+    def __repr__(self):
+        return "%s.%s %s %s" % (self.table, self.name, self.db_type, self.nullable)
     def __init__(self, model, col_info, casing):
 
         self.info = col_info

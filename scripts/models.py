@@ -25,10 +25,18 @@ class ModelBuilder:
 
       return s
 
+  def get_column(self, model_name, column_name):
+    for m in self.app.models:
+      if m.name == model_name:
+        for c in m.columns:
+          if c.name == column_name:
+            return c
+
   def build_references(self, ref_name, model_name, field_name,
                        model2_name, field2_name, ref_type,
                        column_type):
       #the method in the companion object
+      nullable = (self.get_column(model_name, field_name)).nullable
       s = """def get%s(%s: %s) = {
       val q = quote {
         %sQuery.filter(_.%s == lift(%s))
@@ -43,9 +51,15 @@ class ModelBuilder:
       s += "\n}"
 
       #the reference in the case class
-      case_access = """
-      lazy val %s = %s.map(v => %s.get%s(v))
-      """ % (ref_name, camelize(field_name, False), camelize(model_name), camelize(ref_name))
+      if nullable:
+        case_access = """
+        lazy val %s = %s.map(v => %s.get%s(v))
+        """ % (ref_name, camelize(field_name, False), camelize(model_name), camelize(ref_name))
+      else:
+        case_access = """
+        lazy val %s = %s.get%s(%s)
+        """ % (ref_name, camelize(model_name), camelize(ref_name), camelize(field_name, False))
+
       return (s, case_access)
 
   def build(self):
@@ -67,7 +81,7 @@ class ModelBuilder:
         self.query_name = "%sQuery" % (model.name_lower)
         model_path= os.path.join(self.app.base_path, "components/%s/%sModel.scala" % (underscore(model.name), model.name))
 
-        raw_columns = [(c.name, c.scala_type, c.formatters) for c in model.columns]
+        raw_columns = [(c.name, c.scala_type, c.formatters, c.nullable) for c in model.columns]
         create_columns = filter(lambda x: x[0] not in ("createdAt", "updatedAt", "id"), raw_columns)
 
         formatted_fields = []
@@ -114,7 +128,7 @@ class ModelBuilder:
         for col in model.columns:
           col_name = col.name
           if col_name == "id":
-              col_str = "  id: Option[Long] = Some(-1l)"
+              col_str = "  id: Long = -1l"
           elif col_name  == "createdAt":
               col_str = "  createdAt: Option[LocalDateTime] = Option(LocalDateTime.now)"
           elif col_name  == "updatedAt":
@@ -123,7 +137,7 @@ class ModelBuilder:
               if col.nullable:
                   col_str = "  %s: Option[%s] = None" % (col_name, col.scala_type)
               else:
-                  col_str = "  %s: Option[%s]" % (col_name, col.scala_type)
+                  col_str = "  %s: %s" % (col_name, col.scala_type)
 
           columns.append("\n%s\n" % (col_str))
 
@@ -159,13 +173,16 @@ class ModelBuilder:
 
         delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)).delete }""" % (c.name, model.query_name, c.name) for c in model.columns])
 
-
         range_by = ""
         find_by = ""
         delete_by = ""
+
         for scala_type, columns in columns_by_type.items():
           if scala_type not in ("Boolean",):
-            range_by_case = "\n".join(["""case "%s" => quote {%s.filter(_.%s >= lift(start)).filter(_.%s <= lift(end)) }"""  % (c.name, model.query_name, c.name, c.name) for c in columns])
+            if scala_type == "String":
+              range_by_case = "\n".join(["""case "%s" => quote {%s.filter(_.%s gte lift(start)).filter(_.%s lte lift(end)) }"""  % (c.name, model.query_name, c.name, c.name) for c in columns])
+            else:
+              range_by_case = "\n".join(["""case "%s" => quote {%s.filter(_.%s >= lift(start)).filter(_.%s <= lift(end)) }"""  % (c.name, model.query_name, c.name, c.name) for c in columns])
             range_by += "\n\n" + rangeByTemplate\
                         .replace("@@rangeByCase@@", range_by_case)\
                         .replace("@@colType@@", scala_type)
@@ -191,7 +208,7 @@ class ModelBuilder:
         )
 
         #now do create and update
-        update_params = ", ".join(["%s: Option[%s] = None" % (c[0], c[1]) for c in create_columns])
+        update_params = ", ".join(["%s: %s = None" % (c[0], optionize_from_vals(c[1], c[3])) for c in create_columns])
         create_params = ", ".join(["%s: %s" % (c[0], c[1]) for c in create_columns])
         model_create_params = ", ".join(["%s = %s" % (c[0],c[0]) for c in create_columns])
 
@@ -216,8 +233,12 @@ class ModelBuilder:
           ref_comprehensions = []
           #(name, type local_model, local_field, ref_model, ref_field)
           for r in ref_fields:
-              ref_comprehensions.append("Future { get%s(%s.%s.get) }" %(camelize(r[0]), model.name_lower, r[6]))
-
+              print(r)
+              #check nullability
+              if (self.get_column(r[5], r[6])).nullable:
+                ref_comprehensions.append("Future { %s.%s.map(x => get%s(x)) }" %(model.name_lower, r[6], camelize(r[0])))
+              else:
+                ref_comprehensions.append("Future { get%s(%s.%s) }" %(camelize(r[0]), model.name_lower, r[6]))
           ref_futures = ",\n\n".join(ref_comprehensions)
 
 

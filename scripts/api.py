@@ -42,9 +42,9 @@ class ApiBuilder:
 
         if len(c.validations) > 0:
             if name:
-              vstr += '.should("' + name + '")(%s)'
+              vstr += '.must("' + name + '", %s)'
             else:
-              vstr += '.should("' + c.name + '")(%s)'
+              vstr += '.must("' + c.name + '", %s)'
 
             vals = []
 
@@ -71,6 +71,7 @@ class ApiBuilder:
         else:
             return vstr
 
+
     def build(self):
         for model in [m for m in self.app.models if m.generate_api]:
 
@@ -83,7 +84,11 @@ class ApiBuilder:
             cols = [c for c in model.columns if c.name not in ("id", "createdAt", "updatedAt")]
 
             #for creating the body Decoder
-            core_field_comprehension_mappings = "\n".join(['%s <- c.downField("%s").as[Option[%s]]' % (c.name, c.name, c.scala_type) for c in model.columns if c.name not in ("id", "createdAt", "updatedAt")])
+            core_field_comprehension_mappings = "\n".\
+                join(['%s <- c.downField("%s").as[%s]' %
+                      (c.name, c.name, optionize(c)) \
+                      for c in model.columns \
+                      if c.name not in ("id", "createdAt", "updatedAt")])
 
 
             cfields = []
@@ -103,7 +108,7 @@ class ApiBuilder:
             create_params = ", ".join(["%s: %s" % (c.name, c.scala_type) for c in cols])
             model_creation_args = ", ".join([c.name for c in cols])
 
-            param_list = ", ".join(["%s: Option[%s]" % (c.name, c.scala_type) for c in cols])
+            param_list = ", ".join(["%s: %s" % (c.name, optionize(c)) for c in cols])
             update_params = ", ".join([c.name for c in cols])
 
             #user.username.should("username")(max_length(50)),

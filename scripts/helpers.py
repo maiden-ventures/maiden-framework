@@ -100,3 +100,15 @@ def write(name, content, prompt_overwrite=False):
         fd = open(name, "w+")
         fd.write(content)
         fd.close()
+
+def optionize(c):
+    if c.nullable:
+        return "Option[%s]" % (c.scala_type)
+    else:
+        return c.scala_type
+
+def optionize_from_vals(nullable, scala_type):
+    if nullable:
+        return "Option[%s]" % (scala_type)
+    else:
+        return scala_type

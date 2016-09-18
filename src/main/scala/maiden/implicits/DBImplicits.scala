@@ -65,7 +65,19 @@ trait DBImplicits {
     scala.math.BigDecimal(bd)
 
   //private[this] val nullEncoder = encoder[Int](_.setNull)
+  implicit class StringOps(f: String) {
+    def lt (right: String) = quote(infix"$f < $right".as[Boolean])
+    def gt (right: String) = quote(infix"$f > $right".as[Boolean])
+    def lte (right: String) = quote(infix"$f <= $right".as[Boolean])
+    def gte (right: String) = quote(infix"$f >= $right".as[Boolean])
+  }
 
+  implicit class OptionStringOps(f: Option[String]) {
+    def lt (right: String) = quote(infix"$f < $right".as[Boolean])
+    def gt (right: String) = quote(infix"$f > $right".as[Boolean])
+    def lte (right: String) = quote(infix"$f <= $right".as[Boolean])
+    def gte (right: String) = quote(infix"$f >= $right".as[Boolean])
+  }
 
   implicit class OptionOps[T](f: Option[T]) {
     def < (right: T) = quote(infix"$f < $right".as[Boolean])
