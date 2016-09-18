@@ -4,8 +4,8 @@ package maiden.implicits
 import java.time._
 import scala.reflect.ClassTag
 import java.sql.{PreparedStatement, ResultSet, Types}
-import io.getquill.context.BindedStatementBuilder
-import io.getquill.JdbcContext
+//import io.getquill.context.BindedStatementBuilder
+import io.getquill._
 
 trait DBImplicits {
   this: JdbcContext[_,_] =>
@@ -29,8 +29,10 @@ trait DBImplicits {
       }
     }
 
-  private[this] val nullEncoder = encoder[Int](_.setNull)
+  import Types._
+  private[this] val nullEncoder = encoder[Int](_.setNull, INTEGER)
 
+  /*
   override implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     new Encoder[Option[T]] {
       override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) =
@@ -56,6 +58,8 @@ trait DBImplicits {
             nullEncoder(idx, sqlType, row)
         }
     }
+
+   */
 
   //quill uses java.math.BigDecimal for some reason
   implicit def scalaBigDecimalToJavaBigDecimal(bd: scala.math.BigDecimal): java.math.BigDecimal =
