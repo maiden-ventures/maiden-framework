@@ -13,10 +13,11 @@ import maiden.types.MaidenApi
 import maiden.http.Render._
 import maiden.processing.Validations._
 import @@package@@.models.@@model@@
+import @@package@@.encoders.@@model@@ResponseEncoders
 import maiden.auth.MaidenAuthUser
 @@securityImport@@
 
-object @@model@@Api extends MaidenApi {
+object @@model@@Api extends MaidenApi with @@model@@ResponseEncoders {
 
   private[this] implicit val @@lowerCaseModel@@BodyDecoder = Decoder.instance[@@model@@](c => {
     for {

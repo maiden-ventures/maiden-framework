@@ -200,8 +200,9 @@ class MigrationBuilder:
 
           elif key == "removed":
 
-            for p in payload:
-              migration_name = "Remove%sFrom%s" % (camelize(model_name))
+            for p in list(payload):
+              print p
+              migration_name = "Remove%sFrom%s" % (camelize(p['name']), camelize(model_name))
               m = {"name": model_name, "columns": p}
               model = Model(m, self.app.casing)
               for col in model.columns:

@@ -8,11 +8,11 @@ import maiden.http.ErrorHandler.apiErrorHandler
 //import maiden.http.{ExceptionFilter, HawkAuthenticateRequestFilter, RequestLoggingFilter}
 import maiden.http.{ExceptionFilter, RequestLoggingFilter}
 import maiden.util.error.ErrorResponseEncoders
-import @@package@@.api._
+@@imports@@
 
 object UnhandledExceptionsFilter extends ExceptionFilter[Request](ErrorResponseEncoders.exceptionResponseEncoder)
 
-object @@app@@Api extends ResponseEncoders {
+object @@app@@Api {
    def @@appLower@@Api = @@api_list@@
 
   def apiService: Service[Request, Response] =
