@@ -5,5 +5,5 @@ def findBy[T](col: String, value: @@colType@@) ={
 
       case _ => throw(new Exception(s"Unknown column ${col}"))
   }
-  db.run(q)
+  execute(q)
 }

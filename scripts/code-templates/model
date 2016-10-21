@@ -52,13 +52,23 @@ case class @@model@@ (
 
 object @@model@@ extends MaidenModelObject[@@model@@] {
 
+
+  private[this] def execute(query: Quoted[EntityQuery[@@model@@]]) =
+    db.run(query)
+
+  private[this] def execute[A[@@model@@]](query: Quoted[@@model@@ => UnassignedAction[@@model@@] with A[@@model@@]]) =
+    db.run(query)
+
+
+  private[this] def execute(query: Quoted[Delete[@@model@@]]) = db.run(query)
+
   def exists(id: Long) = {
     val q = quote {
       @@queryName@@.filter(_.id == lift(id))
     }
 
-    db.run(q.size) match {
-      case x: Long if x > 0 => true
+    execute(q).size match {
+      case x: Int if x > 0 => true
       case _ => false
     }
   }

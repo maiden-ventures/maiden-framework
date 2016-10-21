@@ -5,7 +5,7 @@ def update(data: @@model@@) = {
     @@queryName@@.filter(_.id == lift(d.id)).update
   }
 
-  db.run(q)(List(d))
+  execute(q)(List(d))
   get(d.id)
 
 }
