@@ -165,9 +165,14 @@ class ModelBuilder:
           columns_by_type[t] = [x for x in model.columns if x.scala_type == t]
 
         #all columns that are not dates
-        find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type != "LocalDateTime"])
+        find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type != "LocalDateTime" and c.nullable == False])
+        find_by_case += "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(Option(value))) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type != "LocalDateTime" and c.nullable == True])
+
+
         #like queries can only use string columns
-        find_by_like_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s like  lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == "String"])
+        find_by_like_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s like  lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == "String" and c.nullable == False])
+
+        find_by_like_case += "\n".join(["""case "%s" => quote { %s.filter(_.%s like  lift(Option(value))) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == "String" and c.nullable == True])
 
         if len(find_by_like_case) == 0: likeTemplate = ""
 
@@ -181,19 +186,21 @@ class ModelBuilder:
           if scala_type not in ("Boolean",):
             if scala_type == "String":
               range_by_case = "\n".join(["""case "%s" => quote {%s.filter(_.%s gte lift(start)).filter(_.%s lte lift(end)) }"""  % (c.name, model.query_name, c.name, c.name) for c in columns])
+
             else:
               range_by_case = "\n".join(["""case "%s" => quote {%s.filter(_.%s >= lift(start)).filter(_.%s <= lift(end)) }"""  % (c.name, model.query_name, c.name, c.name) for c in columns])
-            range_by += "\n\n" + rangeByTemplate\
-                        .replace("@@rangeByCase@@", range_by_case)\
-                        .replace("@@colType@@", scala_type)
 
-            find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == scala_type])
+            find_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == scala_type if c.nullable == False])
+
+            find_by_case += "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(Option(value))) }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == scala_type and c.nullable == True])
 
             find_by += "\n\n" + findByTemplate\
                       .replace("@@findByCase@@", find_by_case)\
                       .replace("@@colType@@", scala_type)
 
-            delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)).delete }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == scala_type])
+            delete_by_case = "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(value)).delete }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == scala_type and c.nullable == False])
+
+            delete_by_case += "\n".join(["""case "%s" => quote { %s.filter(_.%s == lift(Option(value))).delete }""" % (c.name, model.query_name, c.name) for c in model.columns if c.scala_type == scala_type if c.nullable == True])
 
             delete_by += deleteByTemplate\
                          .replace("@@deleteByCase@@", delete_by_case)\

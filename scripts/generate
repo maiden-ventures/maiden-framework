@@ -76,14 +76,16 @@ def read_models(model_stream, casing):
             model_data[index]["columns"].append({
                 "name": "created_at",
                 "type" : "timestamp",
-                "default": "NOW()"
+                "default": "NOW()",
+                "nullable": True
             })
 
         if 'updated_at' not in cols and timestamps:
             model_data[index]["columns"].append({
                 "name": "updated_at",
                 "type" : "timestamp",
-                "default": "NOW()"
+                "default": "NOW()",
+                "nullable": True
             })
 
         #handle implicit validations if there is a limit given

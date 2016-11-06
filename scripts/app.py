@@ -71,7 +71,7 @@ class Model:
 
         self.casing = casing
         #whether to generate an API for this model
-        self.generate_api = self.info.get("generate_api", False)
+        self.generate_api = self.info.get("generate_api", True)
         #whether to generate model classes for this model
         self.generate_model = self.info.get("generate_model", True)
 

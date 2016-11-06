@@ -2,13 +2,20 @@ package maiden.implicits
 
 
 import java.time._
+import scala.language.implicitConversions
 import scala.reflect.ClassTag
 import java.sql.{PreparedStatement, ResultSet, Types}
-import io.getquill.context.BindedStatementBuilder
+//import io.getquill.context.BindedStatementBuilder
 import io.getquill._
 
 trait DBImplicits {
   this: JdbcContext[_,_] =>
+
+  implicit def dt2optdt(v: LocalDateTime): Option[LocalDateTime] = Option(v)
+  implicit def str2optstr(v: String): Option[String] = Option(v)
+  implicit def long2optlong(v: Long): Option[Long] = Option(v)
+  implicit def bd2optbd(v: BigDecimal): Option[BigDecimal] =  Option(v)
+  implicit def int2optint(v: Int): Option[Int] = Option(v)
 
   val SqlNull = quote(infix"null")
 
@@ -16,6 +23,7 @@ trait DBImplicits {
     def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
   }
 
+  /*
   implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
     new Decoder[LocalDateTime] {
       def apply(index: Int, row: ResultSet) = {
@@ -28,9 +36,11 @@ trait DBImplicits {
         }
       }
     }
+   */
 
-  private[this] val nullEncoder = encoder[Int](_.setNull)
+  //private[this] val nullEncoder = encoder[Int](_.setNull)
 
+  /*
   override implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     new Encoder[Option[T]] {
       override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) =
@@ -56,6 +66,7 @@ trait DBImplicits {
             nullEncoder(idx, sqlType, row)
         }
     }
+   */
 
   //quill uses java.math.BigDecimal for some reason
   implicit def scalaBigDecimalToJavaBigDecimal(bd: scala.math.BigDecimal): java.math.BigDecimal =

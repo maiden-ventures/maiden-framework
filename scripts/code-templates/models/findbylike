@@ -7,5 +7,5 @@ def findByLike(col: String, value: String) = {
       case _ => throw(new Exception(s"Unknown column ${col}"))
     }
 
-    execute(q)
+    db.run(q)
 }

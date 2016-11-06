@@ -5,5 +5,5 @@ def deleteBy(col: String, value: @@colType@@) = {
       case _ => throw(new Exception(s"Unknown column ${col}"))
   }
 
-  execute(q)
+  db.run(q)
 }
