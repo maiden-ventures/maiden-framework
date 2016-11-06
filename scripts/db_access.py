@@ -80,7 +80,7 @@ class DbAccessBuilder:
             uname = m.name
 
             cols = ",".join(['_.%s -> "%s"' % (c.name, c.db_name) for c in m.columns])
-            s = 'implicit lazy val %sQuery = quote(query[%s].schema(_.entity("%s").columns(%s).generated(_.id)))' % (lname, uname, m.db_name, cols)
+            s = 'lazy val %sQuery = quote { querySchema[%s]("%s", %s) }' % (lname, uname, m.db_name, cols)
             schema_list.append(s)
 
         schema_list_str = "\n\n".join(schema_list)
