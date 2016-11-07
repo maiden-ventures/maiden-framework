@@ -37,12 +37,22 @@ class ModelBuilder:
                        column_type):
       #the method in the companion object
       nullable = (self.get_column(model_name, field_name)).nullable
-      s = """def get%s(%s: %s) = {
-      val q = quote {
-        %sQuery.filter(_.%s == lift(%s))
-      }""" % (camelize(ref_name), camelize(field_name, False), column_type,
-              camelize(model2_name, False), field2_name,
-              camelize(field_name, False))
+      ref_nullable = (self.get_column(model2_name, field2_name)).nullable
+      if ref_nullable:
+        s = """def get%s(%s: %s) = {
+        val q = quote {
+          %sQuery.filter(_.%s == lift(Option(%s)))
+        }""" % (camelize(ref_name), camelize(field_name, False), column_type,
+                camelize(model2_name, False), field2_name,
+                camelize(field_name, False))
+
+      else:
+        s = """def get%s(%s: %s) = {
+        val q = quote {
+          %sQuery.filter(_.%s == lift(%s))
+        }""" % (camelize(ref_name), camelize(field_name, False), column_type,
+                camelize(model2_name, False), field2_name,
+                camelize(field_name, False))
 
       if ref_type == "ONE_TO_MANY":
         s += "\n\n  db.run(q)"
