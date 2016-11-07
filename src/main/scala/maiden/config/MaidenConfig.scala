@@ -8,7 +8,8 @@ import com.typesafe.config.{ConfigFactory, ConfigValueType}
 object MaidenConfig {
 
   lazy val env = Properties.envOrElse("MAIDEN_MODE", "development")
-  lazy val _conf = ConfigFactory.parseFile(new File(s"config/maiden-${env}.conf"))
+  lazy val configDir = Properties.envOrElse("MAIDEN_CONFIG_DIR", "config")
+  lazy val _conf = ConfigFactory.parseFile(new File(s"${configDir}/maiden-${env}.conf"))
   lazy val conf = ConfigFactory.load(_conf)
 
   def get[T](key: String): T = {
