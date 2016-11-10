@@ -11,7 +11,7 @@ trait MaidenModel extends MaidenEncoder {
   val updatedAt: Option[LocalDateTime]
 }
 
-trait MaidenModelWithoutTimestamps {
+trait MaidenModelWithoutTimestamps extends MaidenEncoder {
   val id: Long
 }
 
