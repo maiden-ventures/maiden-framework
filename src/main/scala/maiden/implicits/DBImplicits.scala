@@ -23,51 +23,6 @@ trait DBImplicits {
     def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
   }
 
-  /*
-  implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
-    new Decoder[LocalDateTime] {
-      def apply(index: Int, row: ResultSet) = {
-        val v = row.getTimestamp(index + 1)
-        if (v == null)
-          LocalDateTime.MIN
-        else {
-          LocalDateTime.ofInstant(v.toInstant,
-                                  ZoneId.systemDefault())
-        }
-      }
-    }
-   */
-
-  //private[this] val nullEncoder = encoder[Int](_.setNull)
-
-  /*
-  override implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    new Encoder[Option[T]] {
-      override def apply(idx: Int, value: Option[T], row: BindedStatementBuilder[PreparedStatement]) =
-        value match {
-          case Some(value) => d(idx, value, row)
-          case None =>
-            import Types._
-            val sqlType =
-              d match {
-                case `stringEncoder`     => VARCHAR
-                case `bigDecimalEncoder` => NUMERIC
-                case `booleanEncoder`    => BOOLEAN
-                case `byteEncoder`       => TINYINT
-                case `shortEncoder`      => SMALLINT
-                case `intEncoder`        => INTEGER
-                case `longEncoder`       => BIGINT
-                case `floatEncoder`      => REAL
-                case `doubleEncoder`     => DOUBLE
-                case `byteArrayEncoder`  => VARBINARY
-                case `dateEncoder`       => TIMESTAMP
-                case _                   => INTEGER
-              }
-            nullEncoder(idx, sqlType, row)
-        }
-    }
-   */
-
   //quill uses java.math.BigDecimal for some reason
   implicit def scalaBigDecimalToJavaBigDecimal(bd: scala.math.BigDecimal): java.math.BigDecimal =
     bd.bigDecimal
@@ -128,23 +83,4 @@ trait DBImplicits {
   implicit class Between[T: ClassTag](f: T) extends OptionBetween(Option(f))
   implicit class DateBetween(f: LocalDateTime)
       extends OptionBetween[LocalDateTime](Option(f))
-
-
-  /*
-  def between[T] = quote {
-    new {
-      def apply[T](start: T, end: T, value: T) =
-        if (start > value && end < value) true
-        else false
-    }
-  }
-
-  val between = quote {
-    new {
-      def apply[T](xs: Query[T])(p: T => Boolean) =
-        xs.filter(p(_)).nonEmpty
-    }
-}
-   */
-
 }

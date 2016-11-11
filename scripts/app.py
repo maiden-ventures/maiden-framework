@@ -38,6 +38,7 @@ class App:
         self.https_port = self.app_info.get("https_port", "")
         self.certificate_path = self.app_info.get("certificate_path", "")
         self.key_path = self.app_info.get("key_path", "")
+        self.custom_apis = self.info.get("custom_apis", [])
 
         if 'generator' in info and "prompt_overwrite" in info['generator']:
             self.prompt_overwrite = info['generator']['prompt_overwrite']
@@ -76,6 +77,7 @@ class Model:
         self.generate_model = self.info.get("generate_model", True)
 
         self.generate_migration = self.info.get("generate_migration", True)
+
 
         try:
             self.name = camelize(self.info["name"])

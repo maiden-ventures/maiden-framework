@@ -14,7 +14,14 @@ def build_boot(app):
     write(file_name, out)
 
 def build_api_service(app):
+    #handle the automatically generated model APIs
     apis = ["%sApi.%sApi" % (m.name, m.name_lower) for m in app.models if m.generate_api]
+
+    #now handle any APIs that are outside of our scope
+
+    for custom_api in app.custom_apis:
+        apis +=  ["%sApi.%sApi" % (camelize(custom_api['name']), camelize(custom_api['name'], False))]
+
     apis = " :+: ".join(apis)
 
     service = read_template("api-service")
