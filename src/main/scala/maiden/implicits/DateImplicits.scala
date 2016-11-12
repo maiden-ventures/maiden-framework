@@ -18,9 +18,9 @@ trait  DateImplicits {
   private[this] def ldt2date(ldt: LocalDateTime) =
     Date.from(ldt.atZone(ZoneId.systemDefault).toInstant)
 
-  implicit val decodeLocalDateTime = mappedEncoding[Date, LocalDateTime](date => date2ldt(date))
+  implicit val decodeLocalDateTime = MappedEncoding[Date, LocalDateTime](date => date2ldt(date))
 
-  implicit val encodeLocalDateTime = mappedEncoding[LocalDateTime, Date](ldt => ldt2date(ldt))
+  implicit val encodeLocalDateTime = MappedEncoding[LocalDateTime, Date](ldt => ldt2date(ldt))
 
   //handle ordering of datetimes
   implicit val localDateTimeOrder: Ordering[LocalDateTime] = null

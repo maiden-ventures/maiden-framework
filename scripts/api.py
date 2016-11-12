@@ -6,14 +6,10 @@ class ApiBuilder:
     def __init__(self, app):
         self.template = read_template("api")
         self.app = app
-
-
         self.security_import = app.security["security_import"]
         self.build()
 
-
     def add_validations(self, c, name=None): # scala_type, validations, name = None):
-
         def handle_escape(v):
             try:
                 int(v)
@@ -73,8 +69,8 @@ class ApiBuilder:
 
 
     def build(self):
+        #generate all of the automatic model APIs first
         for model in [m for m in self.app.models if m.generate_api]:
-
             #Endpoint params
             param_str = """param("%s").as[%s]%s"""
 
@@ -90,9 +86,7 @@ class ApiBuilder:
                       for c in model.columns \
                       if c.name not in ("id", "createdAt", "updatedAt")])
 
-
             cfields = []
-
             #don't do validations at parsing time
             for cf in cols:
                 #if len(cf.formatters) > 0:

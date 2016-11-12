@@ -31,9 +31,9 @@ trait MaidenBaseDB {
 
     props.put("dataSource.logWriter", new PrintWriter(System.out));
     val config = new HikariConfig(props);
-    config.addDataSourceProperty("cachePrepStmts", "true");
-    config.addDataSourceProperty("prepStmtCacheSize", "500");
-    config.addDataSourceProperty("prepStmtCacheSqlLimit", "4096");
+    //config.addDataSourceProperty("cachePrepStmts", "true");
+    //config.addDataSourceProperty("prepStmtCacheSize", "500");
+    //config.addDataSourceProperty("prepStmtCacheSqlLimit", "4096");
     new HikariDataSource(config);
   }
 }

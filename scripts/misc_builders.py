@@ -14,16 +14,19 @@ def build_boot(app):
     write(file_name, out)
 
 def build_api_service(app):
-    apis = ["%sApi" % (m.name_lower) for m in app.models if m.generate_api]
-    apis = " :+: ".join(apis)
+    #handle the automatically generated model APIs
+    apis = ["%sApi.%sApi" % (m.name, m.name_lower) for m in app.models if m.generate_api]
 
-    imports = ["import %s.api.%sApi._" % (app.package, m.name) for m in app.models if m.generate_api]
-    imports = "\n".join(imports)
+    #now handle any APIs that are outside of our scope
+
+    for custom_api in app.custom_apis:
+        apis +=  ["%sApi.%sApi" % (camelize(custom_api['name']), camelize(custom_api['name'], False))]
+
+    apis = " :+: ".join(apis)
 
     service = read_template("api-service")
     out = service.replace("@@package@@", app.package)\
                  .replace("@@app@@", app.name)\
-                 .replace("@@imports@@", imports)\
                  .replace("@@appLower@@", app.name_lower)\
                  .replace("@@api_list@@", apis)
     file_name = os.path.join(app.base_path, "%sApi.scala" % (app.name))
