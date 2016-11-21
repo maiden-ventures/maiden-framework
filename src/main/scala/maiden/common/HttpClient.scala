@@ -110,7 +110,7 @@ class HttpClient(url: String,
       case resp => resp
     }
 
-    val resp = res.unsafePerformSync
+    val resp = res.runFor(30000)//unsafePerformSync
 
     if (headerList == List.empty) {
       resp.headers.map(h =>  h.name.toString -> h.value).toMap
@@ -135,12 +135,12 @@ class HttpClient(url: String,
     }
 
     try {
-      val resp = res.unsafePerformSync //Timed(10)
+      val resp = res.runFor(30000)//unsafePerformSync //Timed(10)
       val headers = buildHeaderMap(resp)
       val p = resp.body
       val p2 = p.runLog
 
-      val rawBody = resp.body.runLog.unsafePerformSync //run
+      val rawBody = resp.body.runLog.run //unsafePerformSync //run
 
       //handle chunked responses
       var body:ByteVector = ByteVector.empty

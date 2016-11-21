@@ -17,11 +17,12 @@ val circeVersion = "0.5.4"
 
 val catsVersion = "0.7.0"
 
-val http4sVersion = "0.13.2a"
+val http4sVersion = "0.14.11"
 
 val logbackVersion = "1.1.7"
 
 val specsVersion = "3.8.3"
+
 
 lazy val `maiden-framework` = (project in file("."))
   .settings(
