@@ -18,7 +18,8 @@ object JsonImplicits {
     Encoder.instance(a => (new Date().asJson))
 
     implicit val dateTimeDecoder: Decoder[Date] =
-      Decoder.instance(a => a.as[Long].map(new Date(_)))
+      Decoder.instance(a => a.as[Long]
+                         .map(new Date(_)))
 
 }
 

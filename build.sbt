@@ -3,7 +3,7 @@ import NativePackagerHelper._
 organization := "com.maiden"
 
 
-version := "0.6.0"
+version := "0.6.5"
 
 scalaVersion := "2.11.8"
 
@@ -11,7 +11,7 @@ val finagleVersion = "6.36.0"
 
 val finchVersion = "0.10.0"
 
-val quillVersion = "1.0.0"
+val quillVersion = "1.0.1-SNAPSHOT"
 
 val circeVersion = "0.5.4"
 
